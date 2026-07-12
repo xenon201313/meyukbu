@@ -24,6 +24,7 @@ type ResolveState = "idle" | "loading" | "success" | "error";
 type FormErrorKey =
   | "targetBoss"
   | "difficulty"
+  | "convertedStat"
   | "availability"
   | "lootPolicy"
   | "experienceSummary"
@@ -56,14 +57,11 @@ const dayOptions = ["월", "화", "수", "목", "금", "토", "일"];
 
 const roleOptions: ReadonlyArray<{ value: ResumeRole; label: string }> = [
   { value: "DAMAGE", label: roleLabels.DAMAGE },
-  { value: "SUPPORT", label: roleLabels.SUPPORT },
   { value: "UTILITY", label: roleLabels.UTILITY },
-  { value: "OTHER", label: roleLabels.OTHER },
 ];
 
 const partyTypeOptions: ReadonlyArray<{ value: PartyType; label: string }> = [
   { value: "FIXED", label: partyTypeLabels.FIXED },
-  { value: "SEMI_FIXED", label: partyTypeLabels.SEMI_FIXED },
   { value: "TEMPORARY", label: partyTypeLabels.TEMPORARY },
   { value: "PROGRESSION", label: partyTypeLabels.PROGRESSION },
 ];
@@ -89,7 +87,7 @@ function createDefaultDraft(): ResumeDraft {
     targetBossCadence: "MONTHLY",
     difficulty: "하드",
     role: "DAMAGE",
-    partyType: "SEMI_FIXED",
+    partyType: "FIXED",
     availability: [
       {
         days: ["화", "목", "일"],
@@ -216,6 +214,7 @@ function isResumeDraft(value: unknown): value is ResumeDraft {
     (value.voiceChat === "AVAILABLE" ||
       value.voiceChat === "OPTIONAL" ||
       value.voiceChat === "UNAVAILABLE") &&
+    (value.convertedStat === undefined || typeof value.convertedStat === "string") &&
     (value.lootPolicy === undefined || typeof value.lootPolicy === "string") &&
     (value.experienceSummary === undefined || typeof value.experienceSummary === "string") &&
     (value.roleSummary === undefined || typeof value.roleSummary === "string") &&
@@ -281,6 +280,7 @@ function normalizeDraft(draft: ResumeDraft): ResumeDraft {
     ...draft,
     targetBoss: draft.targetBoss.trim(),
     difficulty: draft.difficulty.trim(),
+    convertedStat: draft.convertedStat?.trim() || undefined,
     availability: draft.availability.map((slot) => ({
       ...slot,
       days: [...slot.days],
@@ -314,6 +314,9 @@ function validateDraft(draft: ResumeDraft): FormErrors {
     errors.availability = "종료 시간은 시작 시간보다 뒤여야 합니다.";
   }
 
+  if ((draft.convertedStat?.trim().length ?? 0) > 40) {
+    errors.convertedStat = "환산은 40자 이하로 입력해 주세요.";
+  }
   if ((draft.lootPolicy?.trim().length ?? 0) > 80) {
     errors.lootPolicy = "분배 방식은 80자 이하로 입력해 주세요.";
   }
@@ -767,6 +770,40 @@ function ResumeEditorContent() {
                   </select>
                 </Field>
               </div>
+              <Field
+                label="환산 (MapleScouter 기준)"
+                htmlFor="converted-stat"
+                error={formErrors.convertedStat}
+              >
+                <input
+                  id="converted-stat"
+                  name="convertedStat"
+                  autoComplete="off"
+                  className={inputClassName}
+                  maxLength={40}
+                  placeholder="예: 110,650"
+                  onChange={(event) => {
+                    updateDraft({ convertedStat: event.target.value });
+                    clearError("convertedStat");
+                  }}
+                  value={draft.convertedStat ?? ""}
+                  aria-describedby={formErrors.convertedStat ? "converted-stat-error" : undefined}
+                  aria-invalid={Boolean(formErrors.convertedStat)}
+                />
+                <p className="mt-2 text-xs leading-5 text-stone-600">
+                  <a
+                    href={`https://maplescouter.com/ko/info?name=${encodeURIComponent(
+                      profile?.characterName ?? "",
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-stone-900 underline"
+                  >
+                    MapleScouter에서 환산 확인
+                  </a>
+                  {" 후 값을 입력하세요. 이력서에는 사용자 입력 출처와 검증 링크가 함께 표시됩니다."}
+                </p>
+              </Field>
             </div>
           </FormSection>
 

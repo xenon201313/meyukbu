@@ -24,7 +24,9 @@ function profileValue(value: string | number | null): string {
 export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUri }: ResumeShareImageProps) {
   const { profile } = resume.version.snapshot;
   const { draft } = resume.version;
-  const metrics = prioritizedFields(profile, draft.role).slice(0, 5);
+  const metrics = prioritizedFields(profile, draft.role)
+    .filter((field) => field.key !== "combatPower")
+    .slice(0, 4);
   const availability = draft.availability
     .map((slot) => `${slot.days.join("·")} ${slot.startTime}–${slot.endTime}`)
     .join(" / ");
@@ -132,15 +134,32 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
               ? "고정"
               : draft.partyType === "SEMI_FIXED"
                 ? "반고정"
-                : "임시"}
+                : "용병"}
         </div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", marginTop: "36px" }}>
         <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700, marginBottom: 18 }}>
-          핵심 역량 · API 조회
+          핵심 역량
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              width: "30%",
+              minHeight: 116,
+              padding: 18,
+              borderRadius: 18,
+              background: "#14213d",
+              color: "#fffdf7",
+            }}
+          >
+            <div style={{ display: "flex", fontSize: 20, color: "#c3cede" }}>환산 · 사용자 입력</div>
+            <div style={{ display: "flex", marginTop: 8, fontSize: 27, fontWeight: 800 }}>
+              {draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "미입력"}
+            </div>
+          </div>
           {metrics.length ? (
             metrics.map((field) => (
               <div

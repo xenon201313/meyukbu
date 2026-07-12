@@ -79,7 +79,8 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
     );
   }
 
-  const fields = prioritizedFields(profile, draft.role);
+  const fields = prioritizedFields(profile, draft.role).filter((field) => field.key !== "combatPower");
+  const scouterUrl = `https://maplescouter.com/ko/info?name=${encodeURIComponent(profile.characterName)}`;
   const freshness = getFreshnessStatus(profile.fetchedAt);
   const availability = draft.availability[0];
   const isMock = mode === "mock" || profile.provider === "mock";
@@ -147,23 +148,36 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
           <p id="preview-metrics-heading" className="text-xs font-bold tracking-[0.16em] text-stone-500">
             핵심 역량
           </p>
-          {fields.length ? (
-            <dl className="mt-2 grid grid-cols-2 gap-2">
-              {fields.map((field) => (
-                <div key={field.key} className="rounded-xl border border-stone-200 bg-white p-3">
-                  <dt className="flex items-center justify-between gap-2 text-xs text-stone-600">
-                    <span>{field.label}</span>
-                    <ProvenanceBadge provenance={field.provenance} />
-                  </dt>
-                  <dd className="mt-2 break-words text-base font-bold text-stone-950">
-                    {displayValue(field)}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          ) : (
-            <p className="mt-2 text-sm text-stone-600">표시할 API 조회 항목이 없습니다.</p>
-          )}
+          <dl className="mt-2 grid grid-cols-2 gap-2">
+            <div className="rounded-xl border border-stone-300 bg-stone-950 p-3 text-stone-50">
+              <dt className="flex items-center justify-between gap-2 text-xs text-stone-300">
+                <span>환산</span>
+                <ProvenanceBadge provenance="USER_PROVIDED" />
+              </dt>
+              <dd className="mt-2 break-words text-base font-bold">
+                {draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "입력 필요"}
+              </dd>
+              <a
+                href={scouterUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 block text-xs text-stone-300 underline"
+              >
+                MapleScouter에서 검증
+              </a>
+            </div>
+            {fields.map((field) => (
+              <div key={field.key} className="rounded-xl border border-stone-200 bg-white p-3">
+                <dt className="flex items-center justify-between gap-2 text-xs text-stone-600">
+                  <span>{field.label}</span>
+                  <ProvenanceBadge provenance={field.provenance} />
+                </dt>
+                <dd className="mt-2 break-words text-base font-bold text-stone-950">
+                  {displayValue(field)}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </section>
 
         <section aria-labelledby="preview-experience-heading" className="space-y-3">

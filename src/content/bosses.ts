@@ -64,8 +64,6 @@ export const bossOptions: BossOption[] = [
   { id: "xadv", name: "최초의 대적자 (익스트림)", cadence: "WEEKLY", artworkKey: "adversary" },
   { id: "hjup", name: "유피테르 (하드)", cadence: "WEEKLY", artworkKey: "jupiter" },
   { id: "xkali", name: "카링 (익스트림)", cadence: "WEEKLY", artworkKey: "kaling" },
-  { id: "nmeirin", name: "메이린 (노멀)", cadence: "WEEKLY", artworkKey: "meirin" },
-  { id: "hmeirin", name: "메이린 (하드)", cadence: "WEEKLY", artworkKey: "meirin" },
   { id: "hblack", name: "검은 마법사 (하드)", cadence: "MONTHLY", artworkKey: "blackmage" },
   { id: "xblack", name: "검은 마법사 (익스트림)", cadence: "MONTHLY", artworkKey: "blackmage" },
 ];

@@ -133,6 +133,7 @@ const draftSchema = z.object({
   targetBoss: z.string(),
   targetBossCadence: z.enum(["WEEKLY", "MONTHLY"]).optional(),
   difficulty: z.string(),
+  convertedStat: z.string().optional(),
   role: z.enum(resumeRoleValues),
   partyType: z.enum(partyTypeValues),
   availability: z.array(

@@ -33,6 +33,12 @@ export interface ResumeDraft {
   /** Weekly/monthly is user-selected context, not a value inferred from API data. */
   targetBossCadence?: TargetBossCadence;
   difficulty: string;
+  /**
+   * User-entered converted stat (환산), e.g. the MapleScouter figure. It is
+   * displayed as USER_PROVIDED with an external verification link, never as
+   * an API value or a service calculation.
+   */
+  convertedStat?: string;
   role: ResumeRole;
   partyType: PartyType;
   availability: AvailabilitySlot[];
@@ -101,7 +107,7 @@ export const roleLabels: Record<ResumeRole, string> = {
 export const partyTypeLabels: Record<PartyType, string> = {
   FIXED: "고정",
   SEMI_FIXED: "반고정",
-  TEMPORARY: "임시",
+  TEMPORARY: "용병",
   PROGRESSION: "트라이",
 };
 
