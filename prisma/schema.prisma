@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// The provider that produced an immutable profile snapshot.
+enum SnapshotProvider {
+  MOCK
+  NEXON_OPEN_API
+}
+
+/// Freshness is persisted with a snapshot so a version can be rendered consistently.
+enum SnapshotFreshness {
+  FRESH
+  STALE
+  EXPIRED
+}
+
+/// Every displayed datum is labelled with one of these sources in the application layer.
+enum DataProvenance {
+  NEXON_API
+  SERVICE_CALCULATED
+  USER_PROVIDED
+  SERVICE_OBSERVED
+}
+
+enum ResumeVisibility {
+  PUBLIC
+  UNLISTED
+  WITHDRAWN
+}
+
+enum ResumeTheme {
+  RESUME
+  MINIMAL
+}
+
+enum ReportCategory {
+  IMPERSONATION
+  PRIVACY
+  HARASSMENT
+  OTHER
+}
+
+enum ReportState {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+/// A stable character identity. Mutable character properties belong to snapshots.
+model Character {
+  id               String             @id @default(cuid())
+  ocid             String             @unique @db.VarChar(128)
+  name             String             @db.VarChar(64)
+  worldName        String?            @db.VarChar(64)
+  firstSeenAt      DateTime           @default(now()) @db.Timestamptz(3)
+  lastSeenAt       DateTime           @default(now()) @db.Timestamptz(3)
+  createdAt        DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime           @updatedAt @db.Timestamptz(3)
+  snapshots        ProfileSnapshot[]
+  resumes          Resume[]
+  guildObservations GuildObservation[]
+
+  @@index([name])
+  @@index([lastSeenAt])
+}
+
+/// An immutable, normalized response from either the live or mock character provider.
+model ProfileSnapshot {
+  id                String              @id @default(cuid())
+  characterId       String
+  fetchedAt         DateTime            @default(now()) @db.Timestamptz(3)
+  /// Source game date is deliberately kept as the provider's YYYY-MM-DD/string value.
+  sourceDate        String?             @db.VarChar(32)
+  provider          SnapshotProvider
+  normalized        Json
+  /// Limited/encrypted raw payload only; it is never returned by public handlers.
+  rawPayload        Json?
+  rawAvailability   Json
+  freshness         SnapshotFreshness   @default(FRESH)
+  freshUntil        DateTime            @db.Timestamptz(3)
+  expiresAt         DateTime            @db.Timestamptz(3)
+  contentHash       String              @db.VarChar(64)
+  createdAt         DateTime            @default(now()) @db.Timestamptz(3)
+  character         Character           @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  resumeVersions    ResumeVersion[]
+  calculatedMetrics CalculatedMetric[]
+  guildObservations GuildObservation[]
+
+  @@index([characterId, fetchedAt])
+  @@index([freshness, expiresAt])
+  @@index([contentHash])
+}
+
+/// A public resume has one mutable pointer to its latest immutable version.
+model Resume {
+  id               String           @id @default(cuid())
+  slug             String           @unique @db.VarChar(96)
+  characterId      String
+  currentVersionId String?          @unique
+  visibility       ResumeVisibility @default(PUBLIC)
+  /// SHA-256 (or stronger) hash only; the plaintext edit token is never persisted.
+  editTokenHash    String           @db.VarChar(128)
+  createdAt        DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime         @updatedAt @db.Timestamptz(3)
+  withdrawnAt      DateTime?        @db.Timestamptz(3)
+  character        Character        @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  currentVersion   ResumeVersion?   @relation("CurrentResumeVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
+  versions         ResumeVersion[]  @relation("ResumeVersions")
+  reports          Report[]
+
+  @@index([characterId])
+  @@index([visibility, updatedAt])
+}
+
+/// Published content is versioned rather than overwritten, preserving image/verifier integrity.
+model ResumeVersion {
+  id                 String              @id @default(cuid())
+  resumeId           String
+  snapshotId         String
+  userInput          Json
+  theme              ResumeTheme         @default(RESUME)
+  contentHash        String              @db.VarChar(64)
+  versionNumber      Int
+  publishedAt        DateTime            @default(now()) @db.Timestamptz(3)
+  createdAt          DateTime            @default(now()) @db.Timestamptz(3)
+  resume             Resume              @relation("ResumeVersions", fields: [resumeId], references: [id], onDelete: Cascade)
+  snapshot           ProfileSnapshot     @relation(fields: [snapshotId], references: [id])
+  currentFor         Resume?             @relation("CurrentResumeVersion")
+  calculatedMetrics  CalculatedMetric[]
+
+  @@unique([resumeId, versionNumber], name: "resumeId_versionNumber")
+  @@index([snapshotId])
+  @@index([contentHash])
+}
+
+/// Auditable service-calculated values. User-entered values stay in ResumeVersion.userInput.
+model CalculatedMetric {
+  id               String          @id @default(cuid())
+  snapshotId       String
+  resumeVersionId  String?
+  key              String          @db.VarChar(96)
+  value            String          @db.VarChar(128)
+  unit             String?         @db.VarChar(32)
+  provenance       DataProvenance  @default(SERVICE_CALCULATED)
+  algorithmName    String          @db.VarChar(128)
+  algorithmVersion String          @db.VarChar(64)
+  inputs           Json
+  includedFields   Json
+  excludedFields   Json
+  disclaimer       String          @db.Text
+  calculatedAt     DateTime        @default(now()) @db.Timestamptz(3)
+  snapshot         ProfileSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  resumeVersion    ResumeVersion?  @relation(fields: [resumeVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([resumeVersionId, key], name: "resumeVersionId_key")
+  @@index([snapshotId])
+}
+
+/// Service observations are intervals, not asserted guild join/leave dates.
+model GuildObservation {
+  id               String          @id @default(cuid())
+  characterId      String
+  guildName        String?         @db.VarChar(64)
+  provenance       DataProvenance  @default(SERVICE_OBSERVED)
+  observedFrom     DateTime        @db.Timestamptz(3)
+  lastObservedAt   DateTime        @db.Timestamptz(3)
+  observedTo       DateTime?       @db.Timestamptz(3)
+  sourceSnapshotId String
+  createdAt        DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime        @updatedAt @db.Timestamptz(3)
+  character        Character       @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  sourceSnapshot   ProfileSnapshot @relation(fields: [sourceSnapshotId], references: [id])
+
+  @@index([characterId, observedTo])
+  @@index([sourceSnapshotId])
+}
+
+/// Report records are deliberately modelled without an administrator UI in the MVP.
+model Report {
+  id        String         @id @default(cuid())
+  resumeId  String
+  category  ReportCategory
+  detail    String?        @db.VarChar(1000)
+  state     ReportState    @default(OPEN)
+  createdAt DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime       @updatedAt @db.Timestamptz(3)
+  resume    Resume         @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@index([resumeId, state])
+  @@index([state, createdAt])
+}

@@ -1,0 +1,8 @@
+node_modules/
+.next/
+work/
+test-results/
+docs/
+AGENTS.md
+pnpm-lock.yaml
+pnpm-workspace.yaml

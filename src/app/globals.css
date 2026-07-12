@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #fffdf8;
+  --ink: #172033;
+  --accent: #e26d2f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Arial, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  outline-offset: 3px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #ec8b42;
+}
+
+::selection {
+  background: #fed7aa;
+  color: #172033;
+}
