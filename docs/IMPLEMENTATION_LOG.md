@@ -183,3 +183,25 @@
 | `pnpm build` | 통과 — production build |
 | `pnpm format:check` | 통과 |
 | `git diff --check` | 통과 |
+
+## 2026-07-13 — 편집기 안내 및 결과물 워터마크 보정
+
+### 구현 범위
+
+- 선택 보강 API 실패를 묶어 표시하던 편집 화면의 상단 안내 상자를 제거했다. 기본·전투력 API의 실제 조회 실패는 전투력 섹션의 개별 안내로 계속 드러나며, 데모 모드임을 알리는 표시는 메력서 미리보기에 유지한다.
+- `실시간 NEXON Open API 조회 결과` 안내에 진한 초록 글자, 선명한 배경·테두리, 굵은 글꼴을 적용해 낮은 대비를 해소했다.
+- 환산·보스 배율 입력 앞의 파트너 API 사용 권한 안내 문구를 제거하고, 외부 확인 링크와 직접 입력 기능은 유지했다.
+- `크로아/얀보 제작` 워터마크를 편집 미리보기와 공개 검증 메력서의 하단 우측, 1080×1350 PNG의 안전 여백 안쪽 우측 하단에 추가했다. 결과물 외의 홈·헤더·OG 이미지는 변경하지 않았다.
+- PNG 응답은 immutable 캐시이므로 다운로드 및 생성 응답 URL에 `template=2`를 추가해 기존 캐시와 구분했다.
+
+### 최종 검증
+
+| 명령 | 결과 |
+| --- | --- |
+| `pnpm lint` | 통과 |
+| `pnpm typecheck` | 통과 |
+| `pnpm test` | 통과 — 11 files, 36 tests |
+| `pnpm test:e2e` | 통과 — Chromium 2 tests |
+| `pnpm build` | 통과 — production build |
+| `pnpm format:check` | 통과 |
+| `git diff --check` | 통과 |

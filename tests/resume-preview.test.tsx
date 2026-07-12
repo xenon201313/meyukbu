@@ -37,6 +37,7 @@ describe("ResumePreview", () => {
     expect(avatar).toHaveClass("h-full", "w-full", "scale-[1.9]", "object-cover");
     expect(avatar.parentElement).toHaveClass("h-full", "w-full", "overflow-hidden");
     expect(avatar.parentElement?.parentElement).toHaveClass("h-40", "w-40", "overflow-hidden");
+    expect(screen.getByText("크로아/얀보 제작")).toBeInTheDocument();
   });
 
   it("shows manually confirmed conversion and boss multiplier as user-provided values", () => {

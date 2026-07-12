@@ -56,10 +56,10 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
       </div>
 
       <p
-        className={`mt-3 rounded-xl border px-3 py-2 text-xs leading-5 ${
+        className={`mt-3 rounded-xl border px-3 py-2 text-xs font-semibold leading-5 shadow-sm ${
           provider === "live"
-            ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-100"
-            : "border-sky-300/30 bg-sky-300/10 text-sky-100"
+            ? "border-emerald-700/40 bg-emerald-100 text-emerald-950"
+            : "border-sky-700/40 bg-sky-100 text-sky-950"
         }`}
         data-provider={provider}
       >

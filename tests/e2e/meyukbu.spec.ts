@@ -13,6 +13,9 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
       exact: true,
     }),
   ).toBeVisible();
+  await expect(
+    page.getByText("자동 연동은 해당 서비스의 공식 파트너 API 사용 권한이 확인된 뒤에만 제공됩니다."),
+  ).toHaveCount(0);
   await expect(page.getByRole("button", { name: "메력서 게시하기" })).toBeEnabled();
 
   await page.locator("#converted-stat").fill("110,650");

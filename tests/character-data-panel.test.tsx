@@ -38,9 +38,10 @@ describe("CharacterDataPanel", () => {
 
     render(<CharacterDataPanel profile={profile} mode="live" />);
 
-    expect(
-      screen.getByText("실시간 NEXON Open API 조회 결과입니다. 값은 서비스에서 계산하지 않습니다."),
-    ).toBeInTheDocument();
+    const liveNotice = screen.getByText(
+      "실시간 NEXON Open API 조회 결과입니다. 값은 서비스에서 계산하지 않습니다.",
+    );
+    expect(liveNotice).toHaveClass("border-emerald-700/40", "bg-emerald-100", "text-emerald-950");
     expect(screen.getByText(/전투력·능력치 API 응답을 받지 못했습니다/)).toBeInTheDocument();
     expect(screen.queryByText(/장착 장비 API 응답을 받지 못했습니다/)).not.toBeInTheDocument();
   });

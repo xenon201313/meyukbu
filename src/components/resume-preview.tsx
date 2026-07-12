@@ -95,7 +95,7 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
       <div className="space-y-6 p-5 text-[#202a36]">
         {isMock ? (
           <p className="rounded-xl border border-sky-700/30 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-950">
-            데모 데이터로 표시 중입니다. 실제 게임 데이터와 다를 수 있습니다.
+            현재 데모 데이터로 표시 중입니다. 실제 게임 데이터와 다를 수 있습니다.
           </p>
         ) : null}
 
@@ -228,6 +228,9 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
         ) : null}
         <p className="font-medium text-slate-200">Data based on NEXON Open API</p>
         <p>본 서비스는 NEXON의 공식 제휴 또는 인증 서비스가 아닙니다.</p>
+        <p className="pt-1 text-right text-[11px] font-semibold tracking-[0.08em] text-teal-200">
+          크로아/얀보 제작
+        </p>
       </footer>
     </article>
   );

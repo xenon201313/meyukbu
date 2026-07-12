@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { Suspense, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import type { NormalizedCharacterProfile } from "@/domain/character";
@@ -492,16 +492,6 @@ function ResumeEditorContent() {
     return () => controller.abort();
   }, [editSlug, queryName]);
 
-  const profileNotice = useMemo(() => {
-    if (!profile) {
-      return null;
-    }
-    if (mode === "mock" || profile.provider === "mock") {
-      return "현재 데모 데이터로 표시 중입니다. 실제 게임 데이터와 다를 수 있습니다.";
-    }
-    return profile.notice ?? null;
-  }, [mode, profile]);
-
   function clearError(key: FormErrorKey) {
     setFormErrors((current) => {
       if (!current[key]) {
@@ -672,15 +662,6 @@ function ResumeEditorContent() {
           {resolveError}
         </p>
       ) : null}
-      {profileNotice ? (
-        <aside
-          className="mb-5 rounded-xl border border-sky-700/35 bg-sky-50 p-4 text-sm leading-6 text-sky-950"
-          aria-live="polite"
-        >
-          {profileNotice}
-        </aside>
-      ) : null}
-
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]">
         <form noValidate className="space-y-5" onSubmit={handleSubmit}>
           <FormSection title="캐릭터 정보">
@@ -712,9 +693,6 @@ function ResumeEditorContent() {
                 MapleScouter에서 환산·보스 배율 확인
               </a>
             ) : null}
-            <p className="mt-3 text-xs leading-5 text-slate-400">
-              자동 연동은 해당 서비스의 공식 파트너 API 사용 권한이 확인된 뒤에만 제공됩니다.
-            </p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <Field label="환산" htmlFor="converted-stat" error={formErrors.convertedStat}>
                 <input

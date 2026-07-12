@@ -102,3 +102,11 @@ pnpm build
 - [x] Use Jupiter as the default weekly boss artwork.
 - [x] Center both card illustrations inside padded `object-contain` artwork panes.
 - [x] Run the regression and full quality checks.
+
+## 2026-07-13 — 편집기 안내 및 결과물 워터마크 보정
+
+- [x] 선택 보강 API 실패로 생성되는 상단 안내 상자를 편집 화면에서 제거한다.
+- [x] 실시간 NEXON Open API 안내의 색 대비를 높여 읽기 쉽게 만든다.
+- [x] 환산·보스 배율 참고의 파트너 API 안내 문구를 제거한다.
+- [x] 편집 미리보기·공개 메력서·1080×1350 PNG 우측 하단에 `크로아/얀보 제작` 워터마크를 표시한다.
+- [x] immutable PNG 캐시를 갱신할 수 있도록 다운로드 URL에 템플릿 리비전을 추가하고 전체 품질 명령을 실행한다.

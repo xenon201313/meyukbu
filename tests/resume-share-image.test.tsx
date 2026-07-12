@@ -63,6 +63,7 @@ describe("ResumeShareImage", () => {
     expect(markup).toContain("overflow:hidden");
     expect(markup).toContain("object-fit:cover");
     expect(markup).toContain("transform:scale(1.9)");
+    expect(markup).toContain("크로아/얀보 제작");
   });
 
   it("includes user-provided conversion and boss multiplier on the PNG card source", () => {
