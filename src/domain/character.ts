@@ -80,6 +80,16 @@ export interface SetEffect {
   effects: Array<{ setCount: string | null; options: string[] }>;
 }
 
+/**
+ * The highest combat power this service has observed for a character across
+ * lookups. It is always a raw API value from a past observation, never a
+ * service calculation, and is labelled SERVICE_OBSERVED when displayed.
+ */
+export interface PeakCombatPower {
+  value: number;
+  observedAt: string;
+}
+
 /** Stable, provider-neutral character data used by pages and resume versions. */
 export interface NormalizedCharacterProfile {
   ocid: string;
@@ -95,6 +105,8 @@ export interface NormalizedCharacterProfile {
   fields: ProfileField[];
   /** All final stats as published by NEXON; includes combat power when available. */
   stats: CharacterStat[];
+  /** Highest combat power observed by this service; absent until first recorded. */
+  peakCombatPower?: PeakCombatPower | null;
   /** NEXON's active equipment preset number, when the endpoint provides it. */
   equipmentPresetNo: number | null;
   /** All currently equipped non-cash combat items published by the API. */

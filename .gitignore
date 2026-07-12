@@ -46,3 +46,6 @@ next-env.d.ts
 
 # Codex task intermediates
 /work/
+
+# Local Claude Code launch config
+.claude/

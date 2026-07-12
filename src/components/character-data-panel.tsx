@@ -1,9 +1,9 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
+import type { NormalizedCharacterProfile, ProfileAvailability } from "@/domain/character";
+import { formatNumericDisplay, parseNumericValue } from "@/lib/format";
 
-import type { EquippedItem, NormalizedCharacterProfile, ProfileAvailability } from "@/domain/character";
-
+import { EquippedItemDetails } from "@/components/equipped-item-details";
 import { ProvenanceBadge } from "@/components/provenance-badge";
 
 interface CharacterDataPanelProps {
@@ -21,27 +21,6 @@ function availabilityMessage(label: string, availability: ProfileAvailability | 
   return `${label} API 응답을 받지 못했습니다. 기본 정보는 계속 사용할 수 있습니다.`;
 }
 
-function EquipmentIcon({ item }: { item: EquippedItem }) {
-  if (item.iconUrl) {
-    return (
-      <img
-        src={item.iconUrl}
-        alt=""
-        className="h-10 w-10 shrink-0 rounded-lg border border-stone-200 bg-white object-contain p-0.5"
-      />
-    );
-  }
-
-  return (
-    <span
-      aria-hidden="true"
-      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-dashed border-stone-300 bg-stone-50 text-[10px] font-bold text-stone-500"
-    >
-      장비
-    </span>
-  );
-}
-
 /**
  * Shows NEXON-published character data while a user is editing a resume.
  * It deliberately exposes raw API values only and does not derive a gear score.
@@ -52,6 +31,10 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
     profile.stats.find((stat) => stat.label === "전투력")?.value ??
     profile.fields.find((field) => field.key === "combatPower")?.value ??
     null;
+  const currentCombatValue = parseNumericValue(combatPower);
+  const peak = profile.peakCombatPower ?? null;
+  const usesPeak = Boolean(peak && (currentCombatValue === null || peak.value > currentCombatValue));
+  const shownCombatPower = usesPeak && peak ? String(peak.value) : combatPower;
   const statNotice = availabilityMessage("전투력·능력치", profile.rawAvailability.stat);
   const equipmentNotice = availabilityMessage("장착 장비", profile.rawAvailability.equipment);
   const notices = [profile.notice, statNotice, equipmentNotice].filter(
@@ -100,12 +83,20 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
       <section className="mt-4 rounded-xl bg-stone-950 p-4 text-stone-50" aria-label="인게임 전투력">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <p className="text-xs font-bold tracking-[0.14em] text-stone-300">인게임 전투력</p>
-            <p className="mt-1 text-2xl font-black tracking-tight">{combatPower ?? "조회 불가"}</p>
+            <p className="text-xs font-bold tracking-[0.14em] text-stone-300">
+              {usesPeak ? "최고 전투력 (서비스 관측)" : "인게임 전투력"}
+            </p>
+            <p className="mt-1 text-2xl font-black tracking-tight">
+              {shownCombatPower === null ? "조회 불가" : formatNumericDisplay(shownCombatPower)}
+            </p>
           </div>
-          <ProvenanceBadge provenance="NEXON_API" />
+          <ProvenanceBadge provenance={usesPeak ? "SERVICE_OBSERVED" : "NEXON_API"} />
         </div>
-        <p className="mt-2 text-xs leading-5 text-stone-300">NEXON API의 종합 능력치 원값입니다.</p>
+        <p className="mt-2 text-xs leading-5 text-stone-300">
+          {usesPeak && currentCombatValue !== null
+            ? `현재 장착 세팅 기준 ${formatNumericDisplay(currentCombatValue)} · 조회된 API 원값 중 최고값을 표시합니다.`
+            : "NEXON API의 종합 능력치 원값입니다."}
+        </p>
       </section>
 
       <details className="mt-3 rounded-xl border border-stone-200 bg-white p-3">
@@ -117,7 +108,9 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
             {profile.stats.map((stat) => (
               <div key={`${stat.label}:${stat.value}`} className="border-b border-stone-100 pb-1">
                 <dt className="truncate text-stone-500">{stat.label}</dt>
-                <dd className="mt-0.5 break-words font-semibold text-stone-900">{stat.value}</dd>
+                <dd className="mt-0.5 break-words font-semibold text-stone-900">
+                  {formatNumericDisplay(stat.value)}
+                </dd>
               </div>
             ))}
           </dl>
@@ -136,33 +129,15 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
           </span>
         </div>
         <p className="mt-1 text-xs leading-5 text-stone-600">
-          인벤토리 전체가 아닌, API가 공개한 캐시 장비 제외 현재 장착 장비입니다.
+          인벤토리 전체가 아닌, API가 공개한 캐시 장비 제외 현재 장착 장비입니다. 장비를 누르면 잠재능력
+          등 세부 옵션을 확인할 수 있습니다.
         </p>
         {profile.equipment.length ? (
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {profile.equipment.map((item, index) => (
-              <li
-                key={`${item.slot ?? "equipment"}:${item.name}:${index}`}
-                className="flex min-w-0 gap-2 rounded-xl border border-stone-200 bg-white p-2.5"
-              >
-                <EquipmentIcon item={item} />
-                <span className="min-w-0">
-                  <span className="block text-[11px] text-stone-500">
-                    {item.slot ?? item.part ?? "장착 장비"}
-                  </span>
-                  <span className="block truncate text-sm font-bold text-stone-950">{item.name}</span>
-                  <span className="mt-0.5 block text-xs text-stone-600">
-                    {[
-                      item.starforce ? `스타포스 ${item.starforce}` : null,
-                      item.potentialGrade ? `잠재 ${item.potentialGrade}` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ") || "세부 옵션은 게시 후 검증 페이지에서 확인"}
-                  </span>
-                </span>
-              </li>
+              <EquippedItemDetails key={`${item.slot ?? "equipment"}:${item.name}:${index}`} item={item} />
             ))}
-          </ul>
+          </div>
         ) : (
           <p className="mt-3 rounded-xl bg-stone-50 p-3 text-xs leading-5 text-stone-600">
             현재 장착 장비 API 결과가 없습니다. 캐릭터의 공개 데이터 상태 또는 API 응답을 확인해 주세요.

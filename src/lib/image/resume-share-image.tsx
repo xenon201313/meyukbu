@@ -3,6 +3,7 @@
 import type { PublicResumeView } from "@/server/services/public-view";
 import { prioritizedFields, roleLabels, targetBossCadenceLabels } from "@/domain/resume";
 import { provenanceLabels } from "@/domain/provenance";
+import { formatNumericDisplay } from "@/lib/format";
 
 interface ResumeShareImageProps {
   resume: PublicResumeView;
@@ -16,7 +17,7 @@ function initials(name: string): string {
 }
 
 function profileValue(value: string | number | null): string {
-  return value === null ? "조회 불가" : String(value);
+  return value === null ? "조회 불가" : formatNumericDisplay(value);
 }
 
 /** The 1080×1350 immutable card; it deliberately excludes edit tokens and private contact. */
@@ -73,14 +74,14 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
           <img
             src={avatarDataUri}
             alt={`${profile.characterName} 캐릭터 이미지`}
-            style={{ width: 168, height: 168, borderRadius: 32, objectFit: "cover" }}
+            style={{ width: 224, height: 224, borderRadius: 32, objectFit: "contain" }}
           />
         ) : (
           <div
             style={{
               display: "flex",
-              width: 168,
-              height: 168,
+              width: 224,
+              height: 224,
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 32,

@@ -59,6 +59,9 @@ model Character {
   ocid             String             @unique @db.VarChar(128)
   name             String             @db.VarChar(64)
   worldName        String?            @db.VarChar(64)
+  /// Highest raw combat power the service has observed for this character.
+  peakCombatPower   BigInt?
+  peakCombatPowerAt DateTime?         @db.Timestamptz(3)
   firstSeenAt      DateTime           @default(now()) @db.Timestamptz(3)
   lastSeenAt       DateTime           @default(now()) @db.Timestamptz(3)
   createdAt        DateTime           @default(now()) @db.Timestamptz(3)

@@ -10,6 +10,8 @@ import {
   voiceChatLabels,
 } from "@/domain/resume";
 
+import { formatNumericDisplay } from "@/lib/format";
+
 import { FreshnessBadge } from "@/components/freshness-badge";
 import { ProvenanceBadge } from "@/components/provenance-badge";
 
@@ -26,7 +28,7 @@ function displayValue(field: ProfileField) {
     return "조회 불가";
   }
 
-  return `${field.value}${field.unit ?? ""}`;
+  return `${formatNumericDisplay(field.value)}${field.unit ?? ""}`;
 }
 
 function formatKoreanDateTime(value: string) {
@@ -48,7 +50,7 @@ function CharacterAvatar({ profile }: { profile: NormalizedCharacterProfile }) {
       <img
         src={profile.imageUrl}
         alt={`${profile.characterName} 캐릭터 이미지`}
-        className="h-20 w-20 rounded-2xl border border-stone-200 bg-stone-100 object-cover"
+        className="h-32 w-32 shrink-0 rounded-2xl border border-stone-200 bg-stone-100 object-contain [image-rendering:pixelated]"
       />
     );
   }
@@ -56,7 +58,7 @@ function CharacterAvatar({ profile }: { profile: NormalizedCharacterProfile }) {
   return (
     <div
       aria-label={`${profile.characterName} 캐릭터 이미지 없음`}
-      className="flex h-20 w-20 items-center justify-center rounded-2xl border border-dashed border-stone-300 bg-stone-100 text-2xl font-bold text-stone-500"
+      className="flex h-32 w-32 shrink-0 items-center justify-center rounded-2xl border border-dashed border-stone-300 bg-stone-100 text-2xl font-bold text-stone-500"
       role="img"
     >
       메

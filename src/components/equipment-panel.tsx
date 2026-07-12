@@ -1,153 +1,39 @@
 /* eslint-disable @next/next/no-img-element */
 
-import type { EquippedItem, EquipmentOption, NormalizedCharacterProfile } from "@/domain/character";
+import type { NormalizedCharacterProfile } from "@/domain/character";
+import { formatNumericDisplay, parseNumericValue } from "@/lib/format";
 
+import { EquippedItemDetails } from "@/components/equipped-item-details";
 import { ProvenanceBadge } from "@/components/provenance-badge";
 
 interface EquipmentPanelProps {
   profile: NormalizedCharacterProfile;
 }
 
-function OptionList({ title, options }: { title: string; options: EquipmentOption[] }) {
-  if (!options.length) {
-    return null;
-  }
-
-  return (
-    <section>
-      <h4 className="text-xs font-bold text-stone-700">{title}</h4>
-      <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs leading-5 text-stone-700 sm:grid-cols-3">
-        {options.map((option) => (
-          <div
-            key={`${option.label}:${option.value}`}
-            className="flex justify-between gap-2 border-b border-stone-100 py-1"
-          >
-            <dt className="truncate text-stone-500">{option.label}</dt>
-            <dd className="text-right font-medium text-stone-800">{option.value}</dd>
-          </div>
-        ))}
-      </dl>
-    </section>
-  );
-}
-
-function ItemIcon({ item }: { item: EquippedItem }) {
-  if (item.iconUrl) {
-    return (
-      <img
-        src={item.iconUrl}
-        alt=""
-        className="h-12 w-12 shrink-0 rounded-xl border border-stone-200 bg-stone-50 object-contain p-1"
-      />
-    );
-  }
-
-  return (
-    <span
-      aria-hidden="true"
-      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-dashed border-stone-300 bg-stone-50 text-xs font-bold text-stone-500"
-    >
-      장비
-    </span>
-  );
-}
-
-function ItemDetails({ item }: { item: EquippedItem }) {
-  const hasPotential = item.potentialGrade || item.potentialOptions.length;
-  const hasAdditionalPotential = item.additionalPotentialGrade || item.additionalPotentialOptions.length;
-
-  return (
-    <details className="group rounded-2xl border border-stone-200 bg-white shadow-sm">
-      <summary className="flex cursor-pointer list-none items-center gap-3 p-3 outline-none focus-visible:ring-2 focus-visible:ring-stone-950/30 [&::-webkit-details-marker]:hidden">
-        <ItemIcon item={item} />
-        <span className="min-w-0 flex-1">
-          <span className="block text-xs text-stone-500">{item.slot ?? item.part ?? "장착 장비"}</span>
-          <span className="mt-0.5 block truncate text-sm font-bold text-stone-950">{item.name}</span>
-          <span className="mt-1 flex flex-wrap gap-x-2 text-xs text-stone-600">
-            {item.starforce ? <span>스타포스 {item.starforce}</span> : null}
-            {item.potentialGrade ? <span>잠재 {item.potentialGrade}</span> : null}
-          </span>
-        </span>
-        <span className="text-sm text-stone-500 transition group-open:rotate-45" aria-hidden="true">
-          +
-        </span>
-      </summary>
-      <div className="space-y-4 border-t border-stone-100 p-4 text-sm">
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid-cols-3">
-          <Detail label="부위" value={item.part} />
-          <Detail label="슬롯" value={item.slot} />
-          <Detail label="스타포스" value={item.starforce} />
-          <Detail label="작 횟수" value={item.scrollUpgrade} />
-          <Detail label="소울" value={item.soulName} />
-          <Detail label="소울 옵션" value={item.soulOption} />
-        </dl>
-        {hasPotential ? (
-          <OptionLines
-            title={`잠재능력${item.potentialGrade ? ` · ${item.potentialGrade}` : ""}`}
-            lines={item.potentialOptions}
-          />
-        ) : null}
-        {hasAdditionalPotential ? (
-          <OptionLines
-            title={`에디셔널 잠재능력${item.additionalPotentialGrade ? ` · ${item.additionalPotentialGrade}` : ""}`}
-            lines={item.additionalPotentialOptions}
-          />
-        ) : null}
-        <OptionList title="최종 옵션" options={item.totalOptions} />
-        <OptionList title="기본 옵션" options={item.baseOptions} />
-        <OptionList title="추가 옵션" options={item.addOptions} />
-        <OptionList title="익셉셔널 옵션" options={item.exceptionalOptions} />
-        <OptionList title="기타 옵션" options={item.etcOptions} />
-        {item.description ? (
-          <p className="whitespace-pre-wrap text-xs leading-5 text-stone-600">{item.description}</p>
-        ) : null}
-      </div>
-    </details>
-  );
-}
-
-function Detail({ label, value }: { label: string; value: string | null }) {
-  return (
-    <div>
-      <dt className="text-stone-500">{label}</dt>
-      <dd className="mt-0.5 break-words font-medium text-stone-900">{value ?? "조회 불가"}</dd>
-    </div>
-  );
-}
-
-function OptionLines({ title, lines }: { title: string; lines: string[] }) {
-  if (!lines.length) {
-    return null;
-  }
-
-  return (
-    <section>
-      <h4 className="text-xs font-bold text-stone-700">{title}</h4>
-      <ul className="mt-2 space-y-1 text-xs leading-5 text-stone-700">
-        {lines.map((line, index) => (
-          <li key={`${line}:${index}`} className="rounded-lg bg-stone-50 px-2 py-1">
-            {line}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 function CombatStats({ profile }: { profile: NormalizedCharacterProfile }) {
-  const combatPower = profile.stats.find((stat) => stat.label === "전투력")?.value ?? null;
+  const combatPowerRaw = profile.stats.find((stat) => stat.label === "전투력")?.value ?? null;
+  const currentValue = parseNumericValue(combatPowerRaw);
+  const peak = profile.peakCombatPower ?? null;
+  const usesPeak = Boolean(peak && (currentValue === null || peak.value > currentValue));
+  const shownValue = usesPeak && peak ? String(peak.value) : combatPowerRaw;
 
   return (
     <section className="rounded-2xl border border-stone-300 bg-stone-950 p-5 text-stone-50">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-xs font-bold tracking-[0.15em] text-stone-300">인게임 전투력</p>
-          <p className="mt-2 text-3xl font-black tracking-tight">{combatPower ?? "조회 불가"}</p>
+          <p className="text-xs font-bold tracking-[0.15em] text-stone-300">
+            {usesPeak ? "최고 전투력 (서비스 관측)" : "인게임 전투력"}
+          </p>
+          <p className="mt-2 text-3xl font-black tracking-tight">
+            {shownValue === null ? "조회 불가" : formatNumericDisplay(shownValue)}
+          </p>
         </div>
-        <ProvenanceBadge provenance="NEXON_API" />
+        <ProvenanceBadge provenance={usesPeak ? "SERVICE_OBSERVED" : "NEXON_API"} />
       </div>
       <p className="mt-3 text-xs leading-5 text-stone-300">
-        NEXON Open API가 반환한 원값이며, 서비스에서 환산하거나 계산하지 않습니다.
+        {usesPeak && currentValue !== null
+          ? `현재 장착 세팅 기준 ${formatNumericDisplay(currentValue)} · 이 서비스가 조회한 API 원값 중 최고값을 표시합니다.`
+          : "NEXON Open API가 반환한 원값이며, 서비스에서 환산하거나 계산하지 않습니다."}
       </p>
       <details className="mt-4 border-t border-stone-700 pt-3">
         <summary className="cursor-pointer text-sm font-semibold">
@@ -158,7 +44,7 @@ function CombatStats({ profile }: { profile: NormalizedCharacterProfile }) {
             {profile.stats.map((stat) => (
               <div key={`${stat.label}:${stat.value}`} className="border-b border-stone-800 pb-1">
                 <dt className="text-stone-400">{stat.label}</dt>
-                <dd className="mt-0.5 font-semibold text-stone-100">{stat.value}</dd>
+                <dd className="mt-0.5 font-semibold text-stone-100">{formatNumericDisplay(stat.value)}</dd>
               </div>
             ))}
           </dl>
@@ -202,7 +88,7 @@ export function EquipmentPanel({ profile }: EquipmentPanelProps) {
         {profile.equipment.length ? (
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {profile.equipment.map((item, index) => (
-              <ItemDetails key={`${item.slot ?? "item"}:${item.name}:${index}`} item={item} />
+              <EquippedItemDetails key={`${item.slot ?? "item"}:${item.name}:${index}`} item={item} />
             ))}
           </div>
         ) : (

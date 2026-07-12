@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
 
-import type { NormalizedCharacterProfile } from "@/domain/character";
+import type { NormalizedCharacterProfile, ProfileField } from "@/domain/character";
 import { transitionGuildObservation } from "@/domain/guild-observation";
 import type {
   PublicResume,
@@ -10,7 +10,12 @@ import type {
   ResumeVersion,
 } from "@/domain/resume";
 import { createEditToken, hashEditToken, verifyEditToken } from "@/lib/auth/edit-token";
+import {
+  getCombatPowerRepository,
+  type CombatPowerRepository,
+} from "@/lib/db/combat-power-repository";
 import { getResumeRepository, type ResumeRepository } from "@/lib/db/resume-repository";
+import { parseNumericValue } from "@/lib/format";
 import { contentHash } from "@/lib/hash";
 import type { NexonProvider } from "@/lib/nexon/provider";
 import { getNexonProvider } from "@/lib/nexon/provider";
@@ -58,9 +63,61 @@ async function uniqueSlug(repository: ResumeRepository): Promise<string> {
   throw new Error("Unable to allocate a public slug.");
 }
 
-async function fetchProfile(name: string, provider: NexonProvider): Promise<NormalizedCharacterProfile> {
+/**
+ * Records the current API combat power and merges the highest observed value into
+ * the profile. A peak from a past observation replaces the combat power field with
+ * a SERVICE_OBSERVED entry so hunting-gear lookups keep showing the best setup.
+ * Observation failures never block a lookup; the raw profile is returned as-is.
+ */
+export async function applyPeakCombatPower(
+  profile: NormalizedCharacterProfile,
+  repository: CombatPowerRepository = getCombatPowerRepository(),
+): Promise<NormalizedCharacterProfile> {
+  const currentValue = parseNumericValue(
+    profile.stats.find((stat) => stat.label === "전투력")?.value ??
+      profile.fields.find((field) => field.key === "combatPower")?.value ??
+      null,
+  );
+  let peak: Awaited<ReturnType<CombatPowerRepository["record"]>> = null;
+  try {
+    peak = await repository.record({
+      ocid: profile.ocid,
+      characterName: profile.characterName,
+      worldName: profile.worldName,
+      combatPower: currentValue,
+      observedAt: profile.fetchedAt,
+    });
+  } catch (error) {
+    console.error("Combat power observation failed:", error instanceof Error ? error.message : error);
+    return profile;
+  }
+  if (!peak) {
+    return profile;
+  }
+
+  const enriched: NormalizedCharacterProfile = { ...profile, peakCombatPower: peak };
+  if (currentValue === null || peak.value > currentValue) {
+    const observedField: ProfileField = {
+      key: "combatPower",
+      label: "전투력",
+      value: String(peak.value),
+      provenance: "SERVICE_OBSERVED",
+      category: "combat",
+      priorityByRole: { DAMAGE: 1, SUPPORT: 1, UTILITY: 1, OTHER: 1 },
+    };
+    enriched.fields = [observedField, ...profile.fields.filter((field) => field.key !== "combatPower")];
+  }
+  return enriched;
+}
+
+async function fetchProfile(
+  name: string,
+  provider: NexonProvider,
+  combatPowerRepository?: CombatPowerRepository,
+): Promise<NormalizedCharacterProfile> {
   const identifier = await provider.resolveCharacter(name);
-  return provider.getProfile(identifier.ocid);
+  const profile = await provider.getProfile(identifier.ocid);
+  return applyPeakCombatPower(profile, combatPowerRepository ?? getCombatPowerRepository());
 }
 
 export interface CreateResumeInput {
@@ -159,7 +216,7 @@ export async function refreshResume(
     throw new ResumeArchivedError();
   }
   const provider = dependencies.provider ?? getNexonProvider();
-  const profile = await provider.getProfile(record.characterOcid);
+  const profile = await applyPeakCombatPower(await provider.getProfile(record.characterOcid));
   const snapshot = createSnapshot(profile);
   const latest = record.versions.find((version) => version.id === record.currentVersionId);
   if (!latest) {
