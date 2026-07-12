@@ -94,7 +94,7 @@ const formSectionNumbers: Record<string, string> = {
 
 function createDefaultDraft(): ResumeDraft {
   return {
-    targetBoss: "검은 마법사",
+    targetBoss: "검은 마법사 (하드)",
     targetBossCadence: "MONTHLY",
     difficulty: "하드",
     role: "DAMAGE",
@@ -310,7 +310,7 @@ function validateDraft(draft: ResumeDraft): FormErrors {
   const slot = draft.availability[0];
 
   if (!draft.targetBoss.trim()) {
-    errors.targetBoss = "목표 보스를 입력해 주세요.";
+    errors.targetBoss = "목표 보스를 목록에서 선택해 주세요.";
   } else if (draft.targetBoss.trim().length > 60) {
     errors.targetBoss = "목표 보스는 60자 이하로 입력해 주세요.";
   }
@@ -681,7 +681,7 @@ function ResumeEditorContent() {
           <FormSection title="환산·보스 배율 참고">
             <p className="text-sm leading-7 text-slate-300">
               메력서는 환산과 보스 배율을 자동으로 가져오거나 임의로 계산하지 않습니다. 확인한 값은 아래에
-              직접 입력할 수 있으며, 메력서에는 작성 내용으로 표시됩니다.
+              기록할 수 있으며, 메력서에는 작성 내용으로 표시됩니다.
             </p>
             {profile ? (
               <a
@@ -755,34 +755,13 @@ function ResumeEditorContent() {
               <BossCadencePicker
                 value={draft.targetBossCadence}
                 targetBoss={draft.targetBoss}
-                onChange={(targetBossCadence) => updateDraft({ targetBossCadence })}
-                onBossSelect={(targetBoss) => {
-                  updateDraft({ targetBoss });
+                error={formErrors.targetBoss}
+                onBossSelect={(boss) => {
+                  updateDraft({ targetBossCadence: boss.cadence, targetBoss: boss.name });
                   clearError("targetBoss");
                 }}
               />
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field
-                  label={draft.targetBossCadence === "MONTHLY" ? "월간 희망 보스" : "주간 희망 보스"}
-                  htmlFor="target-boss"
-                  error={formErrors.targetBoss}
-                >
-                  <input
-                    id="target-boss"
-                    name="targetBoss"
-                    autoComplete="off"
-                    className={inputClassName}
-                    maxLength={60}
-                    onChange={(event) => {
-                      updateDraft({ targetBoss: event.target.value });
-                      clearError("targetBoss");
-                    }}
-                    required
-                    value={draft.targetBoss}
-                    aria-describedby={formErrors.targetBoss ? "target-boss-error" : undefined}
-                    aria-invalid={Boolean(formErrors.targetBoss)}
-                  />
-                </Field>
                 <Field label="난이도" htmlFor="difficulty" error={formErrors.difficulty}>
                   <input
                     id="difficulty"

@@ -31,7 +31,7 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
     notFound();
   }
   const resume = toPublicResumeView(result);
-  const imageUrl = `/r/${slug}/image?v=${resume.version.versionNumber}&template=2`;
+  const imageUrl = `/r/${slug}/image?v=${resume.version.versionNumber}`;
   const cookieStore = await cookies();
   const canEdit = verifyEditToken(
     cookieStore.get(editTokenCookieName(slug))?.value,

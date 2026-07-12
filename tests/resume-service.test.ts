@@ -15,7 +15,8 @@ import {
 } from "@/server/services/resume-service";
 
 const validDraft: ResumeDraft = {
-  targetBoss: "검은 마법사",
+  targetBoss: "검은 마법사 (하드)",
+  targetBossCadence: "MONTHLY",
   difficulty: "하드",
   role: "DAMAGE",
   partyType: "SEMI_FIXED",
@@ -113,12 +114,17 @@ describe("resume publishing service", () => {
     );
 
     await expect(
-      updateResume(created.record.slug, { ...validDraft, targetBoss: "다른 보스" }, undefined, repository),
+      updateResume(
+        created.record.slug,
+        { ...validDraft, targetBoss: "검은 마법사 (익스트림)" },
+        undefined,
+        repository,
+      ),
     ).rejects.toBeInstanceOf(ResumeAuthorizationError);
     await expect(
       updateResume(
         created.record.slug,
-        { ...validDraft, targetBoss: "다른 보스" },
+        { ...validDraft, targetBoss: "검은 마법사 (익스트림)" },
         "wrong-token",
         repository,
       ),
@@ -126,7 +132,7 @@ describe("resume publishing service", () => {
 
     const updated = await updateResume(
       created.record.slug,
-      { ...validDraft, targetBoss: "다른 보스" },
+      { ...validDraft, targetBoss: "검은 마법사 (익스트림)" },
       created.editToken,
       repository,
     );
@@ -142,7 +148,7 @@ describe("resume publishing service", () => {
     expect(original.isLatestVersion).toBe(false);
     expect(original.version.draft.targetBoss).toBe(validDraft.targetBoss);
     expect(latest.isLatestVersion).toBe(true);
-    expect(latest.version.draft.targetBoss).toBe("다른 보스");
+    expect(latest.version.draft.targetBoss).toBe("검은 마법사 (익스트림)");
 
     await expect(archiveResume(created.record.slug, "wrong-token", repository)).rejects.toBeInstanceOf(
       ResumeAuthorizationError,

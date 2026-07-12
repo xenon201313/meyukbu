@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       slug: result.record.slug,
       versionNumber: 1,
-      imageUrl: `/r/${result.record.slug}/image?v=1&template=2`,
+      imageUrl: `/r/${result.record.slug}/image?v=1`,
     });
     response.cookies.set(editTokenCookieName(result.record.slug), result.editToken, {
       httpOnly: true,

@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { findBossOption } from "@/content/bosses";
 import {
   contactTypeValues,
   partyTypeValues,
@@ -38,27 +39,37 @@ const contactSchema = z.object({
   isPublic: z.boolean(),
 });
 
-export const resumeDraftSchema = z.object({
-  targetBoss: z.string().trim().min(1, "목표 보스를 입력해 주세요.").max(60),
-  targetBossCadence: z.enum(targetBossCadenceValues).optional(),
-  difficulty: z.string().trim().min(1, "난이도를 입력해 주세요.").max(40),
-  convertedStat: z.string().trim().max(40, "환산은 40자 이하로 입력해 주세요.").optional(),
-  bossMultiplierPercent: z
-    .string()
-    .trim()
-    .max(40, "보스 배율은 40자 이하로 입력해 주세요.")
-    .regex(/^\d[\d,]*(?:\.\d+)?$/, "보스 배율은 숫자로 입력해 주세요.")
-    .optional(),
-  role: z.enum(resumeRoleValues),
-  partyType: z.enum(partyTypeValues),
-  availability: z.array(availabilitySchema).min(1, "가능 시간을 하나 이상 입력해 주세요.").max(3),
-  voiceChat: z.enum(voiceChatValues),
-  lootPolicy: z.string().trim().max(80).optional(),
-  experienceSummary: z.string().trim().max(280).optional(),
-  roleSummary: z.string().trim().max(220).optional(),
-  contact: contactSchema.optional(),
-  theme: z.enum(["RESUME", "MINIMAL"]),
-});
+export const resumeDraftSchema = z
+  .object({
+    targetBoss: z.string().trim().min(1, "목표 보스를 목록에서 선택해 주세요.").max(60),
+    targetBossCadence: z.enum(targetBossCadenceValues),
+    difficulty: z.string().trim().min(1, "난이도를 입력해 주세요.").max(40),
+    convertedStat: z.string().trim().max(40, "환산은 40자 이하로 입력해 주세요.").optional(),
+    bossMultiplierPercent: z
+      .string()
+      .trim()
+      .max(40, "보스 배율은 40자 이하로 입력해 주세요.")
+      .regex(/^\d[\d,]*(?:\.\d+)?$/, "보스 배율은 숫자로 입력해 주세요.")
+      .optional(),
+    role: z.enum(resumeRoleValues),
+    partyType: z.enum(partyTypeValues),
+    availability: z.array(availabilitySchema).min(1, "가능 시간을 하나 이상 입력해 주세요.").max(3),
+    voiceChat: z.enum(voiceChatValues),
+    lootPolicy: z.string().trim().max(80).optional(),
+    experienceSummary: z.string().trim().max(280).optional(),
+    roleSummary: z.string().trim().max(220).optional(),
+    contact: contactSchema.optional(),
+    theme: z.enum(["RESUME", "MINIMAL"]),
+  })
+  .superRefine((draft, context) => {
+    if (!findBossOption(draft.targetBossCadence, draft.targetBoss)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["targetBoss"],
+        message: "목록에서 희망 보스를 선택해 주세요.",
+      });
+    }
+  });
 
 export const createResumeSchema = z.object({
   characterName: characterNameSchema,

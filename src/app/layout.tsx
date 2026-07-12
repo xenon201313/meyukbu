@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { SiteWatermark } from "@/components/site-watermark";
+
 import "./globals.css";
 
 const siteUrl = process.env.APP_ORIGIN ?? "https://maple-resume.com";
@@ -38,7 +40,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko" className="h-full">
-      <body className="min-h-full antialiased">{children}</body>
+      <body className="min-h-full antialiased">
+        {children}
+        <SiteWatermark />
+      </body>
     </html>
   );
 }

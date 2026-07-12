@@ -6,7 +6,7 @@ import { parseStoredDraft } from "@/lib/db/json";
 import { createResumeSchema, resumeDraftSchema } from "@/lib/validation/schemas";
 
 const validDraft: ResumeDraft = {
-  targetBoss: "검은 마법사",
+  targetBoss: "유피테르 (노멀)",
   targetBossCadence: "WEEKLY",
   difficulty: "하드",
   role: "DAMAGE",
@@ -54,12 +54,20 @@ describe("resume draft validation", () => {
     );
   });
 
-  it("accepts an optional weekly or monthly target-boss cadence only", () => {
+  it("accepts catalogued weekly/monthly boss pairs and rejects direct-entry values", () => {
     const withoutCadence = { ...validDraft };
     delete withoutCadence.targetBossCadence;
 
-    expect(resumeDraftSchema.safeParse(withoutCadence).success).toBe(true);
-    expect(resumeDraftSchema.safeParse({ ...validDraft, targetBossCadence: "MONTHLY" }).success).toBe(true);
+    expect(resumeDraftSchema.safeParse(withoutCadence).success).toBe(false);
+    expect(
+      resumeDraftSchema.safeParse({
+        ...validDraft,
+        targetBossCadence: "MONTHLY",
+        targetBoss: "검은 마법사 (하드)",
+      }).success,
+    ).toBe(true);
+    expect(resumeDraftSchema.safeParse({ ...validDraft, targetBossCadence: "MONTHLY" }).success).toBe(false);
+    expect(resumeDraftSchema.safeParse({ ...validDraft, targetBoss: "직접 입력 보스" }).success).toBe(false);
     expect(resumeDraftSchema.safeParse({ ...validDraft, targetBossCadence: "DAILY" }).success).toBe(false);
   });
 

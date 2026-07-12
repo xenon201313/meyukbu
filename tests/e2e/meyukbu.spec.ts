@@ -20,7 +20,8 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
 
   await page.locator("#converted-stat").fill("110,650");
   await page.locator("#boss-multiplier-percent").fill("412.5");
-  await page.locator("#target-boss").fill("카링");
+  await expect(page.locator("#target-boss")).toHaveCount(0);
+  await page.locator("#boss-quick-select").selectOption("xblack");
   await Promise.all([
     page.waitForURL(/\/r\/m-[a-z0-9_-]+$/),
     page.getByRole("button", { name: "메력서 게시하기" }).click(),
@@ -57,13 +58,14 @@ test.describe("375px mobile accessibility", () => {
     await page.getByRole("textbox", { name: "캐릭터명" }).fill("루나힐러");
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/\/create\?name=/);
-    await expect(page.getByLabel("월간 희망 보스")).toBeVisible();
+    await expect(page.getByLabel("희망 보스 선택")).toBeVisible();
     const quickSelect = page.locator("#boss-quick-select");
     await expect(quickSelect).toBeEnabled();
     await quickSelect.selectOption("xblack");
-    await expect(page.getByLabel("월간 희망 보스")).toHaveValue("검은 마법사 (익스트림)");
+    await expect(quickSelect).toHaveValue("xblack");
     await expect(page.getByLabel("시작 가능 시간")).toBeVisible();
     await expect(page.getByLabel("종료 가능 시간")).toBeVisible();
     await expect(page.getByText("메력서 미리보기").first()).toBeVisible();
+    await expect(page.getByText("크로아/얀보 제작")).toBeVisible();
   });
 });

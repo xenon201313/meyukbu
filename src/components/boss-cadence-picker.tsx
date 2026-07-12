@@ -3,7 +3,15 @@
 
 import { useSyncExternalStore } from "react";
 
-import { bossArtworkUrl, bossOptions, defaultBossArtworkKeys, findBossOption } from "@/content/bosses";
+import {
+  bossArtworkUrl,
+  bossOptions,
+  defaultBossArtworkKeys,
+  defaultBossOption,
+  findBossOption,
+  findBossOptionById,
+  type BossOption,
+} from "@/content/bosses";
 import type { TargetBossCadence } from "@/domain/resume";
 
 const cadenceCards: Array<{
@@ -17,7 +25,7 @@ const cadenceCards: Array<{
   {
     value: "WEEKLY",
     title: "주간 보스",
-    description: "매주 함께 도전할 보스를 선택하거나 직접 입력하세요.",
+    description: "매주 함께 도전할 보스를 목록에서 선택하세요.",
     fallbackImage: "/images/bosses/weekly-raid.png",
     accentClass: "from-[#e9e1f4] via-[#f8f2e9] to-transparent",
     activeClass: "border-[#a44640] ring-[#a44640]/25",
@@ -25,7 +33,7 @@ const cadenceCards: Array<{
   {
     value: "MONTHLY",
     title: "월간 보스",
-    description: "월간 일정에 맞춘 도전 목표를 선택하거나 직접 입력하세요.",
+    description: "월간 일정에 맞춘 도전 목표를 목록에서 선택하세요.",
     fallbackImage: "/images/bosses/monthly-raid.png",
     accentClass: "from-[#f8e3df] via-[#f8f2e9] to-transparent",
     activeClass: "border-[#a44640] ring-[#a44640]/25",
@@ -39,15 +47,15 @@ const getServerHydrationSnapshot = () => false;
 interface BossCadencePickerProps {
   value: TargetBossCadence | undefined;
   targetBoss: string;
-  onChange: (value: TargetBossCadence) => void;
-  onBossSelect: (name: string) => void;
+  error?: string;
+  onBossSelect: (boss: BossOption) => void;
 }
 
 /**
  * Shows the user-authorized Maple Trackers boss artwork without copying image files
  * into the project. A text fallback remains available if the external source is down.
  */
-export function BossCadencePicker({ value, targetBoss, onChange, onBossSelect }: BossCadencePickerProps) {
+export function BossCadencePicker({ value, targetBoss, error, onBossSelect }: BossCadencePickerProps) {
   const isHydrated = useSyncExternalStore(
     subscribeToHydration,
     getHydratedSnapshot,
@@ -60,7 +68,7 @@ export function BossCadencePicker({ value, targetBoss, onChange, onBossSelect }:
     <fieldset>
       <legend className="text-sm font-semibold text-[#202a36]">희망 보스 주기</legend>
       <p className="mt-1 text-xs leading-5 text-[#687380]">
-        주간 또는 월간을 고른 뒤 빠른 선택 또는 직접 입력으로 희망 보스를 정하세요.
+        주간 또는 월간을 고른 뒤 목록에서 희망 보스를 선택하세요.
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {cadenceCards.map((card) => {
@@ -77,7 +85,7 @@ export function BossCadencePicker({ value, targetBoss, onChange, onBossSelect }:
               type="button"
               disabled={!isHydrated}
               aria-pressed={selected}
-              onClick={() => onChange(card.value)}
+              onClick={() => onBossSelect(defaultBossOption(card.value))}
               className={`group relative isolate min-h-36 overflow-hidden rounded-xl border bg-[#fffdf8] text-left shadow-[0_8px_18px_rgba(74,53,35,0.08)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(74,53,35,0.13)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4efe5] disabled:cursor-wait disabled:opacity-80 ${
                 selected ? `ring-2 ${card.activeClass}` : "border-[#d9cdbd] hover:border-[#a44640]/60"
               }`}
@@ -125,20 +133,25 @@ export function BossCadencePicker({ value, targetBoss, onChange, onBossSelect }:
       </div>
       {value ? (
         <label className="mt-4 block text-sm font-semibold text-[#202a36]" htmlFor="boss-quick-select">
-          보스 빠른 선택
+          희망 보스 선택
           <select
             id="boss-quick-select"
             disabled={!isHydrated}
             className="ui-input mt-2 block w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition disabled:cursor-wait disabled:opacity-60"
+            required
             value={selectedBoss?.id ?? ""}
+            aria-describedby={error ? "boss-quick-select-error" : undefined}
+            aria-invalid={Boolean(error)}
             onChange={(event) => {
-              const selectedOption = event.currentTarget.selectedOptions[0];
-              if (selectedOption?.value) {
-                onBossSelect(selectedOption.text);
+              const selectedOption = findBossOptionById(event.currentTarget.value);
+              if (selectedOption && selectedOption.cadence === value) {
+                onBossSelect(selectedOption);
               }
             }}
           >
-            <option value="">직접 입력</option>
+            <option value="" disabled>
+              희망 보스를 선택해 주세요
+            </option>
             {selectableBosses.map((boss) => (
               <option key={boss.id} value={boss.id}>
                 {boss.name}
@@ -146,6 +159,11 @@ export function BossCadencePicker({ value, targetBoss, onChange, onBossSelect }:
             ))}
           </select>
         </label>
+      ) : null}
+      {error ? (
+        <p id="boss-quick-select-error" className="mt-2 text-sm leading-5 text-rose-800" role="alert">
+          {error}
+        </p>
       ) : null}
     </fieldset>
   );

@@ -42,7 +42,8 @@ function createResumeView(draft: ResumeDraft): PublicResumeView {
 describe("ResumeShareImage", () => {
   it("clips and scales a transparent character sprite so it fills the PNG avatar square", () => {
     const draft: ResumeDraft = {
-      targetBoss: "검은 마법사",
+      targetBoss: "검은 마법사 (하드)",
+      targetBossCadence: "MONTHLY",
       difficulty: "하드",
       role: "DAMAGE",
       partyType: "FIXED",
@@ -63,12 +64,12 @@ describe("ResumeShareImage", () => {
     expect(markup).toContain("overflow:hidden");
     expect(markup).toContain("object-fit:cover");
     expect(markup).toContain("transform:scale(1.9)");
-    expect(markup).toContain("크로아/얀보 제작");
+    expect(markup).not.toContain("크로아/얀보 제작");
   });
 
   it("includes user-provided conversion and boss multiplier on the PNG card source", () => {
     const draft: ResumeDraft = {
-      targetBoss: "검은 마법사",
+      targetBoss: "검은 마법사 (하드)",
       targetBossCadence: "MONTHLY",
       difficulty: "하드",
       convertedStat: "110,650",

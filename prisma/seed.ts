@@ -182,7 +182,8 @@ async function main(): Promise<void> {
     slug: "sample-lumina-star",
     editTokenHash: "seed-only-edit-token-hash-lumina-star",
     userInput: {
-      targetBoss: "검은 마법사",
+      targetBoss: "검은 마법사 (하드)",
+      targetBossCadence: "MONTHLY",
       difficulty: "하드",
       role: "DAMAGE",
       partyType: "FIXED",
@@ -260,7 +261,8 @@ async function main(): Promise<void> {
     slug: "sample-solar-priest",
     editTokenHash: "seed-only-edit-token-hash-solar-priest",
     userInput: {
-      targetBoss: "세렌",
+      targetBoss: "선택받은 세렌 (하드)",
+      targetBossCadence: "WEEKLY",
       difficulty: "하드",
       role: "SUPPORT",
       partyType: "PROGRESSION",

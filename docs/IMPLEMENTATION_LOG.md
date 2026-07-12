@@ -205,3 +205,24 @@
 | `pnpm build` | 통과 — production build |
 | `pnpm format:check` | 통과 |
 | `git diff --check` | 통과 |
+
+## 2026-07-13 — 보스 선택 제한 및 사이트 워터마크
+
+### 구현 범위
+
+- 희망 보스의 자유 텍스트 입력과 `직접 입력` 선택지를 제거했다. 주간·월간 카드 또는 목록을 선택하면 주기와 공식 보스명이 함께 저장되며, 주간 기본값은 유피테르(노멀), 월간 기본값은 검은 마법사(하드)이다.
+- 새 작성·수정 요청은 주기와 일치하는 카탈로그 보스명만 통과하도록 Zod 검증을 강화했다. 과거 공개 버전의 JSON 파서는 느슨하게 유지해 이미 발행된 기록을 조용히 바꾸거나 읽지 못하게 하지 않는다.
+- `크로아/얀보 제작`을 결과물 내부와 1080×1350 PNG에서 제거하고, 루트 레이아웃의 고정·비상호작용 워터마크로 옮겼다. 모바일 safe area와 `pointer-events: none`을 적용해 터치를 가로막지 않는다.
+- 실제 375×812 in-app browser에서 홈·작성 화면·게시 버튼을 점검했다. 문서 폭 360px / viewport 375px으로 가로 넘침이 없었고, 워터마크·보스 선택·CTA가 모두 표시됐다.
+
+### 최종 검증
+
+| 명령 | 결과 |
+| --- | --- |
+| `pnpm lint` | 통과 |
+| `pnpm typecheck` | 통과 |
+| `pnpm test` | 통과 — 13 files, 38 tests |
+| `pnpm test:e2e` | 통과 — Chromium 2 tests (375px 모바일 포함) |
+| `pnpm build` | 통과 — production build |
+| `pnpm format:check` | 통과 |
+| `git diff --check` | 통과 |

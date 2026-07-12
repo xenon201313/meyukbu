@@ -39,7 +39,6 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
         height: "1350px",
         display: "flex",
         flexDirection: "column",
-        position: "relative",
         background: "#fffdf7",
         color: "#14213d",
         fontFamily: "Noto Sans KR",
@@ -268,19 +267,6 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
             본 서비스는 NEXON의 공식 제휴 또는 인증 서비스가 아닙니다.
           </div>
         </div>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          position: "absolute",
-          right: "68px",
-          bottom: "30px",
-          fontSize: 18,
-          fontWeight: 700,
-          color: "#385a83",
-        }}
-      >
-        크로아/얀보 제작
       </div>
     </div>
   );

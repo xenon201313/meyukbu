@@ -75,6 +75,11 @@ export const defaultBossArtworkKeys: Record<TargetBossCadence, string> = {
   MONTHLY: "blackmage",
 };
 
+const defaultBossOptionIds: Record<TargetBossCadence, string> = {
+  WEEKLY: "njup",
+  MONTHLY: "hblack",
+};
+
 export function bossArtworkUrl(artworkKey: string): string {
   return `/api/boss-art/${encodeURIComponent(artworkKey)}`;
 }
@@ -82,4 +87,18 @@ export function bossArtworkUrl(artworkKey: string): string {
 export function findBossOption(cadence: TargetBossCadence, name: string): BossOption | undefined {
   const normalized = name.trim();
   return bossOptions.find((boss) => boss.cadence === cadence && boss.name === normalized);
+}
+
+/** Finds a catalogued boss by its stable select value. */
+export function findBossOptionById(id: string): BossOption | undefined {
+  return bossOptions.find((boss) => boss.id === id);
+}
+
+/** Returns the catalogued default whenever a player changes the weekly/monthly cadence. */
+export function defaultBossOption(cadence: TargetBossCadence): BossOption {
+  const option = findBossOptionById(defaultBossOptionIds[cadence]);
+  if (!option) {
+    throw new Error(`Default boss option is unavailable for ${cadence}.`);
+  }
+  return option;
 }

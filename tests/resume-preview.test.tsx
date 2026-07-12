@@ -8,7 +8,7 @@ import type { ResumeDraft } from "@/domain/resume";
 import { getMockProfiles } from "@/lib/nexon/fixtures";
 
 const draft: ResumeDraft = {
-  targetBoss: "검은 마법사",
+  targetBoss: "검은 마법사 (하드)",
   targetBossCadence: "MONTHLY",
   difficulty: "하드",
   role: "DAMAGE",
@@ -37,7 +37,7 @@ describe("ResumePreview", () => {
     expect(avatar).toHaveClass("h-full", "w-full", "scale-[1.9]", "object-cover");
     expect(avatar.parentElement).toHaveClass("h-full", "w-full", "overflow-hidden");
     expect(avatar.parentElement?.parentElement).toHaveClass("h-40", "w-40", "overflow-hidden");
-    expect(screen.getByText("크로아/얀보 제작")).toBeInTheDocument();
+    expect(screen.queryByText("크로아/얀보 제작")).not.toBeInTheDocument();
   });
 
   it("shows manually confirmed conversion and boss multiplier as user-provided values", () => {

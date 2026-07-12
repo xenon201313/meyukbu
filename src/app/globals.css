@@ -62,6 +62,37 @@ textarea:focus-visible {
   outline: 3px solid var(--accent);
 }
 
+.site-watermark {
+  position: fixed;
+  right: max(0.85rem, env(safe-area-inset-right));
+  bottom: max(0.85rem, env(safe-area-inset-bottom));
+  z-index: 60;
+  margin: 0;
+  border: 1px solid rgba(226, 232, 240, 0.38);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.84);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.24);
+  color: #f1f5f9;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  padding: 0.54rem 0.78rem;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+
+@media (max-width: 640px) {
+  .site-watermark {
+    right: max(0.65rem, env(safe-area-inset-right));
+    bottom: max(0.65rem, env(safe-area-inset-bottom));
+    font-size: 0.7rem;
+    padding: 0.48rem 0.68rem;
+  }
+}
+
 ::selection {
   background: var(--accent);
   color: #fffaf4;
