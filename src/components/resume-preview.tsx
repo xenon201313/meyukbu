@@ -47,7 +47,7 @@ function CharacterAvatar({ profile }: { profile: NormalizedCharacterProfile }) {
           <img
             src={profile.imageUrl}
             alt={`${profile.characterName} 캐릭터 이미지`}
-            className="h-full w-full max-w-none scale-[1.9] object-cover object-center [image-rendering:pixelated]"
+            className="h-full w-full max-w-none scale-[1.55] object-contain object-center [image-rendering:auto]"
           />
         </span>
       </span>

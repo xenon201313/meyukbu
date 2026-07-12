@@ -246,3 +246,21 @@
 | `pnpm test` | 통과 — 13 files, 38 tests |
 | `pnpm test:e2e` | 통과 — Chromium 2 tests (새 아이콘 링크 포함) |
 | `pnpm build` | 통과 — `/icon.svg` 정적 라우트 생성 확인 |
+
+## 2026-07-13 — 미리보기 가독성 및 캐릭터 원본 품질
+
+### 구현 범위
+
+- 미리보기 헤더·푸터에 항상 짙은 네이비 배경을 적용했다. 이로써 밝은 제목·보조 글자가 종이 배경 위에 출력되던 문제를 없애고, 헤더의 밝은 teal/slate 텍스트와 충분한 대비를 확보했다.
+- 캐릭터 이미지는 최근접 보간(`image-rendering: pixelated`)을 제거해 브라우저의 기본 보간을 사용한다. 투명 여백은 유지하되 `object-contain`과 1.55배 확대를 써서 1.9배 확대의 블록 현상을 줄였다.
+- 공유 PNG도 같은 1.55배 확대·`object-contain` 정책을 사용한다. NEXON이 현재 제공하는 300×300 원본을 그대로 사용하며, 존재하지 않는 고해상도 API URL이나 인위적인 업스케일은 추가하지 않았다.
+
+### 최종 검증
+
+| 명령 | 결과 |
+| --- | --- |
+| `pnpm lint` | 통과 |
+| `pnpm typecheck` | 통과 |
+| `pnpm test` | 통과 — 13 files, 38 tests |
+| `pnpm test:e2e` | 통과 — Chromium 2 tests (375px 모바일 및 PNG 생성 포함) |
+| `pnpm build` | 통과 |

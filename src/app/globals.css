@@ -344,8 +344,8 @@ footer {
   color: #f1b6a8;
 }
 
-.resume-preview-card .resume-preview-header,
-.resume-preview-card .resume-preview-footer {
+.resume-preview-header,
+.resume-preview-footer {
   background: #0f1924;
 }
 

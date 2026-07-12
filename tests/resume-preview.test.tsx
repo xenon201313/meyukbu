@@ -34,7 +34,14 @@ describe("ResumePreview", () => {
     expect(screen.getByText("어필 포인트")).toBeInTheDocument();
     expect(screen.queryByText("환산·보스 배율")).not.toBeInTheDocument();
     const avatar = screen.getByAltText(`${profileWithImage.characterName} 캐릭터 이미지`);
-    expect(avatar).toHaveClass("h-full", "w-full", "scale-[1.9]", "object-cover");
+    expect(avatar).toHaveClass(
+      "h-full",
+      "w-full",
+      "scale-[1.55]",
+      "object-contain",
+      "[image-rendering:auto]",
+    );
+    expect(avatar).not.toHaveClass("[image-rendering:pixelated]");
     expect(avatar.parentElement).toHaveClass("h-full", "w-full", "overflow-hidden");
     expect(avatar.parentElement?.parentElement).toHaveClass("h-40", "w-40", "overflow-hidden");
     expect(screen.queryByText("크로아/얀보 제작")).not.toBeInTheDocument();

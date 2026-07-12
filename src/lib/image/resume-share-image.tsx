@@ -90,9 +90,9 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
                 width: "100%",
                 height: "100%",
                 maxWidth: "none",
-                objectFit: "cover",
+                objectFit: "contain",
                 objectPosition: "center",
-                transform: "scale(1.9)",
+                transform: "scale(1.55)",
                 transformOrigin: "center",
               }}
             />
