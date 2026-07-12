@@ -163,3 +163,23 @@
 | `pnpm build` | 통과 — production build |
 | `pnpm format:check` | 통과 |
 | `git diff --check` | 통과 |
+
+## 2026-07-13 — 보스 카드 일러스트 보정
+
+### 구현 범위
+
+- 선택 전 주간 보스 카드의 대표 일러스트를 유피테르(`jupiter`)로 변경했다. 빠른 선택에서 특정 보스를 고르면 기존처럼 해당 보스의 일러스트를 우선한다.
+- 주간·월간 보스 카드의 일러스트를 각각 여백 있는 전용 영역에 중앙 정렬 `object-contain`으로 표시했다. 텍스트 그라데이션이 그림을 덮거나 hover 확대가 가장자리를 자르지 않도록 조정했다.
+- 기본 아트 키의 회귀를 막기 위해 주간=`jupiter`, 월간=`blackmage`, 허용 키 존재 여부를 검증하는 테스트를 추가했다.
+
+### 최종 검증
+
+| 명령 | 결과 |
+| --- | --- |
+| `pnpm lint` | 통과 |
+| `pnpm typecheck` | 통과 |
+| `pnpm test` | 통과 — 11 files, 36 tests |
+| `pnpm test:e2e` | 통과 — Chromium 2 tests |
+| `pnpm build` | 통과 — production build |
+| `pnpm format:check` | 통과 |
+| `git diff --check` | 통과 |

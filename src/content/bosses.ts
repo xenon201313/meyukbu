@@ -71,7 +71,7 @@ export const bossOptions: BossOption[] = [
 export const bossArtworkKeys = new Set(bossOptions.map((boss) => boss.artworkKey));
 
 export const defaultBossArtworkKeys: Record<TargetBossCadence, string> = {
-  WEEKLY: "lucid",
+  WEEKLY: "jupiter",
   MONTHLY: "blackmage",
 };
 

@@ -96,3 +96,9 @@ pnpm build
 - [x] 캐릭터 스프라이트의 투명 여백을 고려해 웹·공유 PNG의 정사각형 아바타를 시각적으로 꽉 차게 확대한다.
 - [x] 화면·문서의 기존 출처 문구를 `작성 내용`으로 통일하되, API 조회값과의 구분은 계속 제공한다.
 - [x] 전체 품질 명령과 E2E를 다시 실행하고 구현 로그를 갱신한다.
+
+## 2026-07-13 — Boss-card artwork refinement
+
+- [x] Use Jupiter as the default weekly boss artwork.
+- [x] Center both card illustrations inside padded `object-contain` artwork panes.
+- [x] Run the regression and full quality checks.

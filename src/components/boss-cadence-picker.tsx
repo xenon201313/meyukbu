@@ -83,7 +83,7 @@ export function BossCadencePicker({ value, targetBoss, onChange, onBossSelect }:
               }`}
             >
               <span
-                className="absolute inset-y-0 right-0 w-[46%] overflow-hidden bg-[#f8f2e9]"
+                className="absolute inset-y-2 right-2 flex w-[38%] items-center justify-center rounded-lg bg-[#f8f2e9] p-2"
                 aria-hidden="true"
               >
                 <span className={`absolute inset-0 bg-gradient-to-br ${card.accentClass}`} />
@@ -96,16 +96,15 @@ export function BossCadencePicker({ value, targetBoss, onChange, onBossSelect }:
                     event.currentTarget.onerror = null;
                     event.currentTarget.src = card.fallbackImage;
                   }}
-                  className="absolute inset-0 h-full w-full object-contain object-right transition duration-300 ease-out group-hover:scale-[1.035]"
+                  className="relative h-full w-full object-contain object-center"
                 />
-                <span className="absolute inset-y-0 left-0 w-2/3 bg-gradient-to-r from-[#fffdf8] via-[#fffdf8]/90 to-transparent" />
-                <span className="absolute inset-0 bg-gradient-to-t from-white/15 via-transparent to-white/20" />
+                <span className="absolute inset-0 rounded-lg bg-gradient-to-t from-white/10 via-transparent to-white/20" />
               </span>
               <span
-                className="absolute inset-y-0 left-0 w-[72%] bg-gradient-to-r from-[#fffdf8] via-[#fffdf8]/95 to-[#fffdf8]/35"
+                className="absolute inset-y-0 left-0 w-[57%] bg-gradient-to-r from-[#fffdf8] via-[#fffdf8]/95 to-[#fffdf8]/60"
                 aria-hidden="true"
               />
-              <span className="relative flex min-h-36 max-w-[76%] flex-col justify-center p-4 text-[#202a36] sm:p-5">
+              <span className="relative flex min-h-36 max-w-[56%] flex-col justify-center p-4 text-[#202a36] sm:p-5">
                 <span className="text-lg font-extrabold tracking-tight">{card.title}</span>
                 <span className="mt-1 text-xs leading-5 text-[#687380]">{card.description}</span>
                 {bossForCard ? (
