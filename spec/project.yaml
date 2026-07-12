@@ -1,12 +1,12 @@
 project:
-  name: "메력부"
-  romanized_name: "meyukbu"
+  name: "메력서"
+  romanized_name: "resumae"
   artifact_name: "메력서"
   language: "ko-KR"
   timezone: "Asia/Seoul"
   tagline: "스펙을 다시 쓰지 말고, 한 장으로 증명하세요."
   purpose: >-
-    메이플스토리 캐릭터의 NEXON Open API 조회값과 파티 구직용 사용자 입력을
+    메이플스토리 캐릭터의 NEXON Open API 조회값과 파티 구직용 작성 내용을
     결합하여 출처·기준시각·버전을 확인할 수 있는 이력서 이미지와 검증 URL을 생성한다.
 
 engineering:
@@ -24,7 +24,7 @@ engineering:
 provenance:
   NEXON_API: "API 조회"
   SERVICE_CALCULATED: "서비스 계산"
-  USER_PROVIDED: "사용자 입력"
+  USER_PROVIDED: "작성 내용"
   SERVICE_OBSERVED: "서비스 관측"
 
 freshness:

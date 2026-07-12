@@ -114,7 +114,7 @@ GET /maplestory/v1/character/item-equipment?ocid={ocid}&date={YYYY-MM-DD}
 | `OPENAPI00001` | 500 | 서버 내부 오류 | 짧은 jitter 재시도 후 일반 오류 |
 | `OPENAPI00002` | 403 | 권한이 없는 경우 | live 설정/권한 오류로 기록, 키는 숨김 |
 | `OPENAPI00003` | 400 | 유효하지 않은 식별자 | 캐릭터를 찾을 수 없음 |
-| `OPENAPI00004` | 400 | 파라미터 누락 또는 유효하지 않음 | 사용자 입력 검증 오류 |
+| `OPENAPI00004` | 400 | 파라미터 누락 또는 유효하지 않음 | 작성 내용 검증 오류 |
 | `OPENAPI00005` | 400 | 유효하지 않은 API KEY | 서버 설정 오류, 키는 숨김 |
 | `OPENAPI00006` | 400 | 유효하지 않은 게임 또는 API PATH | 배포/adapter 설정 오류 |
 | `OPENAPI00007` | 429 | API 호출량 초과 | rate-limit 안내 및 재시도 시간 적용 |

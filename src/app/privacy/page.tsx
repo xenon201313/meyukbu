@@ -11,7 +11,7 @@ export default function PrivacyPage() {
         </h1>
         <div className="resume-paper mt-7 space-y-6 rounded-2xl p-6 leading-7 text-[#52606d] sm:p-8">
           <p>
-            메력부는 캐릭터명으로 조회되는 공개 게임 데이터와 작성자가 직접 입력한 파티 구직 정보를 메력서에
+            메력서는 캐릭터명으로 조회되는 공개 게임 데이터와 작성자가 직접 입력한 파티 구직 정보를 메력서에
             표시합니다.
           </p>
           <p>

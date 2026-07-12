@@ -16,7 +16,7 @@ const writingSteps = [
   {
     number: "03",
     title: "한 장으로 공유",
-    description: "출처와 사용자 입력이 구분된 메력서, 검증 링크와 공유 PNG를 만듭니다.",
+    description: "출처와 작성 내용이 구분된 메력서, 검증 링크와 공유 PNG를 만듭니다.",
   },
 ];
 
@@ -31,13 +31,13 @@ export default function Home() {
   return (
     <main className="resume-shell min-h-screen overflow-hidden">
       <header className="mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 py-5 sm:px-8 sm:py-6">
-        <Link href="/" className="resume-brand flex items-center gap-3" aria-label="메력부 홈">
+        <Link href="/" className="resume-brand flex items-center gap-3" aria-label="메력서 홈">
           <span className="resume-brand-mark !h-9 !w-9" aria-hidden>
-            M
+            R
           </span>
           <span>
             <span className="block text-lg font-black tracking-tight">{ko.brand}</span>
-            <span className="block text-[0.63rem] font-bold tracking-[0.2em]">MERIT RESUME</span>
+            <span className="block text-[0.63rem] font-bold tracking-[0.2em]">RESUMAE</span>
           </span>
         </Link>
         <nav aria-label="보조 메뉴" className="resume-nav flex items-center gap-4 text-sm sm:gap-6">
@@ -99,7 +99,7 @@ export default function Home() {
           </form>
 
           <p className="resume-caption mt-4 max-w-xl text-sm leading-6">
-            API 조회 정보, 사용자 입력, 서비스 계산 항목은 문서 안에서 각각의 출처와 함께 표시됩니다.
+            API 조회 정보, 작성 내용, 서비스 계산 항목은 문서 안에서 각각의 출처와 함께 표시됩니다.
           </p>
         </div>
 
@@ -109,7 +109,7 @@ export default function Home() {
         >
           <div className="flex items-start justify-between gap-4 border-b pb-5">
             <div>
-              <p className="resume-kicker">MEYUKBU / DOCUMENT</p>
+              <p className="resume-kicker">RESUMAE / DOCUMENT</p>
               <h2 id="resume-outline-heading" className="mt-2 text-2xl font-black tracking-tight">
                 메력서 작성 순서
               </h2>
@@ -139,7 +139,7 @@ export default function Home() {
           <div className="resume-document-note mt-5 rounded-xl border p-4">
             <p className="text-sm font-extrabold">작성 전 확인</p>
             <p className="mt-1 text-sm leading-6">
-              메력부는 합격 여부를 판단하지 않습니다. 조회된 정보와 작성자가 제공한 내용을 구분해 보여 줍니다.
+              메력서는 합격 여부를 판단하지 않습니다. 조회된 정보와 작성자가 제공한 내용을 구분해 보여 줍니다.
             </p>
           </div>
         </aside>

@@ -641,7 +641,7 @@ function ResumeEditorContent() {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="mb-6 max-w-2xl">
-        <p className="ui-kicker">메력부 · 메이플 파티 구직용 캐릭터 이력서</p>
+        <p className="ui-kicker">메력서 · 메이플 파티 구직용 캐릭터 이력서</p>
         <h1 className="resume-heading mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
           {editSlug ? "메력서 수정" : "메력서 작성"}
         </h1>
@@ -699,8 +699,8 @@ function ResumeEditorContent() {
 
           <FormSection title="환산·보스 배율 참고">
             <p className="text-sm leading-7 text-slate-300">
-              메력부는 환산과 보스 배율을 자동으로 가져오거나 임의로 계산하지 않습니다. 확인한 값은 아래에
-              직접 입력할 수 있으며, 메력서에는 사용자 입력으로 표시됩니다.
+              메력서는 환산과 보스 배율을 자동으로 가져오거나 임의로 계산하지 않습니다. 확인한 값은 아래에
+              직접 입력할 수 있으며, 메력서에는 작성 내용으로 표시됩니다.
             </p>
             {profile ? (
               <a

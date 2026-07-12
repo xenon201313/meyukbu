@@ -55,7 +55,7 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
       >
         <div style={{ display: "flex", alignItems: "center", gap: "16px", fontSize: 30, fontWeight: 700 }}>
           <div style={{ width: 18, height: 18, borderRadius: 999, background: "#f69b42" }} />
-          메력부 · 메력서
+          메력서 · RESUMAE
         </div>
         <div
           style={{
@@ -74,11 +74,29 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
 
       <div style={{ display: "flex", gap: "30px", paddingBottom: "36px", borderBottom: "2px solid #e6dfd2" }}>
         {avatarDataUri ? (
-          <img
-            src={avatarDataUri}
-            alt={`${profile.characterName} 캐릭터 이미지`}
-            style={{ width: 260, height: 260, borderRadius: 32, objectFit: "cover" }}
-          />
+          <div
+            style={{
+              display: "flex",
+              width: 260,
+              height: 260,
+              overflow: "hidden",
+              borderRadius: 32,
+            }}
+          >
+            <img
+              src={avatarDataUri}
+              alt={`${profile.characterName} 캐릭터 이미지`}
+              style={{
+                width: "100%",
+                height: "100%",
+                maxWidth: "none",
+                objectFit: "cover",
+                objectPosition: "center",
+                transform: "scale(1.9)",
+                transformOrigin: "center",
+              }}
+            />
+          </div>
         ) : (
           <div
             style={{
@@ -121,7 +139,7 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "36px" }}>
         <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700 }}>
-          지원 분야 · 사용자 입력
+          지원 분야 · 작성 내용
         </div>
         <div style={{ display: "flex", fontSize: 42, fontWeight: 800 }}>
           {draft.targetBossCadence ? `${targetBossCadenceLabels[draft.targetBossCadence]} · ` : ""}
@@ -160,7 +178,7 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
               }}
             >
               <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700 }}>
-                환산 · 사용자 입력
+                환산 · 작성 내용
               </div>
               <div style={{ display: "flex", fontSize: 42, fontWeight: 800 }}>
                 {formatNumericDisplay(draft.convertedStat)}
@@ -180,7 +198,7 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
               }}
             >
               <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700 }}>
-                보스 배율 · 사용자 입력
+                보스 배율 · 작성 내용
               </div>
               <div style={{ display: "flex", fontSize: 42, fontWeight: 800 }}>
                 {formatBossMultiplierPercent(draft.bossMultiplierPercent)}
@@ -202,7 +220,7 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
         }}
       >
         <div style={{ display: "flex", fontSize: 23, color: "#8a5a13", fontWeight: 700 }}>
-          파티 경험 · 사용자 입력
+          파티 경험 · 작성 내용
         </div>
         <div style={{ display: "flex", fontSize: 26 }}>
           {draft.experienceSummary || "작성자가 입력한 경험 요약이 없습니다."}

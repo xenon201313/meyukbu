@@ -43,11 +43,13 @@ function CharacterAvatar({ profile }: { profile: NormalizedCharacterProfile }) {
   if (profile.imageUrl) {
     return (
       <span className="h-40 w-40 shrink-0 overflow-hidden rounded-xl border border-[#d9cdbd] bg-[#f4efe5] sm:h-44 sm:w-44">
-        <img
-          src={profile.imageUrl}
-          alt={`${profile.characterName} 캐릭터 이미지`}
-          className="h-full w-full object-cover object-center [image-rendering:pixelated]"
-        />
+        <span className="flex h-full w-full items-center justify-center overflow-hidden">
+          <img
+            src={profile.imageUrl}
+            alt={`${profile.characterName} 캐릭터 이미지`}
+            className="h-full w-full max-w-none scale-[1.9] object-cover object-center [image-rendering:pixelated]"
+          />
+        </span>
       </span>
     );
   }
@@ -86,7 +88,7 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
       className={`resume-paper overflow-hidden rounded-2xl border ${className}`}
     >
       <div className="resume-preview-header border-b border-[#314355] px-5 py-3 text-slate-50">
-        <p className="text-xs font-semibold tracking-[0.2em] text-teal-200">메력부 · 메력서</p>
+        <p className="text-xs font-semibold tracking-[0.2em] text-teal-200">메력서 · RESUMAE</p>
         <p className="mt-1 text-sm text-slate-300">파티 구직용 캐릭터 이력서</p>
       </div>
 

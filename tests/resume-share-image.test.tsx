@@ -40,6 +40,31 @@ function createResumeView(draft: ResumeDraft): PublicResumeView {
 }
 
 describe("ResumeShareImage", () => {
+  it("clips and scales a transparent character sprite so it fills the PNG avatar square", () => {
+    const draft: ResumeDraft = {
+      targetBoss: "검은 마법사",
+      difficulty: "하드",
+      role: "DAMAGE",
+      partyType: "FIXED",
+      availability: [{ days: ["토"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
+      voiceChat: "OPTIONAL",
+      theme: "RESUME",
+    };
+
+    const markup = renderToStaticMarkup(
+      <ResumeShareImage
+        resume={createResumeView(draft)}
+        qrDataUri="data:image/png;base64,abc"
+        canonicalUrl="https://example.test/r/m-test"
+        avatarDataUri="data:image/png;base64,avatar"
+      />,
+    );
+
+    expect(markup).toContain("overflow:hidden");
+    expect(markup).toContain("object-fit:cover");
+    expect(markup).toContain("transform:scale(1.9)");
+  });
+
   it("includes user-provided conversion and boss multiplier on the PNG card source", () => {
     const draft: ResumeDraft = {
       targetBoss: "검은 마법사",
@@ -63,9 +88,9 @@ describe("ResumeShareImage", () => {
       />,
     );
 
-    expect(markup).toContain("환산 · 사용자 입력");
+    expect(markup).toContain("환산 · 작성 내용");
     expect(markup).toContain("110,650");
-    expect(markup).toContain("보스 배율 · 사용자 입력");
+    expect(markup).toContain("보스 배율 · 작성 내용");
     expect(markup).toContain("412.5%");
   });
 });
