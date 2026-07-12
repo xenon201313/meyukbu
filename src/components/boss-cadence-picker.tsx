@@ -91,9 +91,9 @@ export function BossCadencePicker({ value, targetBoss, onChange, onBossSelect }:
               <span className="relative flex min-h-40 flex-col justify-end p-4 text-white">
                 <span className="text-base font-bold">{card.title}</span>
                 <span className="mt-1 text-xs leading-5 text-stone-100">{card.description}</span>
-                <span className="mt-2 text-[11px] text-stone-200">
-                  {bossForCard ? bossForCard.name : "Maple Trackers 제공 일러스트"}
-                </span>
+                {bossForCard ? (
+                  <span className="mt-2 text-[11px] text-stone-200">{bossForCard.name}</span>
+                ) : null}
                 {selected ? (
                   <span className="mt-2 inline-flex w-fit rounded-full bg-white px-2 py-1 text-[11px] font-bold text-stone-950">
                     선택됨
