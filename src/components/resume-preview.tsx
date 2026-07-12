@@ -35,10 +35,14 @@ function formatKoreanDateTime(value: string) {
   }).format(date);
 }
 
+function formatBossMultiplierPercent(value: string): string {
+  return `${formatNumericDisplay(value)}%`;
+}
+
 function CharacterAvatar({ profile }: { profile: NormalizedCharacterProfile }) {
   if (profile.imageUrl) {
     return (
-      <span className="h-40 w-40 shrink-0 overflow-hidden rounded-2xl border border-slate-600 bg-slate-950 sm:h-44 sm:w-44">
+      <span className="h-40 w-40 shrink-0 overflow-hidden rounded-xl border border-[#d9cdbd] bg-[#f4efe5] sm:h-44 sm:w-44">
         <img
           src={profile.imageUrl}
           alt={`${profile.characterName} 캐릭터 이미지`}
@@ -51,7 +55,7 @@ function CharacterAvatar({ profile }: { profile: NormalizedCharacterProfile }) {
   return (
     <div
       aria-label={`${profile.characterName} 캐릭터 이미지 없음`}
-      className="flex h-40 w-40 shrink-0 items-center justify-center rounded-2xl border border-dashed border-slate-600 bg-slate-950 text-2xl font-bold text-slate-400 sm:h-44 sm:w-44"
+      className="flex h-40 w-40 shrink-0 items-center justify-center rounded-xl border border-dashed border-[#bfae99] bg-[#f4efe5] text-2xl font-bold text-[#687380] sm:h-44 sm:w-44"
       role="img"
     >
       메
@@ -65,7 +69,7 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
     return (
       <section
         aria-label="메력서 미리보기"
-        className={`rounded-3xl border border-dashed border-slate-600 bg-slate-950/60 p-6 text-sm leading-6 text-slate-400 ${className}`}
+        className={`resume-paper rounded-2xl border border-dashed p-6 text-sm leading-6 text-[#687380] ${className}`}
       >
         캐릭터 정보를 불러오면 작성 중인 메력서를 여기에서 바로 확인할 수 있어요.
       </section>
@@ -79,16 +83,16 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
   return (
     <article
       aria-labelledby="resume-preview-title"
-      className={`overflow-hidden rounded-3xl border border-slate-700 bg-[#101823] text-slate-100 shadow-[0_22px_55px_rgba(0,0,0,0.28)] ${className}`}
+      className={`resume-paper overflow-hidden rounded-2xl border ${className}`}
     >
-      <div className="border-b border-slate-700 bg-[#071118] px-5 py-3 text-slate-50">
+      <div className="resume-preview-header border-b border-[#314355] px-5 py-3 text-slate-50">
         <p className="text-xs font-semibold tracking-[0.2em] text-teal-200">메력부 · 메력서</p>
         <p className="mt-1 text-sm text-slate-300">파티 구직용 캐릭터 이력서</p>
       </div>
 
-      <div className="space-y-6 p-5">
+      <div className="space-y-6 p-5 text-[#202a36]">
         {isMock ? (
-          <p className="rounded-xl border border-sky-300/35 bg-sky-300/10 px-3 py-2 text-xs leading-5 text-sky-100">
+          <p className="rounded-xl border border-sky-700/30 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-950">
             데모 데이터로 표시 중입니다. 실제 게임 데이터와 다를 수 있습니다.
           </p>
         ) : null}
@@ -97,17 +101,20 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
           <CharacterAvatar profile={profile} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 id="resume-preview-title" className="truncate text-2xl font-bold tracking-tight text-white">
+              <h2
+                id="resume-preview-title"
+                className="truncate text-2xl font-bold tracking-tight text-[#202a36]"
+              >
                 {profile.characterName}
               </h2>
               <ProvenanceBadge provenance="NEXON_API" />
             </div>
-            <p className="mt-1 text-sm text-slate-300">
+            <p className="mt-1 text-sm text-[#52606d]">
               {[profile.worldName, profile.className, profile.level ? `Lv.${profile.level}` : null]
                 .filter(Boolean)
                 .join(" · ") || "기본 정보 조회 불가"}
             </p>
-            <p className="mt-1 text-sm text-slate-400">현재 길드: {profile.currentGuild ?? "조회 불가"}</p>
+            <p className="mt-1 text-sm text-[#687380]">현재 길드: {profile.currentGuild ?? "조회 불가"}</p>
           </div>
         </header>
 
@@ -135,23 +142,33 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
           </div>
         </section>
 
-        {draft.convertedStat ? (
+        {draft.convertedStat || draft.bossMultiplierPercent ? (
           <section
-            aria-labelledby="preview-conversion-heading"
-            className="rounded-xl border border-teal-300/35 bg-teal-300/10 p-3"
+            aria-labelledby="preview-reference-metrics-heading"
+            className="rounded-xl border border-[#c78b85] bg-[#f8e6e1] p-3"
           >
-            <div className="flex items-center justify-between gap-2">
-              <p
-                id="preview-conversion-heading"
-                className="text-xs font-bold tracking-[0.16em] text-teal-100"
-              >
-                환산 (기존 사용자 입력)
-              </p>
-              <ProvenanceBadge provenance="USER_PROVIDED" />
-            </div>
-            <p className="mt-2 break-words text-xl font-black text-white">
-              {formatNumericDisplay(draft.convertedStat)}
+            <p
+              id="preview-reference-metrics-heading"
+              className="text-xs font-bold tracking-[0.16em] text-[#7c2f2c]"
+            >
+              환산·보스 배율
             </p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {draft.convertedStat ? (
+                <PreviewItem
+                  label="환산"
+                  value={formatNumericDisplay(draft.convertedStat)}
+                  provenance="USER_PROVIDED"
+                />
+              ) : null}
+              {draft.bossMultiplierPercent ? (
+                <PreviewItem
+                  label="보스 배율"
+                  value={formatBossMultiplierPercent(draft.bossMultiplierPercent)}
+                  provenance="USER_PROVIDED"
+                />
+              ) : null}
+            </div>
           </section>
         ) : null}
 
@@ -161,7 +178,7 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
           </p>
           {draft.experienceSummary ? <PreviewText label="보스 경험" value={draft.experienceSummary} /> : null}
           {draft.roleSummary ? <PreviewText label="어필 포인트" value={draft.roleSummary} /> : null}
-          <div className="rounded-xl border border-amber-300/35 bg-amber-300/10 p-3 text-sm text-amber-100">
+          <div className="rounded-xl border border-[#d7b98a] bg-[#fbf2e3] p-3 text-sm text-[#5e4030]">
             <div className="flex items-center justify-between gap-2">
               <span className="font-semibold">가능 시간</span>
               <ProvenanceBadge provenance="USER_PROVIDED" />
@@ -184,7 +201,7 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
         </section>
 
         {draft.contact?.isPublic && draft.contact.value ? (
-          <section className="rounded-xl border border-amber-300/35 bg-amber-300/10 p-3 text-sm text-amber-100">
+          <section className="rounded-xl border border-[#d7b98a] bg-[#fbf2e3] p-3 text-sm text-[#5e4030]">
             <div className="flex items-center justify-between gap-2">
               <span className="font-semibold">연락 방법</span>
               <ProvenanceBadge provenance="USER_PROVIDED" />
@@ -194,7 +211,7 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
         ) : null}
       </div>
 
-      <footer className="space-y-2 border-t border-slate-700 bg-[#071118] px-5 py-4 text-xs leading-5 text-slate-400">
+      <footer className="resume-preview-footer space-y-2 border-t border-[#314355] px-5 py-4 text-xs leading-5 text-slate-400">
         <div className="flex flex-wrap items-center gap-2">
           <FreshnessBadge fetchedAt={profile.fetchedAt} status={freshness} />
           {versionNumber ? <span>v{versionNumber}</span> : null}
@@ -224,19 +241,19 @@ function PreviewItem({
   provenance: "USER_PROVIDED" | "NEXON_API";
 }) {
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-950/55 p-3">
+    <div className="rounded-xl border border-[#d9cdbd] bg-[#fffefa] p-3">
       <div className="flex flex-wrap items-center justify-between gap-1">
-        <p className="text-xs text-slate-400">{label}</p>
+        <p className="text-xs text-[#687380]">{label}</p>
         <ProvenanceBadge provenance={provenance} />
       </div>
-      <p className="mt-2 break-words font-semibold text-slate-100">{value || "입력 필요"}</p>
+      <p className="mt-2 break-words font-semibold text-[#202a36]">{value || "입력 필요"}</p>
     </div>
   );
 }
 
 function PreviewText({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-amber-300/35 bg-amber-300/10 p-3 text-sm text-amber-100">
+    <div className="rounded-xl border border-[#d7b98a] bg-[#fbf2e3] p-3 text-sm text-[#5e4030]">
       <div className="flex items-center justify-between gap-2">
         <span className="font-semibold">{label}</span>
         <ProvenanceBadge provenance="USER_PROVIDED" />

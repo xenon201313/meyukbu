@@ -24,6 +24,8 @@ type ResolveState = "idle" | "loading" | "success" | "error";
 type FormErrorKey =
   | "targetBoss"
   | "difficulty"
+  | "convertedStat"
+  | "bossMultiplierPercent"
   | "availability"
   | "lootPolicy"
   | "experienceSummary"
@@ -79,6 +81,16 @@ const contactTypeOptions: ReadonlyArray<{ value: ContactType; label: string }> =
 
 const inputClassName =
   "ui-input mt-2 block w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition disabled:cursor-not-allowed disabled:opacity-60";
+
+const formSectionNumbers: Record<string, string> = {
+  "캐릭터 정보": "01",
+  "환산·보스 배율 참고": "02",
+  "지원 분야": "03",
+  "가능 시간": "04",
+  "파티 경험": "05",
+  "희망 조건": "06",
+  "공개 범위": "07",
+};
 
 function createDefaultDraft(): ResumeDraft {
   return {
@@ -214,6 +226,7 @@ function isResumeDraft(value: unknown): value is ResumeDraft {
       value.voiceChat === "OPTIONAL" ||
       value.voiceChat === "UNAVAILABLE") &&
     (value.convertedStat === undefined || typeof value.convertedStat === "string") &&
+    (value.bossMultiplierPercent === undefined || typeof value.bossMultiplierPercent === "string") &&
     (value.lootPolicy === undefined || typeof value.lootPolicy === "string") &&
     (value.experienceSummary === undefined || typeof value.experienceSummary === "string") &&
     (value.roleSummary === undefined || typeof value.roleSummary === "string") &&
@@ -280,6 +293,7 @@ function normalizeDraft(draft: ResumeDraft): ResumeDraft {
     targetBoss: draft.targetBoss.trim(),
     difficulty: draft.difficulty.trim(),
     convertedStat: draft.convertedStat?.trim() || undefined,
+    bossMultiplierPercent: draft.bossMultiplierPercent?.trim() || undefined,
     availability: draft.availability.map((slot) => ({
       ...slot,
       days: [...slot.days],
@@ -305,6 +319,17 @@ function validateDraft(draft: ResumeDraft): FormErrors {
     errors.difficulty = "난이도를 입력해 주세요.";
   } else if (draft.difficulty.trim().length > 40) {
     errors.difficulty = "난이도는 40자 이하로 입력해 주세요.";
+  }
+
+  if ((draft.convertedStat?.trim().length ?? 0) > 40) {
+    errors.convertedStat = "환산은 40자 이하로 입력해 주세요.";
+  }
+
+  const bossMultiplierPercent = draft.bossMultiplierPercent?.trim() ?? "";
+  if (bossMultiplierPercent.length > 40) {
+    errors.bossMultiplierPercent = "보스 배율은 40자 이하로 입력해 주세요.";
+  } else if (bossMultiplierPercent && !/^\d[\d,]*(?:\.\d+)?$/.test(bossMultiplierPercent)) {
+    errors.bossMultiplierPercent = "보스 배율은 % 기호 없이 숫자로 입력해 주세요.";
   }
 
   if (!slot?.days.length) {
@@ -614,20 +639,20 @@ function ResumeEditorContent() {
   const availability = draft.availability[0];
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="mb-6 max-w-2xl">
         <p className="ui-kicker">메력부 · 메이플 파티 구직용 캐릭터 이력서</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
+        <h1 className="resume-heading mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
           {editSlug ? "메력서 수정" : "메력서 작성"}
         </h1>
-        <p className="mt-2 leading-6 text-slate-300">
+        <p className="mt-2 leading-7 text-[#52606d]">
           API 조회 정보와 작성자 입력을 구분해 한 장의 메력서로 정리합니다.
         </p>
       </div>
 
       {!queryName && !editSlug ? (
         <section
-          className="rounded-2xl border border-amber-300/35 bg-amber-300/10 p-4 text-sm leading-6 text-amber-100"
+          className="rounded-xl border border-amber-800/35 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
           role="alert"
         >
           캐릭터명을 입력해 주세요. 검색 화면에서 캐릭터를 선택하면 메력서를 작성할 수 있습니다.
@@ -635,13 +660,13 @@ function ResumeEditorContent() {
       ) : null}
 
       {resolveState === "loading" ? (
-        <p className="ui-panel mb-5 rounded-2xl p-4 text-sm text-slate-300" role="status">
+        <p className="ui-panel mb-5 rounded-xl p-4 text-sm text-[#52606d]" role="status">
           {queryName} 캐릭터 정보를 불러오는 중이에요.
         </p>
       ) : null}
       {resolveError ? (
         <p
-          className="mb-5 rounded-2xl border border-rose-300/35 bg-rose-300/10 p-4 text-sm leading-6 text-rose-100"
+          className="mb-5 rounded-xl border border-rose-700/35 bg-rose-50 p-4 text-sm leading-6 text-rose-950"
           role="alert"
         >
           {resolveError}
@@ -649,7 +674,7 @@ function ResumeEditorContent() {
       ) : null}
       {profileNotice ? (
         <aside
-          className="mb-5 rounded-2xl border border-sky-300/35 bg-sky-300/10 p-4 text-sm leading-6 text-sky-100"
+          className="mb-5 rounded-xl border border-sky-700/35 bg-sky-50 p-4 text-sm leading-6 text-sky-950"
           aria-live="polite"
         >
           {profileNotice}
@@ -674,8 +699,8 @@ function ResumeEditorContent() {
 
           <FormSection title="환산·보스 배율 참고">
             <p className="text-sm leading-7 text-slate-300">
-              환산과 보스 배율은 외부 계산 서비스의 결과이므로, 메력부에서 값을 복사하거나 임의로 계산하지
-              않습니다.
+              메력부는 환산과 보스 배율을 자동으로 가져오거나 임의로 계산하지 않습니다. 확인한 값은 아래에
+              직접 입력할 수 있으며, 메력서에는 사용자 입력으로 표시됩니다.
             </p>
             {profile ? (
               <a
@@ -689,6 +714,61 @@ function ResumeEditorContent() {
             ) : null}
             <p className="mt-3 text-xs leading-5 text-slate-400">
               자동 연동은 해당 서비스의 공식 파트너 API 사용 권한이 확인된 뒤에만 제공됩니다.
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Field label="환산" htmlFor="converted-stat" error={formErrors.convertedStat}>
+                <input
+                  id="converted-stat"
+                  name="convertedStat"
+                  autoComplete="off"
+                  className={inputClassName}
+                  inputMode="decimal"
+                  maxLength={40}
+                  placeholder="예: 110,650"
+                  value={draft.convertedStat ?? ""}
+                  onChange={(event) => {
+                    updateDraft({ convertedStat: event.target.value });
+                    clearError("convertedStat");
+                  }}
+                  aria-describedby={formErrors.convertedStat ? "converted-stat-error" : undefined}
+                  aria-invalid={Boolean(formErrors.convertedStat)}
+                />
+              </Field>
+              <Field
+                label="보스 배율"
+                htmlFor="boss-multiplier-percent"
+                error={formErrors.bossMultiplierPercent}
+              >
+                <div className="relative">
+                  <input
+                    id="boss-multiplier-percent"
+                    name="bossMultiplierPercent"
+                    autoComplete="off"
+                    className={`${inputClassName} pr-9`}
+                    inputMode="decimal"
+                    maxLength={40}
+                    placeholder="예: 412.5"
+                    value={draft.bossMultiplierPercent ?? ""}
+                    onChange={(event) => {
+                      updateDraft({ bossMultiplierPercent: event.target.value });
+                      clearError("bossMultiplierPercent");
+                    }}
+                    aria-describedby={
+                      formErrors.bossMultiplierPercent ? "boss-multiplier-percent-error" : undefined
+                    }
+                    aria-invalid={Boolean(formErrors.bossMultiplierPercent)}
+                  />
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-bold text-slate-400"
+                  >
+                    %
+                  </span>
+                </div>
+              </Field>
+            </div>
+            <p className="mt-2 text-xs leading-5 text-slate-400">
+              보스 배율에는 % 기호를 제외한 숫자만 입력해 주세요.
             </p>
           </FormSection>
 
@@ -800,8 +880,8 @@ function ResumeEditorContent() {
                       key={day}
                       className={`cursor-pointer rounded-full border px-3 py-2 text-sm font-medium transition ${
                         isChecked
-                          ? "border-teal-300 bg-teal-300/15 text-teal-100 shadow-[0_0_0_1px_rgba(94,234,212,0.14)_inset]"
-                          : "border-slate-600 bg-slate-950/60 text-slate-200 hover:border-teal-300/60 hover:text-teal-100"
+                          ? "border-[#a44640] bg-[#f8e6e1] text-[#7c2f2c] shadow-[0_0_0_1px_rgba(164,70,64,0.14)_inset]"
+                          : "border-[#d9cdbd] bg-[#fffefa] text-[#52606d] hover:border-[#a44640]/60 hover:text-[#7c2f2c]"
                       }`}
                     >
                       <input
@@ -931,9 +1011,9 @@ function ResumeEditorContent() {
           </FormSection>
 
           <FormSection title="공개 범위">
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-700 bg-slate-950/50 p-3 text-sm text-slate-200">
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#d9cdbd] bg-[#fffefa] p-3 text-sm text-[#52606d]">
               <input
-                className="mt-0.5 h-4 w-4 rounded border-slate-500 bg-slate-900 text-teal-300 focus:ring-teal-300"
+                className="mt-0.5 h-4 w-4 rounded border-[#bfae99] bg-white text-[#a44640] focus:ring-[#a44640]"
                 type="checkbox"
                 checked={Boolean(draft.contact)}
                 onChange={handleContactEnabled}
@@ -990,9 +1070,9 @@ function ResumeEditorContent() {
             ) : null}
 
             {draft.contact ? (
-              <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm text-slate-200">
+              <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm text-[#52606d]">
                 <input
-                  className="mt-0.5 h-4 w-4 rounded border-slate-500 bg-slate-900 text-teal-300 focus:ring-teal-300"
+                  className="mt-0.5 h-4 w-4 rounded border-[#bfae99] bg-white text-[#a44640] focus:ring-[#a44640]"
                   type="checkbox"
                   checked={draft.contact.isPublic}
                   onChange={(event) => {
@@ -1013,7 +1093,7 @@ function ResumeEditorContent() {
 
           {formErrors.form ? (
             <p
-              className="rounded-xl border border-rose-300/35 bg-rose-300/10 px-3 py-2 text-sm leading-6 text-rose-100"
+              className="rounded-xl border border-rose-800/35 bg-rose-50 px-3 py-2 text-sm leading-6 text-rose-950"
               role="alert"
             >
               {formErrors.form}
@@ -1035,7 +1115,7 @@ function ResumeEditorContent() {
         </form>
 
         <aside className="lg:sticky lg:top-6" aria-label="메력서 미리보기">
-          <p className="mb-3 text-sm font-bold text-slate-100">메력서 미리보기</p>
+          <p className="mb-3 text-sm font-bold text-[#202a36]">메력서 미리보기</p>
           <ResumePreview profile={profile} draft={draft} mode={mode ?? undefined} />
         </aside>
       </div>
@@ -1044,9 +1124,16 @@ function ResumeEditorContent() {
 }
 
 function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const number = formSectionNumbers[title];
+
   return (
-    <section className="ui-panel rounded-2xl p-4 sm:p-5">
-      <h2 className="text-lg font-bold tracking-tight text-white">{title}</h2>
+    <section className="resume-section-rule ui-panel rounded-xl p-5 sm:p-6">
+      <div className="flex items-center gap-3 pl-3">
+        {number ? (
+          <span className="text-xs font-black tracking-[0.14em] text-[#a44640]">{number}</span>
+        ) : null}
+        <h2 className="text-lg font-bold tracking-tight text-[#202a36]">{title}</h2>
+      </div>
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -1065,7 +1152,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="text-sm font-semibold text-slate-100" htmlFor={htmlFor}>
+      <label className="text-sm font-semibold text-[#202a36]" htmlFor={htmlFor}>
         {label}
       </label>
       {children}
@@ -1080,7 +1167,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   }
 
   return (
-    <p id={id} className="mt-2 text-sm leading-5 text-rose-200" role="alert">
+    <p id={id} className="mt-2 text-sm leading-5 text-rose-800" role="alert">
       {message}
     </p>
   );
@@ -1088,9 +1175,9 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 
 function CharacterDetail({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-3">
-      <dt className="text-xs text-slate-500">{label}</dt>
-      <dd className="mt-1 break-words font-semibold text-slate-100">{value}</dd>
+    <div className="rounded-xl border border-[#d9cdbd] bg-[#fffefa] p-3">
+      <dt className="text-xs text-[#687380]">{label}</dt>
+      <dd className="mt-1 break-words font-semibold text-[#202a36]">{value}</dd>
     </div>
   );
 }

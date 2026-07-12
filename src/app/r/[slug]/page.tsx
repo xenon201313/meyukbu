@@ -6,6 +6,7 @@ import { CombatStatsPanel } from "@/components/combat-stats-panel";
 import { OwnerResumeActions } from "@/components/owner-resume-actions";
 import { ProvenanceBadge } from "@/components/provenance-badge";
 import { ResumePreview } from "@/components/resume-preview";
+import { SiteHeader } from "@/components/site-header";
 import { FreshnessBadge } from "@/components/freshness-badge";
 import { toPublicResumeView } from "@/server/services/public-view";
 import { getPublicResume } from "@/server/services/resume-service";
@@ -38,26 +39,15 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
   );
 
   return (
-    <main className="min-h-screen pb-14">
-      <header className="mx-auto flex max-w-5xl items-center justify-between border-b border-slate-700/50 px-5 py-5 sm:px-8">
-        <Link href="/" className="flex items-center gap-2 text-lg font-black text-white">
-          <span
-            className="h-3 w-3 rounded-full bg-teal-300 shadow-[0_0_14px_rgba(94,234,212,0.9)]"
-            aria-hidden
-          />
-          메력부
-        </Link>
-        <Link href="/create" className="text-sm font-semibold text-slate-300 transition hover:text-teal-200">
-          메력서 만들기
-        </Link>
-      </header>
+    <main className="resume-shell pb-14">
+      <SiteHeader currentLabel="메력서 검증" />
 
-      <div className="mx-auto grid max-w-5xl gap-7 px-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <section>
+      <div className="mx-auto grid max-w-5xl gap-7 px-5 pt-7 sm:px-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <section className="resume-paper rounded-2xl p-4 sm:p-6">
           {!resume.isLatestVersion ? (
             <div
               role="status"
-              className="mb-4 rounded-2xl border border-amber-300/35 bg-amber-300/10 p-4 text-sm leading-6 text-amber-100"
+              className="mb-4 rounded-xl border border-amber-800/35 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
             >
               최신 버전(v{resume.latestVersionNumber})이 있습니다. 이 페이지는 v{resume.version.versionNumber}
               의 원본을 보여 줍니다.
@@ -69,7 +59,7 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
           {resume.freshness === "expired" ? (
             <div
               role="status"
-              className="mb-4 rounded-2xl border border-rose-300/35 bg-rose-300/10 p-4 text-sm leading-6 text-rose-100"
+              className="mb-4 rounded-xl border border-rose-800/35 bg-rose-50 p-4 text-sm leading-6 text-rose-950"
             >
               API 데이터가 오래되어 공개가 제한되었습니다. 작성자가 갱신하면 다시 확인할 수 있습니다.
             </div>
@@ -84,7 +74,7 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
         </section>
 
         <aside className="space-y-4 lg:sticky lg:top-6 lg:h-fit">
-          <section className="ui-panel rounded-2xl p-4">
+          <section className="ui-panel rounded-xl p-4">
             <div className="flex items-center justify-between gap-2">
               <h1 className="font-bold text-white">검증 정보</h1>
               <FreshnessBadge fetchedAt={resume.version.snapshot.fetchedAt} status={resume.freshness} />
@@ -123,7 +113,7 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
               <br />본 서비스는 NEXON의 공식 제휴 또는 인증 서비스가 아닙니다.
             </p>
           </section>
-          <section className="ui-panel rounded-2xl p-4">
+          <section className="ui-panel rounded-xl p-4">
             <h2 className="text-sm font-bold text-white">출처 범례</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               <ProvenanceBadge provenance="NEXON_API" />
@@ -133,7 +123,7 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
             </div>
           </section>
           {resume.guildObservations.length ? (
-            <section className="ui-panel rounded-2xl p-4">
+            <section className="ui-panel rounded-xl p-4">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-sm font-bold text-white">길드 관측</h2>
                 <ProvenanceBadge provenance="SERVICE_OBSERVED" />

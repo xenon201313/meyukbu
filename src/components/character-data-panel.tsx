@@ -38,11 +38,17 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
   const notices = [statNotice].filter((notice): notice is string => Boolean(notice));
 
   return (
-    <section aria-labelledby="character-data-heading" className="ui-panel rounded-2xl p-4 sm:p-5">
+    <section
+      aria-labelledby="character-data-heading"
+      className="resume-section-rule ui-panel rounded-xl p-5 sm:p-6"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="ui-kicker">검색 결과 · API 원문</p>
-          <h2 id="character-data-heading" className="mt-1 text-xl font-black tracking-tight text-white">
+          <h2
+            id="character-data-heading"
+            className="mt-1 pl-3 text-xl font-black tracking-tight text-[#202a36]"
+          >
             전투력과 최종 능력치
           </h2>
         </div>
@@ -67,7 +73,7 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
           {notices.map((notice) => (
             <li
               key={notice}
-              className="rounded-xl border border-amber-300/35 bg-amber-300/10 px-3 py-2 text-xs leading-5 text-amber-100"
+              className="rounded-xl border border-amber-800/30 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-950"
             >
               {notice}
             </li>
@@ -76,44 +82,44 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
       ) : null}
 
       <section
-        className="mt-4 rounded-xl border border-teal-300/25 bg-[#071118] p-4 text-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+        className="mt-4 rounded-xl border border-[#d7b98a] bg-[#fbf2e3] p-4 text-[#202a36]"
         aria-label="인게임 전투력"
       >
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <p className="text-xs font-bold tracking-[0.14em] text-teal-200">
+            <p className="text-xs font-bold tracking-[0.14em] text-[#7c2f2c]">
               {usesPeak ? "최고 전투력 (서비스 관측)" : "인게임 전투력"}
             </p>
-            <p className="mt-1 text-2xl font-black tracking-tight text-white">
+            <p className="mt-1 text-2xl font-black tracking-tight text-[#202a36]">
               {shownCombatPower === null ? "조회 불가" : formatNumericDisplay(shownCombatPower)}
             </p>
           </div>
           <ProvenanceBadge provenance={usesPeak ? "SERVICE_OBSERVED" : "NEXON_API"} />
         </div>
-        <p className="mt-2 text-xs leading-5 text-slate-300">
+        <p className="mt-2 text-xs leading-5 text-[#5e4030]">
           {usesPeak && currentCombatValue !== null
             ? `현재 장착 세팅 기준 ${formatNumericDisplay(currentCombatValue)} · 조회된 API 원값 중 최고값을 표시합니다.`
             : "NEXON API의 종합 능력치 원값입니다."}
         </p>
       </section>
 
-      <details className="mt-3 rounded-xl border border-slate-700 bg-slate-950/50 p-3">
-        <summary className="cursor-pointer text-sm font-bold text-slate-100">
+      <details className="mt-3 rounded-xl border border-[#d9cdbd] bg-[#fffefa] p-3">
+        <summary className="cursor-pointer text-sm font-bold text-[#202a36]">
           전체 최종 능력치 ({profile.stats.length})
         </summary>
         {profile.stats.length ? (
           <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs sm:grid-cols-3">
             {profile.stats.map((stat) => (
-              <div key={`${stat.label}:${stat.value}`} className="border-b border-slate-800 pb-1">
-                <dt className="truncate text-slate-500">{stat.label}</dt>
-                <dd className="mt-0.5 break-words font-semibold text-slate-100">
+              <div key={`${stat.label}:${stat.value}`} className="border-b border-[#eadfce] pb-1">
+                <dt className="truncate text-[#687380]">{stat.label}</dt>
+                <dd className="mt-0.5 break-words font-semibold text-[#202a36]">
                   {formatNumericDisplay(stat.value)}
                 </dd>
               </div>
             ))}
           </dl>
         ) : (
-          <p className="mt-2 text-xs leading-5 text-slate-400">능력치 API 조회 결과가 없습니다.</p>
+          <p className="mt-2 text-xs leading-5 text-[#687380]">능력치 API 조회 결과가 없습니다.</p>
         )}
       </details>
     </section>

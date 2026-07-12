@@ -20,6 +20,10 @@ function compactText(value: string, limit = 96): string {
   return value.length > limit ? `${value.slice(0, limit)}…` : value;
 }
 
+function formatBossMultiplierPercent(value: string): string {
+  return `${formatNumericDisplay(value)}%`;
+}
+
 /** The 1080×1350 immutable card; it deliberately excludes edit tokens and private contact. */
 export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUri }: ResumeShareImageProps) {
   const { profile } = resume.version.snapshot;
@@ -135,24 +139,54 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
         </div>
       </div>
 
-      {draft.convertedStat ? (
+      {draft.convertedStat || draft.bossMultiplierPercent ? (
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
-            gap: 10,
+            gap: 20,
             marginTop: "36px",
-            padding: "24px",
-            borderRadius: 18,
-            background: "#edf2f7",
           }}
         >
-          <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700 }}>
-            환산 · 기존 사용자 입력
-          </div>
-          <div style={{ display: "flex", fontSize: 42, fontWeight: 800 }}>
-            {formatNumericDisplay(draft.convertedStat)}
-          </div>
+          {draft.convertedStat ? (
+            <div
+              style={{
+                display: "flex",
+                flex: 1,
+                flexDirection: "column",
+                gap: 10,
+                padding: "24px",
+                borderRadius: 18,
+                background: "#edf2f7",
+              }}
+            >
+              <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700 }}>
+                환산 · 사용자 입력
+              </div>
+              <div style={{ display: "flex", fontSize: 42, fontWeight: 800 }}>
+                {formatNumericDisplay(draft.convertedStat)}
+              </div>
+            </div>
+          ) : null}
+          {draft.bossMultiplierPercent ? (
+            <div
+              style={{
+                display: "flex",
+                flex: 1,
+                flexDirection: "column",
+                gap: 10,
+                padding: "24px",
+                borderRadius: 18,
+                background: "#edf2f7",
+              }}
+            >
+              <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700 }}>
+                보스 배율 · 사용자 입력
+              </div>
+              <div style={{ display: "flex", fontSize: 42, fontWeight: 800 }}>
+                {formatBossMultiplierPercent(draft.bossMultiplierPercent)}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
 

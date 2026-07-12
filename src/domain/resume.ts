@@ -39,6 +39,12 @@ export interface ResumeDraft {
    * an API value or a service calculation.
    */
   convertedStat?: string;
+  /**
+   * User-entered boss multiplier percentage. This is intentionally kept
+   * separate from the conversion figure and is never inferred or calculated
+   * by the service.
+   */
+  bossMultiplierPercent?: string;
   role: ResumeRole;
   partyType: PartyType;
   availability: AvailabilitySlot[];

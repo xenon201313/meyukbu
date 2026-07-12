@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { transitionGuildObservation } from "@/domain/guild-observation";
 import type { ResumeDraft } from "@/domain/resume";
+import { parseStoredDraft } from "@/lib/db/json";
 import { createResumeSchema, resumeDraftSchema } from "@/lib/validation/schemas";
 
 const validDraft: ResumeDraft = {
@@ -62,11 +63,25 @@ describe("resume draft validation", () => {
     expect(resumeDraftSchema.safeParse({ ...validDraft, targetBossCadence: "DAILY" }).success).toBe(false);
   });
 
-  it("keeps MapleScouter conversion as an optional user-provided value", () => {
-    const parsed = resumeDraftSchema.parse({ ...validDraft, convertedStat: "110,650" });
+  it("keeps conversion and boss multiplier as optional user-provided values", () => {
+    const parsed = resumeDraftSchema.parse({
+      ...validDraft,
+      convertedStat: "110,650",
+      bossMultiplierPercent: "412.5",
+    });
 
     expect(parsed.convertedStat).toBe("110,650");
+    expect(parsed.bossMultiplierPercent).toBe("412.5");
     expect(resumeDraftSchema.safeParse({ ...validDraft, convertedStat: "1".repeat(41) }).success).toBe(false);
+    expect(resumeDraftSchema.safeParse({ ...validDraft, bossMultiplierPercent: "412.5%" }).success).toBe(
+      false,
+    );
+  });
+
+  it("round-trips the optional boss multiplier through stored draft JSON", () => {
+    const stored = parseStoredDraft({ ...validDraft, bossMultiplierPercent: "412.5" });
+
+    expect(stored.bossMultiplierPercent).toBe("412.5");
   });
 });
 

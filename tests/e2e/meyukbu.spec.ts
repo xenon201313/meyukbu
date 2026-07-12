@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 
 test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByRole("heading", { name: "메력서 작성 순서" })).toBeVisible();
+  await expect(page.getByText("샘플로 체험하기", { exact: true })).toHaveCount(0);
   await page.getByRole("textbox", { name: "캐릭터명" }).fill("별빛검사");
   await page.getByRole("button", { name: "메력서 만들기" }).click();
 
@@ -13,6 +15,8 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "메력서 게시하기" })).toBeEnabled();
 
+  await page.locator("#converted-stat").fill("110,650");
+  await page.locator("#boss-multiplier-percent").fill("412.5");
   await page.locator("#target-boss").fill("카링");
   await Promise.all([
     page.waitForURL(/\/r\/m-[a-z0-9_-]+$/),
@@ -21,6 +25,9 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
 
   await expect(page.getByRole("heading", { name: "검증 정보" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "전투력과 최종 능력치" })).toBeVisible();
+  await expect(page.getByText("환산·보스 배율")).toBeVisible();
+  await expect(page.getByText("110,650")).toBeVisible();
+  await expect(page.getByText("412.5%")).toBeVisible();
   await expect(page.getByText("Data based on NEXON Open API").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "최신 데이터로 갱신" })).toBeVisible();
 

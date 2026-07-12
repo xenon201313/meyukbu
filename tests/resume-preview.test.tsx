@@ -32,9 +32,30 @@ describe("ResumePreview", () => {
     render(<ResumePreview profile={profileWithImage} draft={draft} mode="mock" />);
 
     expect(screen.getByText("어필 포인트")).toBeInTheDocument();
-    expect(screen.queryByText("환산 (기존 사용자 입력)")).not.toBeInTheDocument();
+    expect(screen.queryByText("환산·보스 배율")).not.toBeInTheDocument();
     const avatar = screen.getByAltText(`${profileWithImage.characterName} 캐릭터 이미지`);
     expect(avatar).toHaveClass("h-full", "w-full", "object-cover");
     expect(avatar.parentElement).toHaveClass("h-40", "w-40", "overflow-hidden");
+  });
+
+  it("shows manually confirmed conversion and boss multiplier as user-provided values", () => {
+    const profile = getMockProfiles()[0];
+    if (!profile) {
+      throw new Error("Expected the primary mock profile.");
+    }
+
+    render(
+      <ResumePreview
+        profile={profile}
+        draft={{ ...draft, convertedStat: "110,650", bossMultiplierPercent: "412.5" }}
+        mode="mock"
+      />,
+    );
+
+    expect(screen.getByText("환산·보스 배율")).toBeInTheDocument();
+    expect(screen.getByText("환산")).toBeInTheDocument();
+    expect(screen.getByText("110,650")).toBeInTheDocument();
+    expect(screen.getByText("보스 배율")).toBeInTheDocument();
+    expect(screen.getByText("412.5%")).toBeInTheDocument();
   });
 });
