@@ -42,14 +42,11 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
   );
 
   return (
-    <section
-      aria-labelledby="character-data-heading"
-      className="rounded-2xl border border-stone-300 bg-[#fffdf8] p-4 sm:p-5"
-    >
+    <section aria-labelledby="character-data-heading" className="ui-panel rounded-2xl p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-bold tracking-[0.16em] text-stone-500">검색 결과 · API 원문</p>
-          <h2 id="character-data-heading" className="mt-1 text-xl font-black tracking-tight text-stone-950">
+          <p className="ui-kicker">검색 결과 · API 원문</p>
+          <h2 id="character-data-heading" className="mt-1 text-xl font-black tracking-tight text-white">
             전투력과 현재 장착 장비
           </h2>
         </div>
@@ -57,8 +54,10 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
       </div>
 
       <p
-        className={`mt-3 rounded-xl px-3 py-2 text-xs leading-5 ${
-          provider === "live" ? "bg-emerald-50 text-emerald-900" : "bg-sky-50 text-sky-900"
+        className={`mt-3 rounded-xl border px-3 py-2 text-xs leading-5 ${
+          provider === "live"
+            ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-100"
+            : "border-sky-300/30 bg-sky-300/10 text-sky-100"
         }`}
         data-provider={provider}
       >
@@ -72,7 +71,7 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
           {notices.map((notice) => (
             <li
               key={notice}
-              className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-950"
+              className="rounded-xl border border-amber-300/35 bg-amber-300/10 px-3 py-2 text-xs leading-5 text-amber-100"
             >
               {notice}
             </li>
@@ -80,66 +79,73 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
         </ul>
       ) : null}
 
-      <section className="mt-4 rounded-xl bg-stone-950 p-4 text-stone-50" aria-label="인게임 전투력">
+      <section
+        className="mt-4 rounded-xl border border-teal-300/25 bg-[#071118] p-4 text-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+        aria-label="인게임 전투력"
+      >
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <p className="text-xs font-bold tracking-[0.14em] text-stone-300">
+            <p className="text-xs font-bold tracking-[0.14em] text-teal-200">
               {usesPeak ? "최고 전투력 (서비스 관측)" : "인게임 전투력"}
             </p>
-            <p className="mt-1 text-2xl font-black tracking-tight">
+            <p className="mt-1 text-2xl font-black tracking-tight text-white">
               {shownCombatPower === null ? "조회 불가" : formatNumericDisplay(shownCombatPower)}
             </p>
           </div>
           <ProvenanceBadge provenance={usesPeak ? "SERVICE_OBSERVED" : "NEXON_API"} />
         </div>
-        <p className="mt-2 text-xs leading-5 text-stone-300">
+        <p className="mt-2 text-xs leading-5 text-slate-300">
           {usesPeak && currentCombatValue !== null
             ? `현재 장착 세팅 기준 ${formatNumericDisplay(currentCombatValue)} · 조회된 API 원값 중 최고값을 표시합니다.`
             : "NEXON API의 종합 능력치 원값입니다."}
         </p>
       </section>
 
-      <details className="mt-3 rounded-xl border border-stone-200 bg-white p-3">
-        <summary className="cursor-pointer text-sm font-bold text-stone-950">
+      <details className="mt-3 rounded-xl border border-slate-700 bg-slate-950/50 p-3">
+        <summary className="cursor-pointer text-sm font-bold text-slate-100">
           전체 최종 능력치 ({profile.stats.length})
         </summary>
         {profile.stats.length ? (
           <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs sm:grid-cols-3">
             {profile.stats.map((stat) => (
-              <div key={`${stat.label}:${stat.value}`} className="border-b border-stone-100 pb-1">
-                <dt className="truncate text-stone-500">{stat.label}</dt>
-                <dd className="mt-0.5 break-words font-semibold text-stone-900">
+              <div key={`${stat.label}:${stat.value}`} className="border-b border-slate-800 pb-1">
+                <dt className="truncate text-slate-500">{stat.label}</dt>
+                <dd className="mt-0.5 break-words font-semibold text-slate-100">
                   {formatNumericDisplay(stat.value)}
                 </dd>
               </div>
             ))}
           </dl>
         ) : (
-          <p className="mt-2 text-xs leading-5 text-stone-600">능력치 API 조회 결과가 없습니다.</p>
+          <p className="mt-2 text-xs leading-5 text-slate-400">능력치 API 조회 결과가 없습니다.</p>
         )}
       </details>
 
       <section className="mt-4" aria-labelledby="current-equipment-heading">
         <div className="flex items-center justify-between gap-3">
-          <h3 id="current-equipment-heading" className="text-sm font-bold text-stone-950">
+          <h3 id="current-equipment-heading" className="text-sm font-bold text-slate-100">
             현재 장착 전투 장비
           </h3>
-          <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-bold text-stone-700">
+          <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-xs font-bold text-slate-200">
             {profile.equipment.length}개
           </span>
         </div>
-        <p className="mt-1 text-xs leading-5 text-stone-600">
-          인벤토리 전체가 아닌, API가 공개한 캐시 장비 제외 현재 장착 장비입니다. 장비를 누르면 잠재능력
-          등 세부 옵션을 확인할 수 있습니다.
+        <p className="mt-1 text-xs leading-5 text-slate-400">
+          인벤토리 전체가 아닌, API가 공개한 캐시 장비 제외 현재 장착 장비입니다. 장비를 누르면 잠재능력 등
+          세부 옵션을 확인할 수 있습니다.
         </p>
         {profile.equipment.length ? (
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {profile.equipment.map((item, index) => (
-              <EquippedItemDetails key={`${item.slot ?? "equipment"}:${item.name}:${index}`} item={item} />
+              <EquippedItemDetails
+                key={`${item.slot ?? "equipment"}:${item.name}:${index}`}
+                item={item}
+                defaultOpen={index === 0}
+              />
             ))}
           </div>
         ) : (
-          <p className="mt-3 rounded-xl bg-stone-50 p-3 text-xs leading-5 text-stone-600">
+          <p className="mt-3 rounded-xl border border-slate-800 bg-slate-950/45 p-3 text-xs leading-5 text-slate-400">
             현재 장착 장비 API 결과가 없습니다. 캐릭터의 공개 데이터 상태 또는 API 응답을 확인해 주세요.
           </p>
         )}

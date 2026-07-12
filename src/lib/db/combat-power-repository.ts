@@ -49,9 +49,10 @@ class PrismaCombatPowerRepository implements CombatPowerRepository {
       where: { ocid: observation.ocid },
       select: { peakCombatPower: true, peakCombatPowerAt: true },
     });
-    const knownValue = existing?.peakCombatPower === null || existing?.peakCombatPower === undefined
-      ? null
-      : Number(existing.peakCombatPower);
+    const knownValue =
+      existing?.peakCombatPower === null || existing?.peakCombatPower === undefined
+        ? null
+        : Number(existing.peakCombatPower);
     const known: PeakCombatPower | null =
       knownValue === null
         ? null

@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import type { PublicResumeView } from "@/server/services/public-view";
-import { prioritizedFields, roleLabels, targetBossCadenceLabels } from "@/domain/resume";
+import { roleLabels, targetBossCadenceLabels } from "@/domain/resume";
 import { provenanceLabels } from "@/domain/provenance";
 import { formatNumericDisplay } from "@/lib/format";
 
@@ -16,17 +16,10 @@ function initials(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
-function profileValue(value: string | number | null): string {
-  return value === null ? "조회 불가" : formatNumericDisplay(value);
-}
-
 /** The 1080×1350 immutable card; it deliberately excludes edit tokens and private contact. */
 export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUri }: ResumeShareImageProps) {
   const { profile } = resume.version.snapshot;
   const { draft } = resume.version;
-  const metrics = prioritizedFields(profile, draft.role)
-    .filter((field) => field.key !== "combatPower")
-    .slice(0, 4);
   const availability = draft.availability
     .map((slot) => `${slot.days.join("·")} ${slot.startTime}–${slot.endTime}`)
     .join(" / ");
@@ -138,53 +131,22 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", marginTop: "36px" }}>
-        <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700, marginBottom: 18 }}>
-          핵심 역량
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          marginTop: "36px",
+          padding: "24px",
+          borderRadius: 18,
+          background: "#edf2f7",
+        }}
+      >
+        <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700 }}>
+          환산 · 사용자 입력
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              width: "30%",
-              minHeight: 116,
-              padding: 18,
-              borderRadius: 18,
-              background: "#14213d",
-              color: "#fffdf7",
-            }}
-          >
-            <div style={{ display: "flex", fontSize: 20, color: "#c3cede" }}>환산 · 사용자 입력</div>
-            <div style={{ display: "flex", marginTop: 8, fontSize: 27, fontWeight: 800 }}>
-              {draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "미입력"}
-            </div>
-          </div>
-          {metrics.length ? (
-            metrics.map((field) => (
-              <div
-                key={field.key}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  width: "30%",
-                  minHeight: 116,
-                  padding: 18,
-                  borderRadius: 18,
-                  background: "#edf2f7",
-                }}
-              >
-                <div style={{ display: "flex", fontSize: 20, color: "#5f6f83" }}>{field.label}</div>
-                <div style={{ display: "flex", marginTop: 8, fontSize: 27, fontWeight: 800 }}>
-                  {profileValue(field.value)}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div style={{ display: "flex", fontSize: 26, color: "#68788b" }}>
-              갱신 전까지 API 파생 정보는 공개되지 않습니다.
-            </div>
-          )}
+        <div style={{ display: "flex", fontSize: 42, fontWeight: 800 }}>
+          {draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "입력 필요"}
         </div>
       </div>
 

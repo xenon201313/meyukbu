@@ -79,7 +79,7 @@ const contactTypeOptions: ReadonlyArray<{ value: ContactType; label: string }> =
 ];
 
 const inputClassName =
-  "mt-2 block w-full rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-950 outline-none transition placeholder:text-stone-400 focus:border-stone-950 focus:ring-2 focus:ring-stone-950/15 disabled:cursor-not-allowed disabled:bg-stone-100";
+  "ui-input mt-2 block w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition disabled:cursor-not-allowed disabled:opacity-60";
 
 function createDefaultDraft(): ResumeDraft {
   return {
@@ -620,18 +620,18 @@ function ResumeEditorContent() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
       <div className="mb-6 max-w-2xl">
-        <p className="text-sm font-semibold text-stone-600">메력부 · 메이플 파티 구직용 캐릭터 이력서</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-stone-950">
+        <p className="ui-kicker">메력부 · 메이플 파티 구직용 캐릭터 이력서</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
           {editSlug ? "메력서 수정" : "메력서 작성"}
         </h1>
-        <p className="mt-2 leading-6 text-stone-700">
+        <p className="mt-2 leading-6 text-slate-300">
           API 조회 정보와 작성자 입력을 구분해 한 장의 메력서로 정리합니다.
         </p>
       </div>
 
       {!queryName && !editSlug ? (
         <section
-          className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+          className="rounded-2xl border border-amber-300/35 bg-amber-300/10 p-4 text-sm leading-6 text-amber-100"
           role="alert"
         >
           캐릭터명을 입력해 주세요. 검색 화면에서 캐릭터를 선택하면 메력서를 작성할 수 있습니다.
@@ -639,16 +639,13 @@ function ResumeEditorContent() {
       ) : null}
 
       {resolveState === "loading" ? (
-        <p
-          className="mb-5 rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm text-stone-700"
-          role="status"
-        >
+        <p className="ui-panel mb-5 rounded-2xl p-4 text-sm text-slate-300" role="status">
           {queryName} 캐릭터 정보를 불러오는 중이에요.
         </p>
       ) : null}
       {resolveError ? (
         <p
-          className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm leading-6 text-rose-900"
+          className="mb-5 rounded-2xl border border-rose-300/35 bg-rose-300/10 p-4 text-sm leading-6 text-rose-100"
           role="alert"
         >
           {resolveError}
@@ -656,7 +653,7 @@ function ResumeEditorContent() {
       ) : null}
       {profileNotice ? (
         <aside
-          className="mb-5 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm leading-6 text-sky-950"
+          className="mb-5 rounded-2xl border border-sky-300/35 bg-sky-300/10 p-4 text-sm leading-6 text-sky-100"
           aria-live="polite"
         >
           {profileNotice}
@@ -678,6 +675,42 @@ function ResumeEditorContent() {
           </FormSection>
 
           {profile ? <CharacterDataPanel profile={profile} mode={mode ?? profile.provider} /> : null}
+
+          <FormSection title="환산 (MapleScouter 기준)">
+            <label className="sr-only" htmlFor="converted-stat">
+              환산
+            </label>
+            <input
+              id="converted-stat"
+              name="convertedStat"
+              autoComplete="off"
+              className={inputClassName}
+              inputMode="numeric"
+              maxLength={40}
+              placeholder="예: 110,650"
+              value={draft.convertedStat ?? ""}
+              onChange={(event) => {
+                updateDraft({ convertedStat: event.target.value });
+                clearError("convertedStat");
+              }}
+              aria-describedby={
+                formErrors.convertedStat ? "converted-stat-help converted-stat-error" : "converted-stat-help"
+              }
+              aria-invalid={Boolean(formErrors.convertedStat)}
+            />
+            <FieldError id="converted-stat-error" message={formErrors.convertedStat} />
+            <p id="converted-stat-help" className="mt-3 text-sm leading-7 text-slate-300">
+              <a
+                className="font-semibold text-cyan-200 underline underline-offset-2 transition hover:text-cyan-100"
+                href={`https://maplescouter.com/ko/info?name=${encodeURIComponent(profile?.characterName ?? "")}`}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                MapleScouter에서 환산 확인
+              </a>{" "}
+              후 값을 입력하세요. 이력서에는 사용자 입력 출처와 검증 링크가 함께 표시됩니다.
+            </p>
+          </FormSection>
 
           <FormSection title="지원 분야">
             <div className="space-y-4">
@@ -770,46 +803,12 @@ function ResumeEditorContent() {
                   </select>
                 </Field>
               </div>
-              <Field
-                label="환산 (MapleScouter 기준)"
-                htmlFor="converted-stat"
-                error={formErrors.convertedStat}
-              >
-                <input
-                  id="converted-stat"
-                  name="convertedStat"
-                  autoComplete="off"
-                  className={inputClassName}
-                  maxLength={40}
-                  placeholder="예: 110,650"
-                  onChange={(event) => {
-                    updateDraft({ convertedStat: event.target.value });
-                    clearError("convertedStat");
-                  }}
-                  value={draft.convertedStat ?? ""}
-                  aria-describedby={formErrors.convertedStat ? "converted-stat-error" : undefined}
-                  aria-invalid={Boolean(formErrors.convertedStat)}
-                />
-                <p className="mt-2 text-xs leading-5 text-stone-600">
-                  <a
-                    href={`https://maplescouter.com/ko/info?name=${encodeURIComponent(
-                      profile?.characterName ?? "",
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold text-stone-900 underline"
-                  >
-                    MapleScouter에서 환산 확인
-                  </a>
-                  {" 후 값을 입력하세요. 이력서에는 사용자 입력 출처와 검증 링크가 함께 표시됩니다."}
-                </p>
-              </Field>
             </div>
           </FormSection>
 
           <FormSection title="가능 시간">
             <fieldset>
-              <legend className="text-sm font-semibold text-stone-900">가능한 요일</legend>
+              <legend className="text-sm font-semibold text-slate-100">가능한 요일</legend>
               <div
                 className="mt-2 flex flex-wrap gap-2"
                 aria-describedby={formErrors.availability ? "availability-error" : undefined}
@@ -821,8 +820,8 @@ function ResumeEditorContent() {
                       key={day}
                       className={`cursor-pointer rounded-full border px-3 py-2 text-sm font-medium transition ${
                         isChecked
-                          ? "border-stone-950 bg-stone-950 text-white"
-                          : "border-stone-300 bg-white text-stone-800 hover:border-stone-500"
+                          ? "border-teal-300 bg-teal-300/15 text-teal-100 shadow-[0_0_0_1px_rgba(94,234,212,0.14)_inset]"
+                          : "border-slate-600 bg-slate-950/60 text-slate-200 hover:border-teal-300/60 hover:text-teal-100"
                       }`}
                     >
                       <input
@@ -868,7 +867,7 @@ function ResumeEditorContent() {
               </Field>
             </div>
             <FieldError id="availability-error" message={formErrors.availability} />
-            <p className="mt-3 text-xs leading-5 text-stone-600">
+            <p className="mt-3 text-xs leading-5 text-slate-400">
               모든 시간은 한국 표준시(Asia/Seoul) 기준입니다.
             </p>
           </FormSection>
@@ -952,16 +951,16 @@ function ResumeEditorContent() {
           </FormSection>
 
           <FormSection title="공개 범위">
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-stone-200 bg-stone-50 p-3 text-sm text-stone-800">
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-700 bg-slate-950/50 p-3 text-sm text-slate-200">
               <input
-                className="mt-0.5 h-4 w-4 rounded border-stone-400 text-stone-950 focus:ring-stone-950"
+                className="mt-0.5 h-4 w-4 rounded border-slate-500 bg-slate-900 text-teal-300 focus:ring-teal-300"
                 type="checkbox"
                 checked={Boolean(draft.contact)}
                 onChange={handleContactEnabled}
               />
               <span>
                 <span className="block font-semibold">연락 방법 추가</span>
-                <span className="mt-1 block leading-5 text-stone-600">
+                <span className="mt-1 block leading-5 text-slate-400">
                   전화번호, 실명, 주소는 입력하지 마세요.
                 </span>
               </span>
@@ -1011,9 +1010,9 @@ function ResumeEditorContent() {
             ) : null}
 
             {draft.contact ? (
-              <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm text-stone-800">
+              <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm text-slate-200">
                 <input
-                  className="mt-0.5 h-4 w-4 rounded border-stone-400 text-stone-950 focus:ring-stone-950"
+                  className="mt-0.5 h-4 w-4 rounded border-slate-500 bg-slate-900 text-teal-300 focus:ring-teal-300"
                   type="checkbox"
                   checked={draft.contact.isPublic}
                   onChange={(event) => {
@@ -1024,7 +1023,7 @@ function ResumeEditorContent() {
                 />
                 <span>
                   <span className="block font-semibold">연락 방법을 공개 페이지에 표시합니다.</span>
-                  <span className="mt-1 block leading-5 text-stone-600">
+                  <span className="mt-1 block leading-5 text-slate-400">
                     선택하지 않으면 연락 방법은 게시되지 않습니다.
                   </span>
                 </span>
@@ -1034,14 +1033,14 @@ function ResumeEditorContent() {
 
           {formErrors.form ? (
             <p
-              className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm leading-6 text-rose-900"
+              className="rounded-xl border border-rose-300/35 bg-rose-300/10 px-3 py-2 text-sm leading-6 text-rose-100"
               role="alert"
             >
               {formErrors.form}
             </p>
           ) : null}
           <button
-            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-stone-950 px-5 py-3 text-base font-bold text-white transition hover:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-stone-400"
+            className="ui-action flex min-h-12 w-full items-center justify-center rounded-xl px-5 py-3 text-base font-bold transition focus:outline-none disabled:cursor-not-allowed disabled:opacity-45"
             type="submit"
             disabled={!profile || resolveState === "loading" || submitting}
           >
@@ -1056,7 +1055,7 @@ function ResumeEditorContent() {
         </form>
 
         <aside className="lg:sticky lg:top-6" aria-label="메력서 미리보기">
-          <p className="mb-3 text-sm font-bold text-stone-800">메력서 미리보기</p>
+          <p className="mb-3 text-sm font-bold text-slate-100">메력서 미리보기</p>
           <ResumePreview profile={profile} draft={draft} mode={mode ?? undefined} />
         </aside>
       </div>
@@ -1066,8 +1065,8 @@ function ResumeEditorContent() {
 
 function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
-      <h2 className="text-lg font-bold tracking-tight text-stone-950">{title}</h2>
+    <section className="ui-panel rounded-2xl p-4 sm:p-5">
+      <h2 className="text-lg font-bold tracking-tight text-white">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -1086,7 +1085,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="text-sm font-semibold text-stone-900" htmlFor={htmlFor}>
+      <label className="text-sm font-semibold text-slate-100" htmlFor={htmlFor}>
         {label}
       </label>
       {children}
@@ -1101,7 +1100,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   }
 
   return (
-    <p id={id} className="mt-2 text-sm leading-5 text-rose-700" role="alert">
+    <p id={id} className="mt-2 text-sm leading-5 text-rose-200" role="alert">
       {message}
     </p>
   );
@@ -1109,9 +1108,9 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 
 function CharacterDetail({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-stone-50 p-3">
-      <dt className="text-xs text-stone-600">{label}</dt>
-      <dd className="mt-1 break-words font-semibold text-stone-950">{value}</dd>
+    <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-3">
+      <dt className="text-xs text-slate-500">{label}</dt>
+      <dd className="mt-1 break-words font-semibold text-slate-100">{value}</dd>
     </div>
   );
 }

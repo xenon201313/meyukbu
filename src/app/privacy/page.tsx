@@ -3,11 +3,11 @@ import Link from "next/link";
 export default function PrivacyPage() {
   return (
     <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8">
-      <Link href="/" className="text-sm font-semibold text-stone-600 hover:text-stone-950">
+      <Link href="/" className="text-sm font-semibold text-slate-300 transition hover:text-teal-200">
         ← 메력부 홈
       </Link>
-      <h1 className="mt-8 text-3xl font-black">개인정보 및 공개 범위</h1>
-      <div className="mt-7 space-y-6 rounded-3xl border border-stone-300 bg-white p-6 leading-7 text-stone-700">
+      <h1 className="mt-8 text-3xl font-black text-white">개인정보 및 공개 범위</h1>
+      <div className="ui-panel mt-7 space-y-6 rounded-3xl p-6 leading-7 text-slate-300">
         <p>
           메력부는 캐릭터명으로 조회되는 공개 게임 데이터와 작성자가 직접 입력한 파티 구직 정보를 메력서에
           표시합니다.

@@ -54,3 +54,20 @@ pnpm build
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`(4 files, 17 tests), `pnpm test:e2e`(Chromium 2 tests), `pnpm build`를 모두 다시 실행해 통과를 확인했다.
 - [x] 검색 편집기에 전투력·전체 최종 능력치·현재 장착 장비를 즉시 표시하고, mock/live provider 상태와 장비 조회 누락 사유를 함께 안내한다.
 - [x] E2E는 개발용 3000번 포트를 재사용하지 않고 격리된 3100번 포트와 `.next-e2e` 빌드 디렉터리를 사용한다.
+
+## 2026-07-12 — 메력서 가독성·장비 상세 UX 보완
+
+- [x] 메력서의 핵심 역량 API 지표 묶음을 제거하고, MapleScouter 기준 환산만 별도 사용자 입력 항목으로 보인다.
+- [x] 환산 입력은 설명·검증 링크를 포함한 별도 편집 섹션으로 분리하고, 공개 메력서와 공유 PNG에는 값과 출처만 표시한다.
+- [x] 전체 화면을 고대비 다크 테마로 정리하고, 버튼·입력·출처·신선도 상태의 명암과 키보드 focus 상태를 강화한다.
+- [x] 주간/월간 보스 카드는 원본을 자르지 않는 우측 아트와 독립된 텍스트 패널로 바꿔 선택 상태와 내용을 선명하게 표시한다.
+- [x] 장비 정보는 실제 API 옵션만을 사용해 아이콘·스타포스·최종/기본/추가/특수 옵션·잠재능력·에디셔널 잠재능력 순서의 고대비 상세 카드로 정리한다.
+- [x] 다크·민트 톤의 공유 미리보기 이미지와 Open Graph/Twitter 메타데이터를 추가한다.
+- [x] lint, typecheck, unit/E2E 테스트, production build와 Prettier 검사를 다시 실행한다.
+
+## 2026-07-12 — 원격 변경 통합 검증
+
+- [x] 원격 `main`의 최고 전투력 관측, Prisma migration pipeline, 숫자 서식 개선을 보존하면서 화면 개편을 통합한다.
+- [x] 중복 환산 필드를 제거하고 `convertedStat` 하나만 저장·검증·편집·미리보기·공유 PNG에 사용한다.
+- [x] 편집기와 공개 검증 화면의 장비 상세를 동일한 고대비 확장 카드로 연결한다.
+- [x] Prisma Client 생성 후 lint, typecheck, 30개 unit 테스트, Chromium E2E, production build, Prettier, diff 검사를 모두 통과한다.

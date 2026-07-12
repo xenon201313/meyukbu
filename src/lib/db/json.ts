@@ -63,10 +63,7 @@ const profileSchema = z.object({
       }),
     )
     .default([]),
-  peakCombatPower: z
-    .object({ value: z.number(), observedAt: z.string() })
-    .nullable()
-    .optional(),
+  peakCombatPower: z.object({ value: z.number(), observedAt: z.string() }).nullable().optional(),
   equipmentPresetNo: z.number().int().nullable().default(null),
   equipment: z
     .array(

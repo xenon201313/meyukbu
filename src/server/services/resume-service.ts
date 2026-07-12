@@ -10,10 +10,7 @@ import type {
   ResumeVersion,
 } from "@/domain/resume";
 import { createEditToken, hashEditToken, verifyEditToken } from "@/lib/auth/edit-token";
-import {
-  getCombatPowerRepository,
-  type CombatPowerRepository,
-} from "@/lib/db/combat-power-repository";
+import { getCombatPowerRepository, type CombatPowerRepository } from "@/lib/db/combat-power-repository";
 import { getResumeRepository, type ResumeRepository } from "@/lib/db/resume-repository";
 import { parseNumericValue } from "@/lib/format";
 import { contentHash } from "@/lib/hash";

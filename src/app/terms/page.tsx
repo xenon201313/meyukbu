@@ -3,11 +3,11 @@ import Link from "next/link";
 export default function TermsPage() {
   return (
     <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8">
-      <Link href="/" className="text-sm font-semibold text-stone-600 hover:text-stone-950">
+      <Link href="/" className="text-sm font-semibold text-slate-300 transition hover:text-teal-200">
         ← 메력부 홈
       </Link>
-      <h1 className="mt-8 text-3xl font-black">서비스 고지</h1>
-      <div className="mt-7 space-y-6 rounded-3xl border border-stone-300 bg-white p-6 leading-7 text-stone-700">
+      <h1 className="mt-8 text-3xl font-black text-white">서비스 고지</h1>
+      <div className="ui-panel mt-7 space-y-6 rounded-3xl p-6 leading-7 text-slate-300">
         <p>
           메력부는 파티 구직용 정보를 정리하는 도구이며 합격·불합격, 직업별 단일 점수, 숙련도 인증을 제공하지
           않습니다.

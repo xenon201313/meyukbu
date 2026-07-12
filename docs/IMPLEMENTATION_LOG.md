@@ -48,3 +48,47 @@
 | `vitest run` | 통과 — 4 files, 17 tests; 전투력 원값·장비 정규화·부분 응답·보스 구분 검증 포함 |
 
 전체 `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm build` 결과는 확장 코드 통합 후의 최종 검증 항목으로 유지한다.
+
+## 2026-07-12 — 메력서 가독성·장비 상세 UX 보완
+
+### 구현 범위
+
+- 메력서 카드와 1080×1350 공유 PNG에서 기존 핵심 역량 API 수치 카드를 제거했다. `환산`은 MapleScouter 확인 값을 받는 별도 편집 섹션으로 옮겼고, 게시물에는 `사용자 입력` 출처로만 표시한다.
+- 배경, 패널, 입력 필드, 버튼, 출처/신선도 배지를 고대비 다크 테마로 통일했다. 포커스 outline을 유지해 모바일·키보드 사용성도 함께 보강했다.
+- 주간·월간 보스 선택 카드는 배경 이미지를 crop하지 않고 우측에 고정하고, 좌측 텍스트를 어두운 패널 위에 분리해 보스명·설명·선택 상태가 배경과 섞이지 않게 했다.
+- 장착 장비 상세는 MapleScouter식 정보 우선순위를 참고해 실제 API 반환값만으로 아이콘, 스타포스, 최종/기본/추가/특수/기타 옵션, 잠재능력, 에디셔널 잠재능력을 고대비로 표시한다. API에 없는 옵션은 만들지 않고 숨긴다.
+- 장비 상세 렌더링 회귀를 막는 컴포넌트 테스트를 추가했다.
+- 공유 링크에는 다크·민트 톤의 `public/og.png`와 Open Graph/Twitter 메타데이터를 연결했다. 브랜드·게임 로고 및 공식 캐릭터를 포함하지 않은 자체 일러스트만 사용한다.
+
+### 최종 검증
+
+| 명령 | 결과 |
+| --- | --- |
+| `pnpm lint` | 통과 |
+| `pnpm typecheck` | 통과 |
+| `pnpm test` | 통과 — 7 files, 24 tests |
+| `pnpm test:e2e` | 통과 — Chromium 2 tests (게시·검증·PNG·갱신 / 375px 모바일) |
+| `pnpm build` | 통과 — production build |
+| `pnpm format:check` | 통과 |
+| `git diff --check` | 통과 |
+
+## 2026-07-12 — 원격 변경 통합 및 최종 검증
+
+### 통합 범위
+
+- 원격 `main`에 추가된 최고 전투력 서비스 관측, API 수치 천 단위 표기, Prisma migration용 Vercel build pipeline을 보존했다.
+- 환산 값은 `convertedStat` 하나로 통일했다. 별도의 중복 저장 필드는 제거했으며, 입력 설명은 독립된 `환산 (MapleScouter 기준)` 섹션에만 남긴다.
+- 편집기와 공개 검증 페이지는 같은 고대비 장비 상세 카드로 API가 제공한 아이콘, 스타포스, 옵션, 잠재능력, 에디셔널 잠재능력을 표시한다.
+
+### 최종 검증
+
+| 명령 | 결과 |
+| --- | --- |
+| `pnpm db:generate` | 통과 — Prisma Client 재생성 |
+| `pnpm lint` | 통과 |
+| `pnpm typecheck` | 통과 |
+| `pnpm test` | 통과 — 8 files, 30 tests |
+| `pnpm test:e2e` | 통과 — Chromium 2 tests |
+| `pnpm build` | 통과 — production build |
+| `pnpm format:check` | 통과 |
+| `git diff --check` | 통과 |

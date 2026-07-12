@@ -2,10 +2,10 @@ import type { DataProvenance } from "@/domain/provenance";
 import { provenanceLabels } from "@/domain/provenance";
 
 const provenanceClassNames: Record<DataProvenance, string> = {
-  NEXON_API: "border-sky-200 bg-sky-50 text-sky-800",
-  SERVICE_CALCULATED: "border-violet-200 bg-violet-50 text-violet-800",
-  USER_PROVIDED: "border-amber-200 bg-amber-50 text-amber-900",
-  SERVICE_OBSERVED: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  NEXON_API: "border-cyan-300/45 bg-cyan-300/10 text-cyan-100",
+  SERVICE_CALCULATED: "border-violet-300/45 bg-violet-300/10 text-violet-100",
+  USER_PROVIDED: "border-amber-300/45 bg-amber-300/10 text-amber-100",
+  SERVICE_OBSERVED: "border-emerald-300/45 bg-emerald-300/10 text-emerald-100",
 };
 
 interface ProvenanceBadgeProps {

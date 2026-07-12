@@ -11,18 +11,24 @@ const cadenceCards: Array<{
   title: string;
   description: string;
   fallbackImage: string;
+  accentClass: string;
+  activeClass: string;
 }> = [
   {
     value: "WEEKLY",
     title: "주간 보스",
     description: "매주 함께 도전할 보스를 선택하거나 직접 입력하세요.",
     fallbackImage: "/images/bosses/weekly-raid.png",
+    accentClass: "from-violet-500/35 via-indigo-950/15 to-transparent",
+    activeClass: "border-violet-200 ring-violet-200/35",
   },
   {
     value: "MONTHLY",
     title: "월간 보스",
     description: "월간 일정에 맞춘 도전 목표를 선택하거나 직접 입력하세요.",
     fallbackImage: "/images/bosses/monthly-raid.png",
+    accentClass: "from-orange-500/35 via-rose-950/15 to-transparent",
+    activeClass: "border-orange-200 ring-orange-200/35",
   },
 ];
 
@@ -52,8 +58,8 @@ export function BossCadencePicker({ value, targetBoss, onChange, onBossSelect }:
 
   return (
     <fieldset>
-      <legend className="text-sm font-semibold text-stone-900">희망 보스 주기</legend>
-      <p className="mt-1 text-xs leading-5 text-stone-600">
+      <legend className="text-sm font-semibold text-slate-100">희망 보스 주기</legend>
+      <p className="mt-1 text-xs leading-5 text-slate-400">
         주간 또는 월간을 고른 뒤 빠른 선택 또는 직접 입력으로 희망 보스를 정하세요.
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -72,30 +78,41 @@ export function BossCadencePicker({ value, targetBoss, onChange, onBossSelect }:
               disabled={!isHydrated}
               aria-pressed={selected}
               onClick={() => onChange(card.value)}
-              className={`group relative min-h-40 overflow-hidden rounded-2xl border text-left shadow-sm transition focus:outline-none focus:ring-2 focus:ring-stone-950/30 disabled:cursor-wait disabled:opacity-80 ${
-                selected
-                  ? "border-stone-950 ring-2 ring-stone-950/20"
-                  : "border-stone-300 hover:border-stone-700"
+              className={`group relative isolate min-h-48 overflow-hidden rounded-2xl border bg-slate-950 text-left shadow-[0_12px_30px_rgba(15,23,42,0.16)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(15,23,42,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b11] disabled:cursor-wait disabled:opacity-80 ${
+                selected ? `ring-2 ${card.activeClass}` : "border-slate-800 hover:border-slate-500"
               }`}
             >
-              <img
-                src={bossArtworkUrl(artworkKey)}
-                alt={imageAlt}
-                onError={(event) => {
-                  event.currentTarget.onerror = null;
-                  event.currentTarget.src = card.fallbackImage;
-                }}
-                className="absolute inset-0 h-full w-full object-cover object-center transition duration-300 group-hover:scale-105"
+              <span className="absolute inset-y-0 right-0 w-[59%] overflow-hidden" aria-hidden="true">
+                <span className={`absolute inset-0 bg-gradient-to-br ${card.accentClass}`} />
+                <img
+                  src={bossArtworkUrl(artworkKey)}
+                  alt={imageAlt}
+                  loading="lazy"
+                  decoding="async"
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = card.fallbackImage;
+                  }}
+                  className="absolute inset-0 h-full w-full object-contain object-right transition duration-300 ease-out group-hover:scale-[1.035]"
+                />
+                <span className="absolute inset-y-0 left-0 w-2/3 bg-gradient-to-r from-slate-950 via-slate-950/85 to-transparent" />
+                <span className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-white/10" />
+              </span>
+              <span
+                className="absolute inset-y-0 left-0 w-[64%] bg-gradient-to-r from-slate-950 via-slate-950/95 to-slate-950/40"
+                aria-hidden="true"
               />
-              <span className="absolute inset-0 bg-gradient-to-r from-stone-950/90 via-stone-950/58 to-stone-950/15" />
-              <span className="relative flex min-h-40 flex-col justify-end p-4 text-white">
-                <span className="text-base font-bold">{card.title}</span>
-                <span className="mt-1 text-xs leading-5 text-stone-100">{card.description}</span>
+              <span className="relative flex min-h-48 max-w-[68%] flex-col justify-end p-4 text-white sm:p-5">
+                <span className="text-lg font-extrabold tracking-tight">{card.title}</span>
+                <span className="mt-1 text-xs leading-5 text-slate-100">{card.description}</span>
                 {bossForCard ? (
-                  <span className="mt-2 text-[11px] text-stone-200">{bossForCard.name}</span>
+                  <span className="mt-2 line-clamp-1 text-[11px] font-semibold text-white/90">
+                    {bossForCard.name}
+                  </span>
                 ) : null}
                 {selected ? (
-                  <span className="mt-2 inline-flex w-fit rounded-full bg-white px-2 py-1 text-[11px] font-bold text-stone-950">
+                  <span className="mt-3 inline-flex w-fit items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-extrabold text-slate-950 shadow-sm">
+                    <span aria-hidden="true">✓</span>
                     선택됨
                   </span>
                 ) : null}
@@ -105,12 +122,12 @@ export function BossCadencePicker({ value, targetBoss, onChange, onBossSelect }:
         })}
       </div>
       {value ? (
-        <label className="mt-4 block text-sm font-semibold text-stone-900" htmlFor="boss-quick-select">
+        <label className="mt-4 block text-sm font-semibold text-slate-100" htmlFor="boss-quick-select">
           보스 빠른 선택
           <select
             id="boss-quick-select"
             disabled={!isHydrated}
-            className="mt-2 block w-full rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-950 outline-none transition focus:border-stone-950 focus:ring-2 focus:ring-stone-950/15 disabled:cursor-wait disabled:bg-stone-100"
+            className="ui-input mt-2 block w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition disabled:cursor-wait disabled:opacity-60"
             value={selectedBoss?.id ?? ""}
             onChange={(event) => {
               const selectedOption = event.currentTarget.selectedOptions[0];

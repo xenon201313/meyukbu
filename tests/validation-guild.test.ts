@@ -61,6 +61,13 @@ describe("resume draft validation", () => {
     expect(resumeDraftSchema.safeParse({ ...validDraft, targetBossCadence: "MONTHLY" }).success).toBe(true);
     expect(resumeDraftSchema.safeParse({ ...validDraft, targetBossCadence: "DAILY" }).success).toBe(false);
   });
+
+  it("keeps MapleScouter conversion as an optional user-provided value", () => {
+    const parsed = resumeDraftSchema.parse({ ...validDraft, convertedStat: "110,650" });
+
+    expect(parsed.convertedStat).toBe("110,650");
+    expect(resumeDraftSchema.safeParse({ ...validDraft, convertedStat: "1".repeat(41) }).success).toBe(false);
+  });
 });
 
 describe("guild observations", () => {

@@ -38,15 +38,15 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
   }
 
   return (
-    <section aria-label="작성자 관리" className="rounded-2xl border border-stone-300 bg-stone-50 p-4">
-      <p className="text-sm font-bold">작성자 관리</p>
-      <p className="mt-1 text-xs leading-5 text-stone-600">
+    <section aria-label="작성자 관리" className="ui-panel rounded-2xl p-4">
+      <p className="text-sm font-bold text-white">작성자 관리</p>
+      <p className="mt-1 text-xs leading-5 text-slate-400">
         이 브라우저에만 저장된 편집 권한으로 새 버전을 만들거나 공개를 중단할 수 있습니다.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <a
           href={`/create?edit=${encodeURIComponent(slug)}`}
-          className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-semibold hover:border-stone-500"
+          className="rounded-lg border border-slate-600 bg-slate-950/50 px-3 py-2 text-sm font-semibold text-slate-100 transition hover:border-teal-300/70 hover:text-teal-100"
         >
           수정
         </a>
@@ -54,7 +54,7 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
           type="button"
           disabled={busy}
           onClick={refresh}
-          className="rounded-lg bg-stone-950 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="ui-action rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50"
         >
           최신 데이터로 갱신
         </button>
@@ -62,13 +62,13 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
           type="button"
           disabled={busy}
           onClick={archive}
-          className="rounded-lg border border-rose-300 px-3 py-2 text-sm font-semibold text-rose-700 disabled:opacity-50"
+          className="rounded-lg border border-rose-300/45 bg-rose-300/10 px-3 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-300/20 disabled:opacity-50"
         >
           공개 중단
         </button>
       </div>
       {message ? (
-        <p role="status" className="mt-3 text-sm text-stone-700">
+        <p role="status" className="mt-3 text-sm text-slate-300">
           {message}
         </p>
       ) : null}

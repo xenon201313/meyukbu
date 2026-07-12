@@ -1,9 +1,9 @@
 import { getFreshnessStatus, freshnessLabels, type FreshnessStatus } from "@/domain/freshness";
 
 const freshnessClassNames: Record<FreshnessStatus, string> = {
-  fresh: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  stale: "border-amber-200 bg-amber-50 text-amber-900",
-  expired: "border-rose-200 bg-rose-50 text-rose-800",
+  fresh: "border-emerald-300/45 bg-emerald-300/10 text-emerald-100",
+  stale: "border-amber-300/45 bg-amber-300/10 text-amber-100",
+  expired: "border-rose-300/45 bg-rose-300/10 text-rose-100",
 };
 
 interface FreshnessBadgeProps {
