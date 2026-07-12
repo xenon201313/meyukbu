@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다", async ({ page }) => {
   await page.goto("/");
+  await expect(page.locator('link[rel="icon"][href*="icon.svg"]')).toHaveCount(1);
   await expect(page.getByRole("heading", { name: "메력서 작성 순서" })).toBeVisible();
   await expect(page.getByText("샘플로 체험하기", { exact: true })).toHaveCount(0);
   await page.getByRole("textbox", { name: "캐릭터명" }).fill("별빛검사");

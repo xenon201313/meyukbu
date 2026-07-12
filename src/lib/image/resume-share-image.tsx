@@ -41,7 +41,7 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
         flexDirection: "column",
         background: "#fffdf7",
         color: "#14213d",
-        fontFamily: "Noto Sans KR",
+        fontFamily: "Nanum Barun Gothic",
         padding: "68px",
       }}
     >

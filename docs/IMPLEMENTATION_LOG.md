@@ -226,3 +226,23 @@
 | `pnpm build` | 통과 — production build |
 | `pnpm format:check` | 통과 |
 | `git diff --check` | 통과 |
+
+## 2026-07-13 — NanumBarunGothic 글꼴 및 브라우저 아이콘
+
+### 구현 범위
+
+- 참조한 메이플스토리 테스트월드 공지의 본문 글꼴을 확인해, 웹의 기본·브랜드·제목 서체를 `NanumBarunGothic`으로 통일했다.
+- `next/font/local`로 굵기 400·700의 로컬 WOFF 파일을 번들한다. 따라서 클라이언트는 글꼴 CDN에 의존하지 않으며, 폰트 로딩 중에는 한글 시스템 글꼴로 자연스럽게 대체된다.
+- 1080×1350 공유 PNG도 같은 Regular/Bold 글꼴을 `ImageResponse`에 등록해 웹과 결과물의 인상을 맞췄다.
+- 기존 기본 `favicon.ico`를 제거하고, 네이비 문서·빨간 기준선으로 구성된 Resumae 전용 `icon.svg`를 App Router 아이콘으로 등록했다.
+- E2E가 새 `/icon.svg` 링크와 PNG 생성 흐름을 함께 확인하도록 보강했다.
+
+### 최종 검증
+
+| 명령 | 결과 |
+| --- | --- |
+| `pnpm lint` | 통과 |
+| `pnpm typecheck` | 통과 |
+| `pnpm test` | 통과 — 13 files, 38 tests |
+| `pnpm test:e2e` | 통과 — Chromium 2 tests (새 아이콘 링크 포함) |
+| `pnpm build` | 통과 — `/icon.svg` 정적 라우트 생성 확인 |

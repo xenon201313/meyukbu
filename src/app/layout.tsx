@@ -1,8 +1,27 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 
 import { SiteWatermark } from "@/components/site-watermark";
 
 import "./globals.css";
+
+const nanumBarunGothic = localFont({
+  src: [
+    {
+      path: "../../node_modules/webfont-nanum/nanumbarungothic/v1/NanumBarunGothic-Regular.woff",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../node_modules/webfont-nanum/nanumbarungothic/v1/NanumBarunGothic-Bold.woff",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-nanum-barun-gothic",
+  display: "swap",
+  fallback: ["Malgun Gothic", "Apple SD Gothic Neo", "sans-serif"],
+});
 
 const siteUrl = process.env.APP_ORIGIN ?? "https://maple-resume.com";
 
@@ -39,7 +58,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ko" className="h-full">
+    <html lang="ko" className={`h-full ${nanumBarunGothic.variable}`}>
       <body className="min-h-full antialiased">
         {children}
         <SiteWatermark />

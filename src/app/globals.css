@@ -38,8 +38,8 @@ body {
     ),
     var(--paper);
   color: var(--ink);
-  font-family: "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
-  font-weight: 450;
+  font-family: var(--font-nanum-barun-gothic), "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
+  font-weight: 400;
 }
 
 a {
@@ -112,7 +112,7 @@ textarea:focus-visible {
 
 .resume-brand {
   color: var(--ink);
-  font-family: "Noto Serif KR", "Batang", Georgia, serif;
+  font-family: var(--font-nanum-barun-gothic), "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
 }
 
 .resume-brand-mark {
@@ -125,14 +125,14 @@ textarea:focus-visible {
   background: var(--accent);
   color: #fffaf4;
   box-shadow: 3px 3px 0 rgba(164, 70, 64, 0.16);
-  font-family: Georgia, serif;
+  font-family: var(--font-nanum-barun-gothic), "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
   font-size: 0.9rem;
   font-weight: 800;
 }
 
 .resume-heading {
   color: var(--ink);
-  font-family: "Noto Serif KR", "Batang", Georgia, serif;
+  font-family: var(--font-nanum-barun-gothic), "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
 }
 
 .resume-paper {

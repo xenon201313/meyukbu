@@ -11,22 +11,26 @@ import { getPublicResume } from "@/server/services/resume-service";
 
 export const runtime = "nodejs";
 
-let koreanFont: Promise<ArrayBuffer> | undefined;
+interface KoreanFonts {
+  regular: ArrayBuffer;
+  bold: ArrayBuffer;
+}
 
-function loadKoreanFont(): Promise<ArrayBuffer> {
-  if (!koreanFont) {
-    koreanFont = readFile(
-      path.join(
-        process.cwd(),
-        "node_modules",
-        "@fontsource",
-        "noto-sans-kr",
-        "files",
-        "noto-sans-kr-korean-400-normal.woff",
-      ),
-    ).then((font) => font.buffer.slice(font.byteOffset, font.byteOffset + font.byteLength));
+let koreanFonts: Promise<KoreanFonts> | undefined;
+
+function toArrayBuffer(font: Buffer): ArrayBuffer {
+  return font.buffer.slice(font.byteOffset, font.byteOffset + font.byteLength) as ArrayBuffer;
+}
+
+function loadKoreanFonts(): Promise<KoreanFonts> {
+  if (!koreanFonts) {
+    const fontDirectory = path.join(process.cwd(), "node_modules", "webfont-nanum", "nanumbarungothic", "v1");
+    koreanFonts = Promise.all([
+      readFile(path.join(fontDirectory, "NanumBarunGothic-Regular.woff")),
+      readFile(path.join(fontDirectory, "NanumBarunGothic-Bold.woff")),
+    ]).then(([regular, bold]) => ({ regular: toArrayBuffer(regular), bold: toArrayBuffer(bold) }));
   }
-  return koreanFont;
+  return koreanFonts;
 }
 
 /** Inlines a trusted NEXON avatar so a remote image failure cannot break the share card. */
@@ -75,7 +79,7 @@ export async function GET(request: NextRequest, context: Context) {
   const canonicalUrl = `${getEnvironment().APP_ORIGIN}/r/${slug}?v=${view.version.versionNumber}`;
   const [qrDataUri, fontData, avatarDataUri] = await Promise.all([
     createQrDataUri(canonicalUrl),
-    loadKoreanFont(),
+    loadKoreanFonts(),
     loadAvatarDataUri(view.version.snapshot.profile.imageUrl),
   ]);
   return new ImageResponse(
@@ -88,7 +92,10 @@ export async function GET(request: NextRequest, context: Context) {
     {
       width: 1080,
       height: 1350,
-      fonts: [{ name: "Noto Sans KR", data: fontData, weight: 400, style: "normal" }],
+      fonts: [
+        { name: "Nanum Barun Gothic", data: fontData.regular, weight: 400, style: "normal" },
+        { name: "Nanum Barun Gothic", data: fontData.bold, weight: 700, style: "normal" },
+      ],
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": `public, max-age=31536000, immutable`,
