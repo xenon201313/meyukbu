@@ -71,6 +71,11 @@ const server = spawn(process.execPath, [nextCli, "dev", "--hostname", host, "--p
   env: {
     ...process.env,
     NEXT_TELEMETRY_DISABLED: "1",
+    // Keep E2E independent from a developer's local live-provider credentials
+    // and persistent database. The scenario intentionally covers the demo flow.
+    NEXON_PROVIDER: "mock",
+    NEXON_OPEN_API_KEY: "",
+    MEYUKBU_STORAGE: "memory",
     MEYUKBU_EXTERNAL_ART: "false",
     MEYUKBU_NEXT_DIST_DIR: e2eDistDir,
   },

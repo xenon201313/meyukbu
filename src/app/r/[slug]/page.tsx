@@ -2,8 +2,8 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
+import { CombatStatsPanel } from "@/components/combat-stats-panel";
 import { OwnerResumeActions } from "@/components/owner-resume-actions";
-import { EquipmentPanel } from "@/components/equipment-panel";
 import { ProvenanceBadge } from "@/components/provenance-badge";
 import { ResumePreview } from "@/components/resume-preview";
 import { FreshnessBadge } from "@/components/freshness-badge";
@@ -80,7 +80,7 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
             mode={resume.version.snapshot.provider}
             versionNumber={resume.version.versionNumber}
           />
-          <EquipmentPanel profile={resume.version.snapshot.profile} />
+          <CombatStatsPanel profile={resume.version.snapshot.profile} />
         </section>
 
         <aside className="space-y-4 lg:sticky lg:top-6 lg:h-fit">

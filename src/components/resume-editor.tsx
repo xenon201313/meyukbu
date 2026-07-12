@@ -24,7 +24,6 @@ type ResolveState = "idle" | "loading" | "success" | "error";
 type FormErrorKey =
   | "targetBoss"
   | "difficulty"
-  | "convertedStat"
   | "availability"
   | "lootPolicy"
   | "experienceSummary"
@@ -99,7 +98,7 @@ function createDefaultDraft(): ResumeDraft {
     voiceChat: "OPTIONAL",
     lootPolicy: "상호 협의",
     experienceSummary: "동일 보스 격수 경험이 있습니다.",
-    roleSummary: "패턴 대응과 생존을 우선해 안정적으로 참여합니다.",
+    roleSummary: "패턴 대응과 생존을 강점으로, 약속한 시간에 안정적으로 참여합니다.",
     theme: "RESUME",
   };
 }
@@ -314,9 +313,6 @@ function validateDraft(draft: ResumeDraft): FormErrors {
     errors.availability = "종료 시간은 시작 시간보다 뒤여야 합니다.";
   }
 
-  if ((draft.convertedStat?.trim().length ?? 0) > 40) {
-    errors.convertedStat = "환산은 40자 이하로 입력해 주세요.";
-  }
   if ((draft.lootPolicy?.trim().length ?? 0) > 80) {
     errors.lootPolicy = "분배 방식은 80자 이하로 입력해 주세요.";
   }
@@ -324,7 +320,7 @@ function validateDraft(draft: ResumeDraft): FormErrors {
     errors.experienceSummary = "보스 경험은 280자 이하로 입력해 주세요.";
   }
   if ((draft.roleSummary?.trim().length ?? 0) > 220) {
-    errors.roleSummary = "담당 역할 설명은 220자 이하로 입력해 주세요.";
+    errors.roleSummary = "어필 포인트는 220자 이하로 입력해 주세요.";
   }
   if (draft.contact) {
     const contactLength = draft.contact.value.trim().length;
@@ -676,39 +672,23 @@ function ResumeEditorContent() {
 
           {profile ? <CharacterDataPanel profile={profile} mode={mode ?? profile.provider} /> : null}
 
-          <FormSection title="환산 (MapleScouter 기준)">
-            <label className="sr-only" htmlFor="converted-stat">
-              환산
-            </label>
-            <input
-              id="converted-stat"
-              name="convertedStat"
-              autoComplete="off"
-              className={inputClassName}
-              inputMode="numeric"
-              maxLength={40}
-              placeholder="예: 110,650"
-              value={draft.convertedStat ?? ""}
-              onChange={(event) => {
-                updateDraft({ convertedStat: event.target.value });
-                clearError("convertedStat");
-              }}
-              aria-describedby={
-                formErrors.convertedStat ? "converted-stat-help converted-stat-error" : "converted-stat-help"
-              }
-              aria-invalid={Boolean(formErrors.convertedStat)}
-            />
-            <FieldError id="converted-stat-error" message={formErrors.convertedStat} />
-            <p id="converted-stat-help" className="mt-3 text-sm leading-7 text-slate-300">
+          <FormSection title="환산·보스 배율 참고">
+            <p className="text-sm leading-7 text-slate-300">
+              환산과 보스 배율은 외부 계산 서비스의 결과이므로, 메력부에서 값을 복사하거나 임의로 계산하지
+              않습니다.
+            </p>
+            {profile ? (
               <a
-                className="font-semibold text-cyan-200 underline underline-offset-2 transition hover:text-cyan-100"
-                href={`https://maplescouter.com/ko/info?name=${encodeURIComponent(profile?.characterName ?? "")}`}
+                className="ui-action mt-4 inline-flex rounded-xl px-4 py-2.5 text-sm font-bold transition"
+                href={`https://maplescouter.com/ko/result?name=${encodeURIComponent(profile.characterName)}&preset=00000`}
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                MapleScouter에서 환산 확인
-              </a>{" "}
-              후 값을 입력하세요. 이력서에는 사용자 입력 출처와 검증 링크가 함께 표시됩니다.
+                MapleScouter에서 환산·보스 배율 확인
+              </a>
+            ) : null}
+            <p className="mt-3 text-xs leading-5 text-slate-400">
+              자동 연동은 해당 서비스의 공식 파트너 API 사용 권한이 확인된 뒤에만 제공됩니다.
             </p>
           </FormSection>
 
@@ -890,7 +870,7 @@ function ResumeEditorContent() {
                   aria-invalid={Boolean(formErrors.experienceSummary)}
                 />
               </Field>
-              <Field label="담당 역할 설명" htmlFor="role-summary" error={formErrors.roleSummary}>
+              <Field label="어필 포인트" htmlFor="role-summary" error={formErrors.roleSummary}>
                 <textarea
                   id="role-summary"
                   name="roleSummary"

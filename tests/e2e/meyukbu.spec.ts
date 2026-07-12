@@ -6,7 +6,11 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
   await page.getByRole("button", { name: "메력서 만들기" }).click();
 
   await expect(page).toHaveURL(/\/create\?name=/);
-  await expect(page.getByText("현재 데모 데이터로 표시 중입니다.", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("현재 데모 데이터로 표시 중입니다. 실제 게임 데이터와 다를 수 있습니다.", {
+      exact: true,
+    }),
+  ).toBeVisible();
   await expect(page.getByRole("button", { name: "메력서 게시하기" })).toBeEnabled();
 
   await page.locator("#target-boss").fill("카링");
@@ -16,7 +20,7 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
   ]);
 
   await expect(page.getByRole("heading", { name: "검증 정보" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "장착 장비와 전투력" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "전투력과 최종 능력치" })).toBeVisible();
   await expect(page.getByText("Data based on NEXON Open API").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "최신 데이터로 갱신" })).toBeVisible();
 

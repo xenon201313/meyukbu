@@ -3,7 +3,6 @@
 import type { NormalizedCharacterProfile, ProfileAvailability } from "@/domain/character";
 import { formatNumericDisplay, parseNumericValue } from "@/lib/format";
 
-import { EquippedItemDetails } from "@/components/equipped-item-details";
 import { ProvenanceBadge } from "@/components/provenance-badge";
 
 interface CharacterDataPanelProps {
@@ -23,7 +22,7 @@ function availabilityMessage(label: string, availability: ProfileAvailability | 
 
 /**
  * Shows NEXON-published character data while a user is editing a resume.
- * It deliberately exposes raw API values only and does not derive a gear score.
+ * It deliberately exposes raw API values only and does not derive a score.
  */
 export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
   const provider = mode ?? profile.provider;
@@ -36,10 +35,7 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
   const usesPeak = Boolean(peak && (currentCombatValue === null || peak.value > currentCombatValue));
   const shownCombatPower = usesPeak && peak ? String(peak.value) : combatPower;
   const statNotice = availabilityMessage("전투력·능력치", profile.rawAvailability.stat);
-  const equipmentNotice = availabilityMessage("장착 장비", profile.rawAvailability.equipment);
-  const notices = [profile.notice, statNotice, equipmentNotice].filter(
-    (notice, index, values): notice is string => Boolean(notice) && values.indexOf(notice) === index,
-  );
+  const notices = [statNotice].filter((notice): notice is string => Boolean(notice));
 
   return (
     <section aria-labelledby="character-data-heading" className="ui-panel rounded-2xl p-4 sm:p-5">
@@ -47,7 +43,7 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
         <div>
           <p className="ui-kicker">검색 결과 · API 원문</p>
           <h2 id="character-data-heading" className="mt-1 text-xl font-black tracking-tight text-white">
-            전투력과 현재 장착 장비
+            전투력과 최종 능력치
           </h2>
         </div>
         <ProvenanceBadge provenance="NEXON_API" />
@@ -120,36 +116,6 @@ export function CharacterDataPanel({ profile, mode }: CharacterDataPanelProps) {
           <p className="mt-2 text-xs leading-5 text-slate-400">능력치 API 조회 결과가 없습니다.</p>
         )}
       </details>
-
-      <section className="mt-4" aria-labelledby="current-equipment-heading">
-        <div className="flex items-center justify-between gap-3">
-          <h3 id="current-equipment-heading" className="text-sm font-bold text-slate-100">
-            현재 장착 전투 장비
-          </h3>
-          <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-xs font-bold text-slate-200">
-            {profile.equipment.length}개
-          </span>
-        </div>
-        <p className="mt-1 text-xs leading-5 text-slate-400">
-          인벤토리 전체가 아닌, API가 공개한 캐시 장비 제외 현재 장착 장비입니다. 장비를 누르면 잠재능력 등
-          세부 옵션을 확인할 수 있습니다.
-        </p>
-        {profile.equipment.length ? (
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            {profile.equipment.map((item, index) => (
-              <EquippedItemDetails
-                key={`${item.slot ?? "equipment"}:${item.name}:${index}`}
-                item={item}
-                defaultOpen={index === 0}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="mt-3 rounded-xl border border-slate-800 bg-slate-950/45 p-3 text-xs leading-5 text-slate-400">
-            현재 장착 장비 API 결과가 없습니다. 캐릭터의 공개 데이터 상태 또는 API 응답을 확인해 주세요.
-          </p>
-        )}
-      </section>
     </section>
   );
 }

@@ -38,18 +38,20 @@ function formatKoreanDateTime(value: string) {
 function CharacterAvatar({ profile }: { profile: NormalizedCharacterProfile }) {
   if (profile.imageUrl) {
     return (
-      <img
-        src={profile.imageUrl}
-        alt={`${profile.characterName} 캐릭터 이미지`}
-        className="h-32 w-32 shrink-0 rounded-2xl border border-slate-600 bg-slate-950 object-contain [image-rendering:pixelated]"
-      />
+      <span className="h-40 w-40 shrink-0 overflow-hidden rounded-2xl border border-slate-600 bg-slate-950 sm:h-44 sm:w-44">
+        <img
+          src={profile.imageUrl}
+          alt={`${profile.characterName} 캐릭터 이미지`}
+          className="h-full w-full object-cover object-center [image-rendering:pixelated]"
+        />
+      </span>
     );
   }
 
   return (
     <div
       aria-label={`${profile.characterName} 캐릭터 이미지 없음`}
-      className="flex h-32 w-32 shrink-0 items-center justify-center rounded-2xl border border-dashed border-slate-600 bg-slate-950 text-2xl font-bold text-slate-400"
+      className="flex h-40 w-40 shrink-0 items-center justify-center rounded-2xl border border-dashed border-slate-600 bg-slate-950 text-2xl font-bold text-slate-400 sm:h-44 sm:w-44"
       role="img"
     >
       메
@@ -133,27 +135,32 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
           </div>
         </section>
 
-        <section
-          aria-labelledby="preview-conversion-heading"
-          className="rounded-xl border border-teal-300/35 bg-teal-300/10 p-3"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <p id="preview-conversion-heading" className="text-xs font-bold tracking-[0.16em] text-teal-100">
-              환산
+        {draft.convertedStat ? (
+          <section
+            aria-labelledby="preview-conversion-heading"
+            className="rounded-xl border border-teal-300/35 bg-teal-300/10 p-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p
+                id="preview-conversion-heading"
+                className="text-xs font-bold tracking-[0.16em] text-teal-100"
+              >
+                환산 (기존 사용자 입력)
+              </p>
+              <ProvenanceBadge provenance="USER_PROVIDED" />
+            </div>
+            <p className="mt-2 break-words text-xl font-black text-white">
+              {formatNumericDisplay(draft.convertedStat)}
             </p>
-            <ProvenanceBadge provenance="USER_PROVIDED" />
-          </div>
-          <p className="mt-2 break-words text-xl font-black text-white">
-            {draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "입력 필요"}
-          </p>
-        </section>
+          </section>
+        ) : null}
 
         <section aria-labelledby="preview-experience-heading" className="space-y-3">
           <p id="preview-experience-heading" className="ui-kicker">
             파티 경험 및 가능 시간
           </p>
           {draft.experienceSummary ? <PreviewText label="보스 경험" value={draft.experienceSummary} /> : null}
-          {draft.roleSummary ? <PreviewText label="담당 역할" value={draft.roleSummary} /> : null}
+          {draft.roleSummary ? <PreviewText label="어필 포인트" value={draft.roleSummary} /> : null}
           <div className="rounded-xl border border-amber-300/35 bg-amber-300/10 p-3 text-sm text-amber-100">
             <div className="flex items-center justify-between gap-2">
               <span className="font-semibold">가능 시간</span>

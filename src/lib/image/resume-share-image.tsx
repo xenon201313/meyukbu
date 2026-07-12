@@ -16,6 +16,10 @@ function initials(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
+function compactText(value: string, limit = 96): string {
+  return value.length > limit ? `${value.slice(0, limit)}…` : value;
+}
+
 /** The 1080×1350 immutable card; it deliberately excludes edit tokens and private contact. */
 export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUri }: ResumeShareImageProps) {
   const { profile } = resume.version.snapshot;
@@ -69,14 +73,14 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
           <img
             src={avatarDataUri}
             alt={`${profile.characterName} 캐릭터 이미지`}
-            style={{ width: 224, height: 224, borderRadius: 32, objectFit: "contain" }}
+            style={{ width: 260, height: 260, borderRadius: 32, objectFit: "cover" }}
           />
         ) : (
           <div
             style={{
               display: "flex",
-              width: 224,
-              height: 224,
+              width: 260,
+              height: 260,
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 32,
@@ -131,24 +135,26 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
         </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-          marginTop: "36px",
-          padding: "24px",
-          borderRadius: 18,
-          background: "#edf2f7",
-        }}
-      >
-        <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700 }}>
-          환산 · 사용자 입력
+      {draft.convertedStat ? (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            marginTop: "36px",
+            padding: "24px",
+            borderRadius: 18,
+            background: "#edf2f7",
+          }}
+        >
+          <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700 }}>
+            환산 · 기존 사용자 입력
+          </div>
+          <div style={{ display: "flex", fontSize: 42, fontWeight: 800 }}>
+            {formatNumericDisplay(draft.convertedStat)}
+          </div>
         </div>
-        <div style={{ display: "flex", fontSize: 42, fontWeight: 800 }}>
-          {draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "입력 필요"}
-        </div>
-      </div>
+      ) : null}
 
       <div
         style={{
@@ -167,6 +173,11 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
         <div style={{ display: "flex", fontSize: 26 }}>
           {draft.experienceSummary || "작성자가 입력한 경험 요약이 없습니다."}
         </div>
+        {draft.roleSummary ? (
+          <div style={{ display: "flex", fontSize: 24, color: "#42536a" }}>
+            어필 포인트: {compactText(draft.roleSummary)}
+          </div>
+        ) : null}
         <div style={{ display: "flex", fontSize: 24, color: "#42536a" }}>가능 시간: {availability}</div>
       </div>
 
