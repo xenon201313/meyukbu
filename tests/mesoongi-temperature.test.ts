@@ -45,6 +45,13 @@ class TestResumeRepository implements ResumeRepository {
     return record ? structuredClone(record) : null;
   }
 
+  async findBySlugs(slugs: readonly string[]): Promise<ResumeRecord[]> {
+    return [...new Set(slugs)].flatMap((slug) => {
+      const record = this.records.get(slug);
+      return record ? [structuredClone(record)] : [];
+    });
+  }
+
   async slugExists(slug: string): Promise<boolean> {
     return this.records.has(slug);
   }

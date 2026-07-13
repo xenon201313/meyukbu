@@ -106,6 +106,32 @@ export interface ResumeRecord {
   updatedAt: string;
 }
 
+/**
+ * A deliberately minimal owner-only representation used by the "my resumes"
+ * view. It must not grow into a full record because it is returned from an
+ * endpoint authenticated only by per-resume edit tokens.
+ */
+export interface OwnedResumeSummary {
+  slug: string;
+  characterName: string;
+  worldName: string | null;
+  className: string | null;
+  characterImageUrl: string | null;
+  targetBoss: string;
+  targetBossCadence: TargetBossCadence | null;
+  role: ResumeRole;
+  partyType: PartyType;
+  partySize: PartySize | null;
+  visibility: ResumeRecord["visibility"];
+  versionNumber: number;
+  publishedAt: string;
+  fetchedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  /** Documents that every returned record passed its own edit-token check. */
+  isOwner: true;
+}
+
 export interface PublicResume {
   resume: ResumeRecord;
   version: ResumeVersion;

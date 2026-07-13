@@ -5,6 +5,8 @@ import { PrismaResumeRepository } from "@/lib/db/prisma-resume-repository";
 export interface ResumeRepository {
   create(record: ResumeRecord): Promise<ResumeRecord>;
   findBySlug(slug: string): Promise<ResumeRecord | null>;
+  /** Retrieves only explicitly requested candidate records; it never lists all resumes. */
+  findBySlugs(slugs: readonly string[]): Promise<ResumeRecord[]>;
   slugExists(slug: string): Promise<boolean>;
   save(record: ResumeRecord): Promise<ResumeRecord>;
   reset?(): void;
@@ -28,6 +30,18 @@ class InMemoryResumeRepository implements ResumeRepository {
   async findBySlug(slug: string): Promise<ResumeRecord | null> {
     const record = this.records.get(slug);
     return record ? clone(record) : null;
+  }
+
+  async findBySlugs(slugs: readonly string[]): Promise<ResumeRecord[]> {
+    const uniqueSlugs = new Set(slugs);
+    const records: ResumeRecord[] = [];
+    for (const slug of uniqueSlugs) {
+      const record = this.records.get(slug);
+      if (record) {
+        records.push(clone(record));
+      }
+    }
+    return records;
   }
 
   async slugExists(slug: string): Promise<boolean> {

@@ -21,11 +21,33 @@
 | `pnpm test` | 17 files, 61 tests 통과 |
 | `pnpm test:e2e` | Chromium 3 tests 통과 — 작성자/평가자 분리 세션, 초대 링크, 기명 태그, PNG 불변, 375px 흐름 포함 |
 | `pnpm build` | 통과 |
+
 | `git diff --check` | 통과 |
 
 ### 남은 환경 확인
 
 - 로컬 Docker가 없어 PostgreSQL migration의 실제 적용은 실행하지 못했다. 배포 환경에서는 `pnpm prisma migrate deploy`를 실행해야 하며, 기존 Vercel `vercel-build` 명령은 이를 수행한다.
+
+## 2026-07-14 — 나의 이력서 보스별 관리
+
+### 구현 범위
+
+- `/my-resumes` 탭을 추가해 현재 브라우저에서 편집 권한을 가진 메력서를 보스명 기준으로 정렬하고, 보스별 필터·캐릭터별 묶음으로 열람할 수 있게 했다.
+- 각 카드에 공개 보기, 수정, 기존 내용을 유지한 새 메력서로 저장 동작을 연결했다. 공개 중단된 항목은 잘못된 편집 링크 대신 상태만 표시한다.
+- `GET /api/my-resumes`는 `meyukbu_edit_{slug}` HttpOnly cookie를 최대 40개만 후보로 읽은 뒤, 각 token hash를 검증한 항목만 최소 요약으로 반환한다. 연락처, token 원문, hash, 전체 version 이력은 반환하지 않는다.
+- 응답에 `Cache-Control: private, no-store`와 `Vary: Cookie`를 적용했고, 다른 브라우저·기기·시크릿 창·삭제된 cookie에서는 빈 상태가 보인다는 안내를 제공한다.
+- 단위 테스트는 잘못된 token, 누락 cookie, 여러 보스 기록의 정렬·최소 응답 경계를 확인한다. E2E는 같은 브라우저의 두 기록, 다른 브라우저 기록의 비노출, 보스 탭 필터, 열기·수정·복제 링크와 375px 가로 넘침을 검증한다.
+
+### 최종 검증
+
+| 명령 | 결과 |
+| --- | --- |
+| `pnpm format:check` | 통과 |
+| `pnpm lint` | 통과 |
+| `pnpm typecheck` | 통과 |
+| `pnpm test` | 통과 — 18 files, 63 tests |
+| `pnpm test:e2e` | 통과 — Chromium 5 tests (375px 목록 흐름 포함) |
+| `pnpm build` | 통과 — `/my-resumes`, `/api/my-resumes` route 생성 확인 |
 
 ## 2026-07-13 — 보스별 별도 저장·희망 인원·참여 시간 방식
 

@@ -50,6 +50,7 @@ routes:
   pages:
     - "/"
     - "/create"
+    - "/my-resumes"
     - "/r/[slug]"
     - "/r/[slug]/temperature"
     - "/r/[slug]/image"
@@ -58,6 +59,7 @@ routes:
   api:
     - "GET /api/characters/resolve?name="
     - "POST /api/resumes"
+    - "GET /api/my-resumes"
     - "GET /api/resumes/[slug]"
     - "POST /api/resumes/[slug]/refresh"
     - "PATCH /api/resumes/[slug]"

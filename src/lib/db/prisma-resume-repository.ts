@@ -10,6 +10,22 @@ import type { ResumeRepository } from "@/lib/db/resume-repository";
 
 type Database = PrismaClient | Prisma.TransactionClient;
 
+const resumeWithDetails = {
+  character: true,
+  versions: { include: { snapshot: true }, orderBy: { versionNumber: "asc" } },
+} satisfies Prisma.ResumeInclude;
+
+type StoredResume = Prisma.ResumeGetPayload<{ include: typeof resumeWithDetails }>;
+type StoredGuildObservation = {
+  id: string;
+  characterId: string;
+  guildName: string | null;
+  observedFrom: Date;
+  lastObservedAt: Date;
+  observedTo: Date | null;
+  sourceSnapshotId: string;
+};
+
 function providerForDatabase(provider: "mock" | "live") {
   return provider === "live" ? "NEXON_OPEN_API" : "MOCK";
 }
@@ -48,6 +64,43 @@ function datesForSnapshot(fetchedAt: string) {
 
 function asDate(value: string): Date {
   return new Date(value);
+}
+
+function toResumeRecord(record: StoredResume, observations: StoredGuildObservation[]): ResumeRecord {
+  return {
+    id: record.id,
+    slug: record.slug,
+    characterOcid: record.character.ocid,
+    editTokenHash: record.editTokenHash,
+    currentVersionId: record.currentVersionId ?? record.versions.at(-1)?.id ?? "",
+    visibility: visibilityFromDatabase(record.visibility),
+    versions: record.versions.map((version) => ({
+      id: version.id,
+      resumeId: version.resumeId,
+      snapshot: {
+        id: version.snapshot.id,
+        profile: parseStoredProfile(version.snapshot.normalized),
+        provider: version.snapshot.provider === "NEXON_OPEN_API" ? "live" : "mock",
+        fetchedAt: version.snapshot.fetchedAt.toISOString(),
+        sourceDate: version.snapshot.sourceDate,
+        createdAt: version.snapshot.createdAt.toISOString(),
+      },
+      draft: parseStoredDraft(version.userInput),
+      versionNumber: version.versionNumber,
+      contentHash: version.contentHash,
+      publishedAt: version.publishedAt.toISOString(),
+    })),
+    guildObservations: observations.map((observation) => ({
+      id: observation.id,
+      guildName: observation.guildName,
+      observedFrom: observation.observedFrom.toISOString(),
+      lastObservedAt: observation.lastObservedAt.toISOString(),
+      observedTo: observation.observedTo?.toISOString() ?? null,
+      sourceSnapshotId: observation.sourceSnapshotId,
+    })),
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+  };
 }
 
 /** Prisma implementation for persistent, immutable resume records. */
@@ -101,10 +154,7 @@ export class PrismaResumeRepository implements ResumeRepository {
   async findBySlug(slug: string): Promise<ResumeRecord | null> {
     const record = await this.prisma.resume.findUnique({
       where: { slug },
-      include: {
-        character: true,
-        versions: { include: { snapshot: true }, orderBy: { versionNumber: "asc" } },
-      },
+      include: resumeWithDetails,
     });
     if (!record) {
       return null;
@@ -113,40 +163,34 @@ export class PrismaResumeRepository implements ResumeRepository {
       where: { characterId: record.characterId },
       orderBy: { observedFrom: "asc" },
     });
-    return {
-      id: record.id,
-      slug: record.slug,
-      characterOcid: record.character.ocid,
-      editTokenHash: record.editTokenHash,
-      currentVersionId: record.currentVersionId ?? record.versions.at(-1)?.id ?? "",
-      visibility: visibilityFromDatabase(record.visibility),
-      versions: record.versions.map((version) => ({
-        id: version.id,
-        resumeId: version.resumeId,
-        snapshot: {
-          id: version.snapshot.id,
-          profile: parseStoredProfile(version.snapshot.normalized),
-          provider: version.snapshot.provider === "NEXON_OPEN_API" ? "live" : "mock",
-          fetchedAt: version.snapshot.fetchedAt.toISOString(),
-          sourceDate: version.snapshot.sourceDate,
-          createdAt: version.snapshot.createdAt.toISOString(),
-        },
-        draft: parseStoredDraft(version.userInput),
-        versionNumber: version.versionNumber,
-        contentHash: version.contentHash,
-        publishedAt: version.publishedAt.toISOString(),
-      })),
-      guildObservations: observations.map((observation) => ({
-        id: observation.id,
-        guildName: observation.guildName,
-        observedFrom: observation.observedFrom.toISOString(),
-        lastObservedAt: observation.lastObservedAt.toISOString(),
-        observedTo: observation.observedTo?.toISOString() ?? null,
-        sourceSnapshotId: observation.sourceSnapshotId,
-      })),
-      createdAt: record.createdAt.toISOString(),
-      updatedAt: record.updatedAt.toISOString(),
-    };
+    return toResumeRecord(record, observations);
+  }
+
+  async findBySlugs(slugs: readonly string[]): Promise<ResumeRecord[]> {
+    const uniqueSlugs = [...new Set(slugs)];
+    if (!uniqueSlugs.length) {
+      return [];
+    }
+    const records = await this.prisma.resume.findMany({
+      where: { slug: { in: uniqueSlugs } },
+      include: resumeWithDetails,
+    });
+    if (!records.length) {
+      return [];
+    }
+    const observations = await this.prisma.guildObservation.findMany({
+      where: { characterId: { in: [...new Set(records.map((record) => record.characterId))] } },
+      orderBy: { observedFrom: "asc" },
+    });
+    const observationsByCharacterId = new Map<string, StoredGuildObservation[]>();
+    for (const observation of observations) {
+      const current = observationsByCharacterId.get(observation.characterId) ?? [];
+      current.push(observation);
+      observationsByCharacterId.set(observation.characterId, current);
+    }
+    return records.map((record) =>
+      toResumeRecord(record, observationsByCharacterId.get(record.characterId) ?? []),
+    );
   }
 
   async slugExists(slug: string): Promise<boolean> {

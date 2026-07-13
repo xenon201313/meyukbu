@@ -3,13 +3,19 @@ import { randomBytes, randomUUID } from "node:crypto";
 import type { NormalizedCharacterProfile, ProfileField } from "@/domain/character";
 import { transitionGuildObservation } from "@/domain/guild-observation";
 import type {
+  OwnedResumeSummary,
   PublicResume,
   ProfileSnapshot,
   ResumeDraft,
   ResumeRecord,
   ResumeVersion,
 } from "@/domain/resume";
-import { createEditToken, hashEditToken, verifyEditToken } from "@/lib/auth/edit-token";
+import {
+  createEditToken,
+  hashEditToken,
+  type OwnedResumeEditTokenReference,
+  verifyEditToken,
+} from "@/lib/auth/edit-token";
 import { getCombatPowerRepository, type CombatPowerRepository } from "@/lib/db/combat-power-repository";
 import { getResumeRepository, type ResumeRepository } from "@/lib/db/resume-repository";
 import { parseNumericValue } from "@/lib/format";
@@ -240,6 +246,66 @@ export async function archiveResume(
   record.visibility = "ARCHIVED";
   record.updatedAt = new Date().toISOString();
   await repository.save(record);
+}
+
+/**
+ * Returns only records for which the caller supplied that record's own valid
+ * edit token. References come exclusively from same-origin HttpOnly cookies;
+ * the result intentionally omits credentials, contacts, and version history.
+ */
+export async function getOwnedResumeSummaries(
+  references: readonly OwnedResumeEditTokenReference[],
+  repository: ResumeRepository = getResumeRepository(),
+): Promise<OwnedResumeSummary[]> {
+  const tokensBySlug = new Map<string, string>();
+  for (const reference of references) {
+    if (!tokensBySlug.has(reference.slug)) {
+      tokensBySlug.set(reference.slug, reference.editToken);
+    }
+  }
+  if (!tokensBySlug.size) {
+    return [];
+  }
+
+  const records = await repository.findBySlugs([...tokensBySlug.keys()]);
+  const summaries: OwnedResumeSummary[] = [];
+  for (const record of records) {
+    const editToken = tokensBySlug.get(record.slug);
+    if (!verifyEditToken(editToken, record.editTokenHash)) {
+      continue;
+    }
+    const version = record.versions.find((candidate) => candidate.id === record.currentVersionId);
+    if (!version) {
+      continue;
+    }
+    const profile = version.snapshot.profile;
+    summaries.push({
+      slug: record.slug,
+      characterName: profile.characterName,
+      worldName: profile.worldName,
+      className: profile.className,
+      characterImageUrl: profile.imageUrl,
+      targetBoss: version.draft.targetBoss,
+      targetBossCadence: version.draft.targetBossCadence ?? null,
+      role: version.draft.role,
+      partyType: version.draft.partyType,
+      partySize: version.draft.partySize ?? null,
+      visibility: record.visibility,
+      versionNumber: version.versionNumber,
+      publishedAt: version.publishedAt,
+      fetchedAt: version.snapshot.fetchedAt,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+      isOwner: true,
+    });
+  }
+
+  return summaries.sort(
+    (left, right) =>
+      left.targetBoss.localeCompare(right.targetBoss, "ko") ||
+      right.updatedAt.localeCompare(left.updatedAt) ||
+      left.slug.localeCompare(right.slug),
+  );
 }
 
 /** Retrieves either the current version or a stable historical version for verification. */

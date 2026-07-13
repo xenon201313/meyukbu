@@ -18,13 +18,23 @@ export function SiteHeader({ currentLabel }: SiteHeaderProps) {
             <span className="block text-[0.58rem] font-bold tracking-[0.2em]">RESUMAE</span>
           </span>
         </Link>
-        <div className="flex items-center gap-4 text-sm font-semibold">
+        <div className="flex items-center gap-3 text-sm font-semibold sm:gap-4">
           {currentLabel ? <span className="hidden text-[#687380] sm:inline">{currentLabel}</span> : null}
-          <nav aria-label="보조 메뉴" className="flex items-center gap-3 text-[#52606d]">
-            <Link className="transition hover:text-[#7c2f2c]" href="/privacy">
+          <nav
+            aria-label="보조 메뉴"
+            className="flex items-center gap-2 text-xs text-[#52606d] sm:gap-3 sm:text-sm"
+          >
+            <Link
+              className="whitespace-nowrap transition hover:text-[#7c2f2c]"
+              href="/my-resumes"
+              aria-current={currentLabel === "나의 이력서" ? "page" : undefined}
+            >
+              나의 이력서
+            </Link>
+            <Link className="hidden transition hover:text-[#7c2f2c] sm:inline" href="/privacy">
               개인정보
             </Link>
-            <Link className="transition hover:text-[#7c2f2c]" href="/terms">
+            <Link className="hidden transition hover:text-[#7c2f2c] sm:inline" href="/terms">
               서비스 고지
             </Link>
           </nav>

@@ -40,11 +40,17 @@ export default function Home() {
             <span className="block text-[0.63rem] font-bold tracking-[0.2em]">RESUMAE</span>
           </span>
         </Link>
-        <nav aria-label="보조 메뉴" className="resume-nav flex items-center gap-4 text-sm sm:gap-6">
-          <Link href="/privacy" className="transition-opacity hover:opacity-70">
+        <nav
+          aria-label="보조 메뉴"
+          className="resume-nav flex items-center gap-3 text-xs sm:gap-6 sm:text-sm"
+        >
+          <Link href="/my-resumes" className="whitespace-nowrap transition-opacity hover:opacity-70">
+            나의 이력서
+          </Link>
+          <Link href="/privacy" className="hidden transition-opacity hover:opacity-70 sm:inline">
             개인정보
           </Link>
-          <Link href="/terms" className="transition-opacity hover:opacity-70">
+          <Link href="/terms" className="hidden transition-opacity hover:opacity-70 sm:inline">
             서비스 고지
           </Link>
         </nav>
