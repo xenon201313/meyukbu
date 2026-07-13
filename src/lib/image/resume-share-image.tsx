@@ -46,14 +46,15 @@ function SourceBadge({ label = "작성 내용" }: { label?: string }) {
       style={{
         display: "flex",
         alignItems: "center",
+        boxSizing: "border-box",
         border: "1px solid #e7bf65",
-        borderRadius: 8,
+        borderRadius: 7,
         background: "#fff3ca",
         color: "#7c3f12",
-        fontSize: 17,
+        fontSize: 14,
         fontWeight: 700,
         lineHeight: 1,
-        padding: "8px 12px",
+        padding: "6px 9px",
       }}
     >
       {label}
@@ -61,26 +62,39 @@ function SourceBadge({ label = "작성 내용" }: { label?: string }) {
   );
 }
 
-function FieldCard({ label, value, wide = false }: { label: string; value: string; wide?: boolean }) {
+function FieldCard({
+  label,
+  value,
+  wide = false,
+  height = 76,
+}: {
+  label: string;
+  value: string;
+  wide?: boolean;
+  height?: number;
+}) {
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        flex: wide ? 1 : undefined,
+        flexGrow: wide ? 1 : 0,
+        flexShrink: 0,
+        boxSizing: "border-box",
+        height,
         minWidth: 0,
-        gap: 10,
+        gap: 4,
         border: `1px solid ${cardBorder}`,
-        borderRadius: 18,
+        borderRadius: 16,
         background: "#fffefa",
-        padding: "17px 20px",
+        padding: "10px 16px",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-        <div style={{ display: "flex", color: "#687380", fontSize: 19 }}>{label}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", color: "#687380", fontSize: 17 }}>{label}</div>
         <SourceBadge />
       </div>
-      <div style={{ display: "flex", color: documentInk, fontSize: 26, fontWeight: 700, lineHeight: 1.2 }}>
+      <div style={{ display: "flex", color: documentInk, fontSize: 24, fontWeight: 700, lineHeight: 1.15 }}>
         {value || "입력 필요"}
       </div>
     </div>
@@ -94,19 +108,21 @@ function MetricCard({ label, value }: { label: string; value: string }) {
         display: "flex",
         flex: 1,
         flexDirection: "column",
+        flexShrink: 0,
+        boxSizing: "border-box",
         justifyContent: "space-between",
         minWidth: 0,
         border: `1px solid ${cardBorder}`,
-        borderRadius: 18,
+        borderRadius: 16,
         background: "#fffefa",
-        padding: "18px 20px",
+        padding: "12px 16px",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-        <div style={{ display: "flex", color: "#687380", fontSize: 19 }}>{label}</div>
+        <div style={{ display: "flex", color: "#687380", fontSize: 17 }}>{label}</div>
         <SourceBadge />
       </div>
-      <div style={{ display: "flex", color: documentInk, fontSize: 34, fontWeight: 700, lineHeight: 1.08 }}>
+      <div style={{ display: "flex", color: documentInk, fontSize: 30, fontWeight: 700, lineHeight: 1.08 }}>
         {value || "입력 필요"}
       </div>
     </div>
@@ -119,19 +135,22 @@ function DetailCard({ label, value }: { label: string; value: string }) {
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: 8,
+        flexShrink: 0,
+        boxSizing: "border-box",
+        height: 70,
+        gap: 4,
         border: "1px solid #d7b98a",
-        borderRadius: 18,
+        borderRadius: 16,
         background: "#fbf2e3",
-        padding: "14px 18px",
+        padding: "8px 14px",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-        <div style={{ display: "flex", color: "#8a5a13", fontSize: 19, fontWeight: 700 }}>{label}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", color: "#8a5a13", fontSize: 17, fontWeight: 700 }}>{label}</div>
         <SourceBadge />
       </div>
-      <div style={{ display: "flex", color: "#5e4030", fontSize: 22, lineHeight: 1.25 }}>
-        {compactText(value || "입력 필요", 78)}
+      <div style={{ display: "flex", color: "#5e4030", fontSize: 19, lineHeight: 1.2 }}>
+        {compactText(value || "입력 필요", 86)}
       </div>
     </div>
   );
@@ -161,6 +180,7 @@ export function ResumeShareImage({
         width: "1080px",
         height: "1350px",
         display: "flex",
+        boxSizing: "border-box",
         padding: "28px",
         background: "#ece7de",
         color: documentInk,
@@ -173,6 +193,8 @@ export function ResumeShareImage({
           height: "100%",
           display: "flex",
           flexDirection: "column",
+          boxSizing: "border-box",
+          minHeight: 0,
           overflow: "hidden",
           border: `1px solid ${cardBorder}`,
           borderRadius: 28,
@@ -182,20 +204,24 @@ export function ResumeShareImage({
       >
         <div
           style={{
-            minHeight: 98,
+            height: 98,
             display: "flex",
+            flexShrink: 0,
             flexDirection: "column",
+            boxSizing: "border-box",
             justifyContent: "center",
-            gap: 8,
-            padding: "18px 30px",
+            gap: 6,
+            padding: "16px 28px",
             borderBottom: "1px solid #314355",
             background: "#202d38",
           }}
         >
-          <div style={{ display: "flex", color: "#8ff0dc", fontSize: 22, fontWeight: 700, letterSpacing: 3 }}>
+          <div
+            style={{ display: "flex", color: "#8ff0dc", fontSize: 20, fontWeight: 700, letterSpacing: 2.5 }}
+          >
             메력서 · RESUMAE
           </div>
-          <div style={{ display: "flex", color: "#e5edf7", fontSize: 21 }}>파티 구직용 캐릭터 이력서</div>
+          <div style={{ display: "flex", color: "#e5edf7", fontSize: 19 }}>파티 구직용 캐릭터 이력서</div>
         </div>
 
         <div
@@ -203,11 +229,13 @@ export function ResumeShareImage({
             display: "flex",
             flex: 1,
             flexDirection: "column",
-            gap: 15,
-            padding: "24px 30px 18px",
+            minHeight: 0,
+            boxSizing: "border-box",
+            gap: 10,
+            padding: "18px 28px 14px",
           }}
         >
-          <div style={{ display: "flex", minHeight: 158, alignItems: "center", gap: 24 }}>
+          <div style={{ display: "flex", height: 158, flexShrink: 0, alignItems: "center", gap: 22 }}>
             {avatarDataUri ? (
               <div
                 style={{
@@ -296,13 +324,22 @@ export function ResumeShareImage({
             </div>
           </div>
 
-          <div style={{ display: "flex", color: accent, fontSize: 19, fontWeight: 700, letterSpacing: 1.4 }}>
+          <div
+            style={{
+              display: "flex",
+              flexShrink: 0,
+              color: accent,
+              fontSize: 18,
+              fontWeight: 700,
+              letterSpacing: 1.2,
+            }}
+          >
             지원 분야
           </div>
-          <FieldCard label="희망 보스" value={targetBoss} wide />
+          <FieldCard label="희망 보스" value={targetBoss} height={76} />
           <div style={{ display: "flex", gap: 14 }}>
-            <FieldCard label="역할" value={roleLabels[draft.role]} wide />
-            <FieldCard label="파티 유형" value={partyTypeLabels[draft.partyType]} wide />
+            <FieldCard label="역할" value={roleLabels[draft.role]} wide height={76} />
+            <FieldCard label="파티 유형" value={partyTypeLabels[draft.partyType]} wide height={76} />
           </div>
 
           {hasReferenceMetrics ? (
@@ -310,25 +347,28 @@ export function ResumeShareImage({
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: 13,
+                flexShrink: 0,
+                boxSizing: "border-box",
+                height: 166,
+                gap: 8,
                 border: "1px solid #d9867f",
-                borderRadius: 20,
+                borderRadius: 18,
                 background: "#f8e6e1",
-                padding: "16px 18px",
+                padding: "12px 14px",
               }}
             >
               <div
                 style={{
                   display: "flex",
                   color: "#7c2f2c",
-                  fontSize: 19,
+                  fontSize: 18,
                   fontWeight: 700,
                   letterSpacing: 1.4,
                 }}
               >
                 환산 · 보스 배율
               </div>
-              <div style={{ display: "flex", height: 126, gap: 14 }}>
+              <div style={{ display: "flex", height: 112, gap: 12 }}>
                 <MetricCard
                   label="환산"
                   value={draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "입력 필요"}
@@ -343,15 +383,17 @@ export function ResumeShareImage({
                 />
                 <div
                   style={{
-                    width: 150,
+                    width: 138,
                     display: "flex",
+                    flexShrink: 0,
+                    boxSizing: "border-box",
                     alignItems: "center",
                     justifyContent: "center",
                     overflow: "hidden",
                     border: `1px solid ${cardBorder}`,
-                    borderRadius: 18,
+                    borderRadius: 16,
                     background: "#fffefa",
-                    padding: 10,
+                    padding: 8,
                   }}
                 >
                   {bossArtworkDataUri ? (
@@ -373,7 +415,16 @@ export function ResumeShareImage({
             </div>
           ) : null}
 
-          <div style={{ display: "flex", color: accent, fontSize: 19, fontWeight: 700, letterSpacing: 1.4 }}>
+          <div
+            style={{
+              display: "flex",
+              flexShrink: 0,
+              color: accent,
+              fontSize: 18,
+              fontWeight: 700,
+              letterSpacing: 1.2,
+            }}
+          >
             파티 경험 및 가능 시간
           </div>
           <DetailCard label="보스 경험" value={draft.experienceSummary ?? "입력 필요"} />
@@ -386,26 +437,29 @@ export function ResumeShareImage({
                 draft.voiceChat === "AVAILABLE" ? "가능" : draft.voiceChat === "OPTIONAL" ? "선택" : "불가"
               }
               wide
+              height={76}
             />
-            <FieldCard label="분배 방식" value={draft.lootPolicy || "협의"} wide />
+            <FieldCard label="분배 방식" value={draft.lootPolicy || "협의"} wide height={76} />
           </div>
         </div>
 
         <div
           style={{
-            minHeight: 132,
+            height: 132,
             display: "flex",
+            flexShrink: 0,
             alignItems: "center",
-            gap: 20,
+            boxSizing: "border-box",
+            gap: 18,
             borderTop: "1px solid #314355",
             background: "#202d38",
             color: "#dbe8f4",
-            padding: "15px 30px",
+            padding: "14px 28px",
           }}
         >
-          <img src={qrDataUri} alt="검증 페이지 QR" style={{ width: 94, height: 94, borderRadius: 4 }} />
+          <img src={qrDataUri} alt="검증 페이지 QR" style={{ width: 88, height: 88, borderRadius: 4 }} />
           <div style={{ display: "flex", minWidth: 0, flex: 1, flexDirection: "column", gap: 5 }}>
-            <div style={{ display: "flex", fontSize: 16 }}>
+            <div style={{ display: "flex", fontSize: 15 }}>
               기준 시각:{" "}
               {new Intl.DateTimeFormat("ko-KR", {
                 dateStyle: "medium",
@@ -413,16 +467,16 @@ export function ResumeShareImage({
                 timeZone: "Asia/Seoul",
               }).format(new Date(resume.version.snapshot.fetchedAt))}
             </div>
-            <div style={{ display: "flex", fontSize: 16 }}>
+            <div style={{ display: "flex", fontSize: 15 }}>
               버전 v{resume.version.versionNumber} · {resume.version.contentHash.slice(0, 12)}
             </div>
-            <div style={{ display: "flex", color: "#9db0c2", fontSize: 15 }}>
+            <div style={{ display: "flex", color: "#9db0c2", fontSize: 14 }}>
               {canonicalUrl.replace(/^https?:\/\//, "")}
             </div>
-            <div style={{ display: "flex", color: "#b7c6d4", fontSize: 15 }}>
+            <div style={{ display: "flex", color: "#b7c6d4", fontSize: 14 }}>
               Data based on NEXON Open API
             </div>
-            <div style={{ display: "flex", color: "#9db0c2", fontSize: 13 }}>
+            <div style={{ display: "flex", color: "#9db0c2", fontSize: 12 }}>
               본 서비스는 NEXON의 공식 제휴 또는 인증 서비스가 아닙니다.
             </div>
           </div>
