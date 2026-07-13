@@ -31,6 +31,8 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
 
   await page.locator("#converted-stat").fill("110,650");
   await page.locator("#boss-multiplier-percent").fill("412.5");
+  await page.locator("#party-type").selectOption("ACHIEVEMENT");
+  await expect(page.locator("#party-type")).toHaveValue("ACHIEVEMENT");
   await expect(page.locator("#target-boss")).toHaveCount(0);
   await page.locator("#boss-quick-select").selectOption("xblack");
   await Promise.all([

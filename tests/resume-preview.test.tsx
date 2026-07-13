@@ -68,4 +68,15 @@ describe("ResumePreview", () => {
     const bossArtwork = document.querySelector('img[data-boss-art-key="blackmage"]');
     expect(bossArtwork).toHaveAttribute("src", "/images/bosses/blackmage.png");
   });
+
+  it("shows the achievement party type in the live preview", () => {
+    const profile = getMockProfiles()[0];
+    if (!profile) {
+      throw new Error("Expected the primary mock profile.");
+    }
+
+    render(<ResumePreview profile={profile} draft={{ ...draft, partyType: "ACHIEVEMENT" }} mode="mock" />);
+
+    expect(screen.getByText("업적")).toBeInTheDocument();
+  });
 });

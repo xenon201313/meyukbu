@@ -99,4 +99,18 @@ describe("ResumeShareImage", () => {
     expect(markup).toContain("data:image/png;base64,boss");
     expect(markup).toContain("검은 마법사 (하드) 보스 일러스트");
   });
+
+  it("includes the achievement party type in the PNG card", () => {
+    const markup = renderShareImage({
+      targetBoss: "유피테르 (노멀)",
+      targetBossCadence: "WEEKLY",
+      role: "DAMAGE",
+      partyType: "ACHIEVEMENT",
+      availability: [{ days: ["토"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
+      voiceChat: "OPTIONAL",
+      theme: "RESUME",
+    });
+
+    expect(markup).toContain("업적");
+  });
 });

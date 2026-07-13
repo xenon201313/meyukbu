@@ -149,7 +149,7 @@ interface ResumeDraft {
   targetBoss: string;
   targetBossCadence?: "WEEKLY" | "MONTHLY";
   role: "DAMAGE" | "SUPPORT" | "UTILITY" | "OTHER";
-  partyType: "FIXED" | "SEMI_FIXED" | "TEMPORARY" | "PROGRESSION";
+  partyType: "FIXED" | "SEMI_FIXED" | "TEMPORARY" | "PROGRESSION" | "ACHIEVEMENT";
   availability: AvailabilitySlot[];
   voiceChat: "AVAILABLE" | "OPTIONAL" | "UNAVAILABLE";
   lootPolicy?: string;

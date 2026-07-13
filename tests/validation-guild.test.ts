@@ -34,6 +34,13 @@ describe("resume draft validation", () => {
     );
   });
 
+  it("accepts and preserves the achievement party type", () => {
+    const draft = { ...validDraft, partyType: "ACHIEVEMENT" as const };
+
+    expect(resumeDraftSchema.safeParse(draft).success).toBe(true);
+    expect(parseStoredDraft(draft).partyType).toBe("ACHIEVEMENT");
+  });
+
   it("rejects invalid time order, oversized plain text, and invalid character names", () => {
     expect(
       resumeDraftSchema.safeParse({

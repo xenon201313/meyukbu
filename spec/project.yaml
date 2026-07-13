@@ -44,6 +44,7 @@ party_types:
   SEMI_FIXED: "반고정"
   TEMPORARY: "임시"
   PROGRESSION: "트라이"
+  ACHIEVEMENT: "업적"
 
 routes:
   pages:

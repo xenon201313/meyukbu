@@ -64,6 +64,7 @@ const partyTypeOptions: ReadonlyArray<{ value: PartyType; label: string }> = [
   { value: "FIXED", label: partyTypeLabels.FIXED },
   { value: "TEMPORARY", label: partyTypeLabels.TEMPORARY },
   { value: "PROGRESSION", label: partyTypeLabels.PROGRESSION },
+  { value: "ACHIEVEMENT", label: partyTypeLabels.ACHIEVEMENT },
 ];
 
 const voiceChatOptions: ReadonlyArray<{ value: VoiceChat; label: string }> = [
@@ -217,7 +218,8 @@ function isResumeDraft(value: unknown): value is ResumeDraft {
     (value.partyType === "FIXED" ||
       value.partyType === "SEMI_FIXED" ||
       value.partyType === "TEMPORARY" ||
-      value.partyType === "PROGRESSION") &&
+      value.partyType === "PROGRESSION" ||
+      value.partyType === "ACHIEVEMENT") &&
     validAvailability &&
     (value.voiceChat === "AVAILABLE" ||
       value.voiceChat === "OPTIONAL" ||

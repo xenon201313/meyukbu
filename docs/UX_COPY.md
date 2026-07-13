@@ -84,6 +84,7 @@
 - SEMI_FIXED: `반고정`
 - TEMPORARY: `임시`
 - PROGRESSION: `트라이`
+- ACHIEVEMENT: `업적`
 
 ## 출처 배지
 

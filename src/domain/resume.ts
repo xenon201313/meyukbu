@@ -3,7 +3,7 @@ import type { NormalizedCharacterProfile } from "@/domain/character";
 export const resumeRoleValues = ["DAMAGE", "SUPPORT", "UTILITY", "OTHER"] as const;
 export type ResumeRole = (typeof resumeRoleValues)[number];
 
-export const partyTypeValues = ["FIXED", "SEMI_FIXED", "TEMPORARY", "PROGRESSION"] as const;
+export const partyTypeValues = ["FIXED", "SEMI_FIXED", "TEMPORARY", "PROGRESSION", "ACHIEVEMENT"] as const;
 export type PartyType = (typeof partyTypeValues)[number];
 
 export const voiceChatValues = ["AVAILABLE", "OPTIONAL", "UNAVAILABLE"] as const;
@@ -114,6 +114,7 @@ export const partyTypeLabels: Record<PartyType, string> = {
   SEMI_FIXED: "반고정",
   TEMPORARY: "용병",
   PROGRESSION: "트라이",
+  ACHIEVEMENT: "업적",
 };
 
 export const voiceChatLabels: Record<VoiceChat, string> = {

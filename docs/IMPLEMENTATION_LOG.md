@@ -1,5 +1,11 @@
 # 구현 및 검증 로그
 
+## 2026-07-13 — 파티 유형 `업적` 추가
+
+- `ACHIEVEMENT`를 파티 유형의 정식 도메인 값으로 추가했다. Zod 입력 검증과 저장 JSON 파서는 같은 enum을 사용하므로 새 값이 안전하게 게시 버전에 저장된다.
+- 작성 화면의 파티 유형 선택지에 `업적`을 넣었고, 편집 미리보기와 1080×1350 발급 PNG는 공통 라벨 맵을 통해 동일하게 `업적`으로 표시한다.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`(14 files, 43 tests), `pnpm test:e2e`(2 tests), `pnpm build`를 모두 통과했다.
+
 ## 2026-07-13 — PNG 카드 레이아웃 안정화
 
 - ImageResponse의 flex 축소로 지원 분야와 하단 QR 영역이 겹치던 문제를 수정했다. 카드별 높이·padding·축소 규칙을 명시하고, 가로 2열에만 `flexGrow`를 적용했다.
