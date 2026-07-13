@@ -220,6 +220,12 @@ Live provider는 여러 endpoint 결과를 병렬 조회하되, 일부 endpoint 
 - 이미지 route는 content hash 기반 immutable cache header를 사용할 수 있다.
 - 이미지에 API key, edit token, 비공개 contact를 포함하지 않는다.
 
+## 7-1. 글 양식 복사
+
+- 서버 컴포넌트가 현재 `PublicResumeView`와 canonical URL에서 고정 순서의 plain text를 만든다.
+- 클라이언트 복사 버튼에는 완료된 문자열만 전달해, 장비 상세·비공개 연락처·edit token을 hydrate하지 않는다.
+- Clipboard API가 거부되면 사용자 동작 안에서 textarea 선택/복사 fallback을 사용하고, 성공·실패는 `aria-live` 상태로 알린다.
+
 ## 8. 편집 권한
 
 1. 게시 시 256-bit 이상 random edit token 생성

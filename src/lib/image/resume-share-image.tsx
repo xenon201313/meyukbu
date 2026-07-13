@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 
-import { partyTypeLabels, roleLabels, targetBossCadenceLabels } from "@/domain/resume";
-import type { PublicResumeView } from "@/server/services/public-view";
+import { partyTypeLabels, roleLabels, targetBossCadenceLabels, voiceChatLabels } from "@/domain/resume";
 import { formatNumericDisplay } from "@/lib/format";
+import type { PublicResumeView } from "@/server/services/public-view";
 
 interface ResumeShareImageProps {
   resume: PublicResumeView;
@@ -12,27 +12,35 @@ interface ResumeShareImageProps {
   bossArtworkDataUri: string | null;
 }
 
-const cardBorder = "#d9cdbd";
+const paper = "#fffefa";
+const paperShade = "#f6f2ea";
+const paperBorder = "#cec5b7";
+const rule = "#ddd5c8";
 const documentInk = "#202a36";
-const mutedInk = "#52606d";
+const mutedInk = "#5e6b78";
 const accent = "#a44640";
 
 function initials(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
-function compactText(value: string, limit: number): string {
-  return value.length > limit ? `${value.slice(0, limit)}…` : value;
+/** Keeps one fixed PNG row readable even when a user-entered description is long. */
+function compactText(value: string | undefined, limit: number): string {
+  const normalized = value?.replace(/\s+/gu, " ").trim() ?? "";
+  if (!normalized) {
+    return "미입력";
+  }
+  return normalized.length > limit ? `${normalized.slice(0, limit - 1)}…` : normalized;
 }
 
-function formatBossMultiplierPercent(value: string): string {
-  return `${formatNumericDisplay(value)}%`;
+function formatBossMultiplierPercent(value: string | undefined): string {
+  return value ? `${formatNumericDisplay(value)}%` : "미입력";
 }
 
 function formatAvailability(resume: PublicResumeView): string {
   const slots = resume.version.draft.availability;
   if (!slots.length) {
-    return "입력 필요";
+    return "미입력";
   }
 
   return slots
@@ -40,18 +48,19 @@ function formatAvailability(resume: PublicResumeView): string {
     .join(" / ");
 }
 
-function SourceBadge({ label = "작성 내용" }: { label?: string }) {
+function SourceBadge({ label }: { label: string }) {
   return (
     <div
       style={{
         display: "flex",
         alignItems: "center",
+        flexShrink: 0,
         boxSizing: "border-box",
-        border: "1px solid #e7bf65",
-        borderRadius: 7,
-        background: "#fff3ca",
-        color: "#7c3f12",
-        fontSize: 14,
+        border: "1px solid #dac99f",
+        borderRadius: 999,
+        background: "#fff7df",
+        color: "#78541b",
+        fontSize: 13,
         fontWeight: 700,
         lineHeight: 1,
         padding: "6px 9px",
@@ -62,103 +71,215 @@ function SourceBadge({ label = "작성 내용" }: { label?: string }) {
   );
 }
 
-function FieldCard({
+function SectionHeading({ number, title, source }: { number: string; title: string; source: string }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexShrink: 0,
+        height: 28,
+        boxSizing: "border-box",
+        borderBottom: `1px solid ${rule}`,
+        paddingBottom: 7,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", color: accent, fontSize: 15, fontWeight: 700, letterSpacing: 1.2 }}>
+          {number}
+        </div>
+        <div style={{ display: "flex", color: documentInk, fontSize: 19, fontWeight: 700 }}>{title}</div>
+      </div>
+      <SourceBadge label={source} />
+    </div>
+  );
+}
+
+function TableRow({
   label,
   value,
-  wide = false,
-  height = 76,
+  height = 50,
+  last = false,
+  valueLimit = 76,
 }: {
   label: string;
-  value: string;
-  wide?: boolean;
+  value: string | undefined;
   height?: number;
+  last?: boolean;
+  valueLimit?: number;
 }) {
   return (
     <div
       style={{
         display: "flex",
-        flexDirection: "column",
-        flexGrow: wide ? 1 : 0,
+        alignItems: "stretch",
         flexShrink: 0,
-        boxSizing: "border-box",
         height,
-        minWidth: 0,
-        gap: 4,
-        border: `1px solid ${cardBorder}`,
-        borderRadius: 16,
-        background: "#fffefa",
-        padding: "10px 16px",
+        boxSizing: "border-box",
+        borderBottom: last ? "0" : `1px solid ${rule}`,
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-        <div style={{ display: "flex", color: "#687380", fontSize: 17 }}>{label}</div>
-        <SourceBadge />
+      <div
+        style={{
+          width: 134,
+          display: "flex",
+          alignItems: "center",
+          flexShrink: 0,
+          boxSizing: "border-box",
+          background: paperShade,
+          color: mutedInk,
+          fontSize: 16,
+          fontWeight: 700,
+          padding: "0 14px",
+        }}
+      >
+        {label}
       </div>
-      <div style={{ display: "flex", color: documentInk, fontSize: 24, fontWeight: 700, lineHeight: 1.15 }}>
-        {value || "입력 필요"}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          minWidth: 0,
+          flex: 1,
+          boxSizing: "border-box",
+          color: documentInk,
+          fontSize: 18,
+          lineHeight: 1.25,
+          padding: "0 16px",
+        }}
+      >
+        {compactText(value, valueLimit)}
       </div>
     </div>
   );
 }
 
-function MetricCard({ label, value }: { label: string; value: string }) {
+function SplitTableRow({
+  leftLabel,
+  leftValue,
+  rightLabel,
+  rightValue,
+}: {
+  leftLabel: string;
+  leftValue: string;
+  rightLabel: string;
+  rightValue: string;
+}) {
+  return (
+    <div style={{ display: "flex", flexShrink: 0, height: 56, boxSizing: "border-box" }}>
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
+          minWidth: 0,
+          boxSizing: "border-box",
+          borderRight: `1px solid ${rule}`,
+        }}
+      >
+        <div
+          style={{
+            width: 90,
+            display: "flex",
+            alignItems: "center",
+            flexShrink: 0,
+            boxSizing: "border-box",
+            background: paperShade,
+            color: mutedInk,
+            fontSize: 15,
+            fontWeight: 700,
+            padding: "0 12px",
+          }}
+        >
+          {leftLabel}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            minWidth: 0,
+            flex: 1,
+            boxSizing: "border-box",
+            color: documentInk,
+            fontSize: 18,
+            fontWeight: 700,
+            padding: "0 14px",
+          }}
+        >
+          {compactText(leftValue, 24)}
+        </div>
+      </div>
+      <div style={{ display: "flex", flex: 1, minWidth: 0, boxSizing: "border-box" }}>
+        <div
+          style={{
+            width: 104,
+            display: "flex",
+            alignItems: "center",
+            flexShrink: 0,
+            boxSizing: "border-box",
+            background: paperShade,
+            color: mutedInk,
+            fontSize: 15,
+            fontWeight: 700,
+            padding: "0 12px",
+          }}
+        >
+          {rightLabel}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            minWidth: 0,
+            flex: 1,
+            boxSizing: "border-box",
+            color: documentInk,
+            fontSize: 18,
+            fontWeight: 700,
+            padding: "0 14px",
+          }}
+        >
+          {compactText(rightValue, 24)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MetricCell({ label, value, last = false }: { label: string; value: string; last?: boolean }) {
   return (
     <div
       style={{
         display: "flex",
         flex: 1,
-        flexDirection: "column",
-        flexShrink: 0,
-        boxSizing: "border-box",
-        justifyContent: "space-between",
         minWidth: 0,
-        border: `1px solid ${cardBorder}`,
-        borderRadius: 16,
-        background: "#fffefa",
-        padding: "12px 16px",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-        <div style={{ display: "flex", color: "#687380", fontSize: 17 }}>{label}</div>
-        <SourceBadge />
-      </div>
-      <div style={{ display: "flex", color: documentInk, fontSize: 30, fontWeight: 700, lineHeight: 1.08 }}>
-        {value || "입력 필요"}
-      </div>
-    </div>
-  );
-}
-
-function DetailCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div
-      style={{
-        display: "flex",
         flexDirection: "column",
-        flexShrink: 0,
+        justifyContent: "center",
         boxSizing: "border-box",
-        height: 70,
-        gap: 4,
-        border: "1px solid #d7b98a",
-        borderRadius: 16,
-        background: "#fbf2e3",
-        padding: "8px 14px",
+        borderRight: last ? "0" : `1px solid ${rule}`,
+        padding: "0 20px",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-        <div style={{ display: "flex", color: "#8a5a13", fontSize: 17, fontWeight: 700 }}>{label}</div>
-        <SourceBadge />
-      </div>
-      <div style={{ display: "flex", color: "#5e4030", fontSize: 19, lineHeight: 1.2 }}>
-        {compactText(value || "입력 필요", 86)}
+      <div style={{ display: "flex", color: mutedInk, fontSize: 16, fontWeight: 700 }}>{label}</div>
+      <div
+        style={{
+          display: "flex",
+          color: documentInk,
+          fontSize: 30,
+          fontWeight: 700,
+          lineHeight: 1.15,
+          marginTop: 6,
+        }}
+      >
+        {value}
       </div>
     </div>
   );
 }
 
 /**
- * The canonical 1080×1350 resume document. The public page displays this same
- * immutable PNG, so the visible card and downloaded file cannot drift apart.
+ * The canonical 1080×1350 resume sheet. The public page shows this exact PNG,
+ * keeping the document-like preview and downloaded image on the same version.
  */
 export function ResumeShareImage({
   resume,
@@ -172,7 +293,8 @@ export function ResumeShareImage({
   const targetBoss = draft.targetBossCadence
     ? `${targetBossCadenceLabels[draft.targetBossCadence]} · ${draft.targetBoss}`
     : draft.targetBoss;
-  const hasReferenceMetrics = Boolean(draft.convertedStat || draft.bossMultiplierPercent);
+  const referenceStat = draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "미입력";
+  const bossMultiplier = formatBossMultiplierPercent(draft.bossMultiplierPercent);
 
   return (
     <div
@@ -181,8 +303,8 @@ export function ResumeShareImage({
         height: "1350px",
         display: "flex",
         boxSizing: "border-box",
-        padding: "28px",
-        background: "#ece7de",
+        padding: "24px",
+        background: "#e8e2d8",
         color: documentInk,
         fontFamily: "Nanum Barun Gothic",
       }}
@@ -194,61 +316,89 @@ export function ResumeShareImage({
           display: "flex",
           flexDirection: "column",
           boxSizing: "border-box",
-          minHeight: 0,
           overflow: "hidden",
-          border: `1px solid ${cardBorder}`,
-          borderRadius: 28,
-          background: "#fffefa",
-          boxShadow: "0 18px 42px rgba(74, 53, 35, 0.16)",
+          border: `1px solid ${paperBorder}`,
+          borderRadius: 10,
+          background: paper,
         }}
       >
         <div
           style={{
-            height: 98,
+            height: 94,
             display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
             flexShrink: 0,
-            flexDirection: "column",
             boxSizing: "border-box",
-            justifyContent: "center",
-            gap: 6,
-            padding: "16px 28px",
-            borderBottom: "1px solid #314355",
-            background: "#202d38",
+            borderBottom: "2px solid #283a48",
+            padding: "18px 30px",
           }}
         >
-          <div
-            style={{ display: "flex", color: "#8ff0dc", fontSize: 20, fontWeight: 700, letterSpacing: 2.5 }}
-          >
-            메력서 · RESUMAE
+          <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
+            <div style={{ width: 6, height: 44, display: "flex", flexShrink: 0, background: accent }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <div
+                style={{
+                  display: "flex",
+                  color: documentInk,
+                  fontSize: 26,
+                  fontWeight: 700,
+                  letterSpacing: 0.6,
+                }}
+              >
+                메력서 · RESUMAE
+              </div>
+              <div style={{ display: "flex", color: mutedInk, fontSize: 16 }}>파티 구직용 캐릭터 이력서</div>
+            </div>
           </div>
-          <div style={{ display: "flex", color: "#e5edf7", fontSize: 19 }}>파티 구직용 캐릭터 이력서</div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
+            <div
+              style={{ display: "flex", color: accent, fontSize: 13, fontWeight: 700, letterSpacing: 1.6 }}
+            >
+              RESUME DOCUMENT
+            </div>
+            <div style={{ display: "flex", color: mutedInk, fontSize: 14 }}>
+              v{resume.version.versionNumber}
+            </div>
+          </div>
         </div>
 
         <div
           style={{
             display: "flex",
             flex: 1,
-            flexDirection: "column",
             minHeight: 0,
+            flexDirection: "column",
             boxSizing: "border-box",
-            gap: 10,
-            padding: "18px 28px 14px",
+            gap: 14,
+            padding: "22px 30px 18px",
           }}
         >
-          <div style={{ display: "flex", height: 158, flexShrink: 0, alignItems: "center", gap: 22 }}>
+          <div
+            style={{
+              height: 160,
+              display: "flex",
+              alignItems: "center",
+              flexShrink: 0,
+              boxSizing: "border-box",
+              borderBottom: `1px solid ${rule}`,
+              paddingBottom: 16,
+              gap: 22,
+            }}
+          >
             {avatarDataUri ? (
               <div
                 style={{
-                  width: 158,
-                  height: 158,
+                  width: 142,
+                  height: 142,
                   display: "flex",
-                  flexShrink: 0,
                   alignItems: "center",
                   justifyContent: "center",
+                  flexShrink: 0,
                   overflow: "hidden",
-                  border: `1px solid ${cardBorder}`,
-                  borderRadius: 20,
-                  background: "#f4efe5",
+                  boxSizing: "border-box",
+                  border: `1px solid ${paperBorder}`,
+                  background: paperShade,
                 }}
               >
                 <img
@@ -268,24 +418,24 @@ export function ResumeShareImage({
             ) : (
               <div
                 style={{
-                  width: 158,
-                  height: 158,
+                  width: 142,
+                  height: 142,
                   display: "flex",
-                  flexShrink: 0,
                   alignItems: "center",
                   justifyContent: "center",
-                  border: `1px dashed #bfae99`,
-                  borderRadius: 20,
-                  background: "#f4efe5",
-                  color: "#687380",
-                  fontSize: 32,
+                  flexShrink: 0,
+                  boxSizing: "border-box",
+                  border: `1px dashed ${paperBorder}`,
+                  background: paperShade,
+                  color: mutedInk,
+                  fontSize: 30,
                   fontWeight: 700,
                 }}
               >
                 {initials(profile.characterName)}
               </div>
             )}
-            <div style={{ display: "flex", minWidth: 0, flex: 1, flexDirection: "column", gap: 9 }}>
+            <div style={{ display: "flex", minWidth: 0, flex: 1, flexDirection: "column", gap: 10 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div
                   style={{
@@ -296,170 +446,129 @@ export function ResumeShareImage({
                     lineHeight: 1,
                   }}
                 >
-                  {profile.characterName}
+                  {compactText(profile.characterName, 24)}
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    border: "1px solid #92cdf0",
-                    borderRadius: 8,
-                    background: "#e7f5ff",
-                    color: "#005e98",
-                    fontSize: 17,
-                    fontWeight: 700,
-                    padding: "8px 12px",
-                  }}
-                >
-                  API 조회
-                </div>
+                <SourceBadge label="API 조회" />
               </div>
-              <div style={{ display: "flex", color: mutedInk, fontSize: 23 }}>
+              <div style={{ display: "flex", color: mutedInk, fontSize: 22 }}>
                 {[profile.worldName, profile.className, profile.level ? `Lv.${profile.level}` : null]
                   .filter(Boolean)
                   .join(" · ") || "기본 정보 조회 불가"}
               </div>
-              <div style={{ display: "flex", color: "#687380", fontSize: 22 }}>
-                현재 길드: {profile.currentGuild ?? "조회 불가"}
+              <div style={{ display: "flex", color: mutedInk, fontSize: 20 }}>
+                현재 길드: {compactText(profile.currentGuild ?? undefined, 40)}
               </div>
             </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              flexShrink: 0,
-              color: accent,
-              fontSize: 18,
-              fontWeight: 700,
-              letterSpacing: 1.2,
-            }}
-          >
-            지원 분야
-          </div>
-          <FieldCard label="희망 보스" value={targetBoss} height={76} />
-          <div style={{ display: "flex", gap: 14 }}>
-            <FieldCard label="역할" value={roleLabels[draft.role]} wide height={76} />
-            <FieldCard label="파티 유형" value={partyTypeLabels[draft.partyType]} wide height={76} />
-          </div>
-
-          {hasReferenceMetrics ? (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                flexShrink: 0,
-                boxSizing: "border-box",
-                height: 166,
-                gap: 8,
-                border: "1px solid #d9867f",
-                borderRadius: 18,
-                background: "#f8e6e1",
-                padding: "12px 14px",
-              }}
-            >
+          <div style={{ display: "flex", flexDirection: "column", flexShrink: 0, gap: 8 }}>
+            <SectionHeading number="01" title="지원 분야" source="작성 내용" />
+            <div style={{ display: "flex", height: 122, gap: 14 }}>
               <div
                 style={{
                   display: "flex",
-                  color: "#7c2f2c",
-                  fontSize: 18,
-                  fontWeight: 700,
-                  letterSpacing: 1.4,
+                  flex: 1,
+                  minWidth: 0,
+                  flexDirection: "column",
+                  boxSizing: "border-box",
+                  border: `1px solid ${paperBorder}`,
                 }}
               >
-                환산 · 보스 배율
+                <TableRow label="희망 보스" value={targetBoss} height={64} valueLimit={58} />
+                <SplitTableRow
+                  leftLabel="역할"
+                  leftValue={roleLabels[draft.role]}
+                  rightLabel="파티 유형"
+                  rightValue={partyTypeLabels[draft.partyType]}
+                />
               </div>
-              <div style={{ display: "flex", height: 112, gap: 12 }}>
-                <MetricCard
-                  label="환산"
-                  value={draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "입력 필요"}
-                />
-                <MetricCard
-                  label="보스 배율"
-                  value={
-                    draft.bossMultiplierPercent
-                      ? formatBossMultiplierPercent(draft.bossMultiplierPercent)
-                      : "입력 필요"
-                  }
-                />
-                <div
-                  style={{
-                    width: 138,
-                    display: "flex",
-                    flexShrink: 0,
-                    boxSizing: "border-box",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    overflow: "hidden",
-                    border: `1px solid ${cardBorder}`,
-                    borderRadius: 16,
-                    background: "#fffefa",
-                    padding: 8,
-                  }}
-                >
-                  {bossArtworkDataUri ? (
-                    <img
-                      src={bossArtworkDataUri}
-                      alt={`${draft.targetBoss} 보스 일러스트`}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "contain",
-                        objectPosition: "center",
-                      }}
-                    />
-                  ) : (
-                    <div style={{ display: "flex", color: "#687380", fontSize: 16 }}>보스 이미지 없음</div>
-                  )}
-                </div>
+              <div
+                style={{
+                  width: 122,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  overflow: "hidden",
+                  boxSizing: "border-box",
+                  border: `1px solid ${paperBorder}`,
+                  background: paperShade,
+                  padding: 8,
+                }}
+              >
+                {bossArtworkDataUri ? (
+                  <img
+                    src={bossArtworkDataUri}
+                    alt={`${draft.targetBoss} 보스 일러스트`}
+                    style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "center" }}
+                  />
+                ) : (
+                  <div style={{ display: "flex", color: mutedInk, fontSize: 13 }}>보스 이미지 없음</div>
+                )}
               </div>
             </div>
-          ) : null}
-
-          <div
-            style={{
-              display: "flex",
-              flexShrink: 0,
-              color: accent,
-              fontSize: 18,
-              fontWeight: 700,
-              letterSpacing: 1.2,
-            }}
-          >
-            파티 경험 및 가능 시간
           </div>
-          <DetailCard label="보스 경험" value={draft.experienceSummary ?? "입력 필요"} />
-          <DetailCard label="어필 포인트" value={draft.roleSummary ?? "입력 필요"} />
-          <DetailCard label="가능 시간" value={formatAvailability(resume)} />
-          <div style={{ display: "flex", gap: 14 }}>
-            <FieldCard
-              label="음성 채팅"
-              value={
-                draft.voiceChat === "AVAILABLE" ? "가능" : draft.voiceChat === "OPTIONAL" ? "선택" : "불가"
-              }
-              wide
-              height={76}
-            />
-            <FieldCard label="분배 방식" value={draft.lootPolicy || "협의"} wide height={76} />
+
+          <div style={{ display: "flex", flexDirection: "column", flexShrink: 0, gap: 8 }}>
+            <SectionHeading number="02" title="환산 · 보스 배율" source="작성 내용" />
+            <div
+              style={{
+                height: 92,
+                display: "flex",
+                flexShrink: 0,
+                boxSizing: "border-box",
+                border: `1px solid ${paperBorder}`,
+              }}
+            >
+              <MetricCell label="환산" value={referenceStat} />
+              <MetricCell label="보스 배율" value={bossMultiplier} last />
+            </div>
+          </div>
+
+          <div style={{ display: "flex", minHeight: 0, flexGrow: 1, flexDirection: "column", gap: 8 }}>
+            <SectionHeading number="03" title="파티 경험 및 조건" source="작성 내용" />
+            <div
+              style={{
+                display: "flex",
+                minHeight: 0,
+                flexGrow: 1,
+                flexDirection: "column",
+                boxSizing: "border-box",
+                border: `1px solid ${paperBorder}`,
+              }}
+            >
+              <TableRow label="보스 경험" value={draft.experienceSummary} height={62} valueLimit={82} />
+              <TableRow label="어필 포인트" value={draft.roleSummary} height={62} valueLimit={82} />
+              <TableRow label="가능 시간" value={formatAvailability(resume)} height={56} valueLimit={82} />
+              <TableRow
+                label="디스코드"
+                value={voiceChatLabels[draft.voiceChat]}
+                height={52}
+                valueLimit={34}
+              />
+              <TableRow label="분배 방식" value={draft.lootPolicy} height={52} valueLimit={60} last />
+              <div style={{ display: "flex", flexGrow: 1, boxSizing: "border-box", background: "#fffefb" }} />
+            </div>
           </div>
         </div>
 
         <div
           style={{
-            height: 132,
+            height: 144,
             display: "flex",
-            flexShrink: 0,
             alignItems: "center",
+            flexShrink: 0,
             boxSizing: "border-box",
             gap: 18,
-            borderTop: "1px solid #314355",
-            background: "#202d38",
-            color: "#dbe8f4",
-            padding: "14px 28px",
+            borderTop: "2px solid #283a48",
+            background: "#f8f5ef",
+            color: mutedInk,
+            padding: "16px 30px",
           }}
         >
-          <img src={qrDataUri} alt="검증 페이지 QR" style={{ width: 88, height: 88, borderRadius: 4 }} />
+          <img src={qrDataUri} alt="검증 페이지 QR" style={{ width: 92, height: 92, borderRadius: 2 }} />
           <div style={{ display: "flex", minWidth: 0, flex: 1, flexDirection: "column", gap: 5 }}>
-            <div style={{ display: "flex", fontSize: 15 }}>
+            <div style={{ display: "flex", color: documentInk, fontSize: 15, fontWeight: 700 }}>
               기준 시각:{" "}
               {new Intl.DateTimeFormat("ko-KR", {
                 dateStyle: "medium",
@@ -467,16 +576,16 @@ export function ResumeShareImage({
                 timeZone: "Asia/Seoul",
               }).format(new Date(resume.version.snapshot.fetchedAt))}
             </div>
-            <div style={{ display: "flex", fontSize: 15 }}>
+            <div style={{ display: "flex", color: documentInk, fontSize: 14 }}>
               버전 v{resume.version.versionNumber} · {resume.version.contentHash.slice(0, 12)}
             </div>
-            <div style={{ display: "flex", color: "#9db0c2", fontSize: 14 }}>
-              {canonicalUrl.replace(/^https?:\/\//, "")}
+            <div style={{ display: "flex", color: mutedInk, fontSize: 13 }}>
+              {canonicalUrl.replace(/^https?:\/\//u, "")}
             </div>
-            <div style={{ display: "flex", color: "#b7c6d4", fontSize: 14 }}>
+            <div style={{ display: "flex", color: "#485a6a", fontSize: 13 }}>
               Data based on NEXON Open API
             </div>
-            <div style={{ display: "flex", color: "#9db0c2", fontSize: 12 }}>
+            <div style={{ display: "flex", color: mutedInk, fontSize: 11 }}>
               본 서비스는 NEXON의 공식 제휴 또는 인증 서비스가 아닙니다.
             </div>
           </div>

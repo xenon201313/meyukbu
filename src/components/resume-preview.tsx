@@ -1,7 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
+
+import { bossArtworkUrl, findBossOption } from "@/content/bosses";
 import type { NormalizedCharacterProfile } from "@/domain/character";
 import { getFreshnessStatus } from "@/domain/freshness";
-import { bossArtworkUrl, findBossOption } from "@/content/bosses";
 import {
   partyTypeLabels,
   roleLabels,
@@ -9,7 +10,6 @@ import {
   type ResumeDraft,
   voiceChatLabels,
 } from "@/domain/resume";
-
 import { formatNumericDisplay } from "@/lib/format";
 
 import { FreshnessBadge } from "@/components/freshness-badge";
@@ -36,14 +36,28 @@ function formatKoreanDateTime(value: string) {
   }).format(date);
 }
 
-function formatBossMultiplierPercent(value: string): string {
-  return `${formatNumericDisplay(value)}%`;
+function formatBossMultiplierPercent(value: string | undefined): string {
+  return value ? `${formatNumericDisplay(value)}%` : "미입력";
+}
+
+function formatAvailability(draft: ResumeDraft): string {
+  if (!draft.availability.length) {
+    return "미입력";
+  }
+
+  return draft.availability
+    .map((slot) => `${slot.days.join(" · ")} ${slot.startTime}–${slot.endTime} (한국 표준시)`)
+    .join(" / ");
+}
+
+function displayOrEmpty(value: string | undefined): string {
+  return value?.trim() || "미입력";
 }
 
 function CharacterAvatar({ profile }: { profile: NormalizedCharacterProfile }) {
   if (profile.imageUrl) {
     return (
-      <span className="h-40 w-40 shrink-0 overflow-hidden rounded-xl border border-[#d9cdbd] bg-[#f4efe5] sm:h-44 sm:w-44">
+      <span className="h-40 w-40 shrink-0 overflow-hidden border border-[#cec5b7] bg-[#f6f2ea] sm:h-44 sm:w-44">
         <span className="flex h-full w-full items-center justify-center overflow-hidden">
           <img
             src={profile.imageUrl}
@@ -58,7 +72,7 @@ function CharacterAvatar({ profile }: { profile: NormalizedCharacterProfile }) {
   return (
     <div
       aria-label={`${profile.characterName} 캐릭터 이미지 없음`}
-      className="flex h-40 w-40 shrink-0 items-center justify-center rounded-xl border border-dashed border-[#bfae99] bg-[#f4efe5] text-2xl font-bold text-[#687380] sm:h-44 sm:w-44"
+      className="flex h-40 w-40 shrink-0 items-center justify-center border border-dashed border-[#cec5b7] bg-[#f6f2ea] text-2xl font-bold text-[#687380] sm:h-44 sm:w-44"
       role="img"
     >
       메
@@ -66,7 +80,55 @@ function CharacterAvatar({ profile }: { profile: NormalizedCharacterProfile }) {
   );
 }
 
-/** A read-only, mobile-first representation of the resume currently being edited. */
+function PreviewSectionHeading({
+  id,
+  number,
+  title,
+  provenance,
+}: {
+  id: string;
+  number: string;
+  title: string;
+  provenance: "NEXON_API" | "USER_PROVIDED";
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-[#ddd5c8] pb-2">
+      <div className="flex items-center gap-2.5">
+        <span className="text-xs font-bold tracking-[0.16em] text-[#a44640]">{number}</span>
+        <h3 id={id} className="text-base font-bold text-[#202a36]">
+          {title}
+        </h3>
+      </div>
+      <ProvenanceBadge provenance={provenance} />
+    </div>
+  );
+}
+
+function PreviewRow({ label, value, last = false }: { label: string; value: string; last?: boolean }) {
+  return (
+    <div className={`flex min-h-12 items-stretch ${last ? "" : "border-b border-[#ddd5c8]"}`}>
+      <div className="flex w-28 shrink-0 items-center bg-[#f6f2ea] px-3 text-xs font-bold text-[#5e6b78] sm:w-32">
+        {label}
+      </div>
+      <p className="flex min-w-0 flex-1 items-center break-words px-3 py-2 text-sm leading-6 text-[#202a36]">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function PreviewMetric({ label, value, last = false }: { label: string; value: string; last?: boolean }) {
+  return (
+    <div
+      className={`min-w-0 flex-1 p-4 ${last ? "" : "border-b border-[#ddd5c8] sm:border-b-0 sm:border-r"}`}
+    >
+      <p className="text-xs font-bold text-[#5e6b78]">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-[#202a36]">{value}</p>
+    </div>
+  );
+}
+
+/** A read-only, mobile-first paper-form representation of the resume being edited. */
 export function ResumePreview({ profile, draft, mode, versionNumber, className = "" }: ResumePreviewProps) {
   if (!profile) {
     return (
@@ -80,149 +142,125 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
   }
 
   const freshness = getFreshnessStatus(profile.fetchedAt);
-  const availability = draft.availability[0];
   const isMock = mode === "mock" || profile.provider === "mock";
   const selectedBoss = draft.targetBossCadence
     ? findBossOption(draft.targetBossCadence, draft.targetBoss)
     : undefined;
+  const targetBoss = draft.targetBossCadence
+    ? `${targetBossCadenceLabels[draft.targetBossCadence]} · ${draft.targetBoss}`
+    : draft.targetBoss;
 
   return (
     <article
       aria-labelledby="resume-preview-title"
       className={`resume-paper overflow-hidden rounded-2xl border ${className}`}
     >
-      <div className="resume-preview-header border-b border-[#314355] px-5 py-3 text-slate-50">
-        <p className="text-xs font-semibold tracking-[0.2em] text-teal-200">메력서 · RESUMAE</p>
-        <p className="mt-1 text-sm text-slate-300">파티 구직용 캐릭터 이력서</p>
+      <div className="flex items-center justify-between gap-3 border-b-2 border-[#283a48] px-5 py-4">
+        <div className="flex items-center gap-3">
+          <span className="h-10 w-1.5 shrink-0 bg-[#a44640]" />
+          <div>
+            <p className="text-sm font-bold tracking-[0.08em] text-[#202a36]">메력서 · RESUMAE</p>
+            <p className="mt-1 text-xs text-[#5e6b78]">파티 구직용 캐릭터 이력서</p>
+          </div>
+        </div>
+        <span className="text-[10px] font-bold tracking-[0.14em] text-[#a44640]">RESUME DOCUMENT</span>
       </div>
 
-      <div className="space-y-6 p-5 text-[#202a36]">
+      <div className="space-y-5 p-5 text-[#202a36]">
         {isMock ? (
-          <p className="rounded-xl border border-sky-700/30 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-950">
+          <p className="border border-sky-700/30 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-950">
             현재 데모 데이터로 표시 중입니다. 실제 게임 데이터와 다를 수 있습니다.
           </p>
         ) : null}
 
-        <header className="flex items-start gap-4">
+        <header className="flex items-start gap-4 border-b border-[#ddd5c8] pb-4">
           <CharacterAvatar profile={profile} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2
-                id="resume-preview-title"
-                className="truncate text-2xl font-bold tracking-tight text-[#202a36]"
-              >
+              <h2 id="resume-preview-title" className="truncate text-2xl font-bold text-[#202a36]">
                 {profile.characterName}
               </h2>
               <ProvenanceBadge provenance="NEXON_API" />
             </div>
-            <p className="mt-1 text-sm text-[#52606d]">
+            <p className="mt-2 text-sm text-[#52606d]">
               {[profile.worldName, profile.className, profile.level ? `Lv.${profile.level}` : null]
                 .filter(Boolean)
                 .join(" · ") || "기본 정보 조회 불가"}
             </p>
-            <p className="mt-1 text-sm text-[#687380]">현재 길드: {profile.currentGuild ?? "조회 불가"}</p>
+            <p className="mt-2 text-sm text-[#687380]">현재 길드: {profile.currentGuild ?? "조회 불가"}</p>
           </div>
         </header>
 
-        <section aria-labelledby="preview-application-heading">
-          <p id="preview-application-heading" className="ui-kicker">
-            지원 분야
-          </p>
-          <div className="mt-2 space-y-2 text-sm">
-            <PreviewItem
-              label="희망 보스"
-              value={
-                draft.targetBossCadence
-                  ? `${targetBossCadenceLabels[draft.targetBossCadence]} · ${draft.targetBoss}`
-                  : draft.targetBoss
-              }
-              provenance="USER_PROVIDED"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <PreviewItem label="역할" value={roleLabels[draft.role]} provenance="USER_PROVIDED" />
-              <PreviewItem
-                label="파티 유형"
-                value={partyTypeLabels[draft.partyType]}
-                provenance="USER_PROVIDED"
-              />
-            </div>
-          </div>
-        </section>
-
-        {draft.convertedStat || draft.bossMultiplierPercent ? (
-          <section
-            aria-labelledby="preview-reference-metrics-heading"
-            className="rounded-xl border border-[#c78b85] bg-[#f8e6e1] p-3"
-          >
-            <p
-              id="preview-reference-metrics-heading"
-              className="text-xs font-bold tracking-[0.16em] text-[#7c2f2c]"
-            >
-              환산·보스 배율
-            </p>
-            <div className="mt-2 grid gap-3 sm:grid-cols-[minmax(0,1fr)_7.5rem]">
-              <div className="grid gap-2 sm:grid-cols-2">
-                <PreviewItem
-                  label="환산"
-                  value={draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "입력 필요"}
-                  provenance="USER_PROVIDED"
-                />
-                <PreviewItem
-                  label="보스 배율"
-                  value={
-                    draft.bossMultiplierPercent
-                      ? formatBossMultiplierPercent(draft.bossMultiplierPercent)
-                      : "입력 필요"
-                  }
-                  provenance="USER_PROVIDED"
-                />
-              </div>
-              {selectedBoss ? (
-                <div className="relative flex min-h-28 items-center justify-center overflow-hidden rounded-xl border border-[#d9cdbd] bg-[#fffefa] p-2">
-                  <img
-                    src={bossArtworkUrl(selectedBoss.artworkKey)}
-                    alt={`${selectedBoss.name} 보스 일러스트`}
-                    data-boss-art-key={selectedBoss.artworkKey}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-contain object-center"
-                  />
-                </div>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
-
-        <section aria-labelledby="preview-experience-heading" className="space-y-3">
-          <p id="preview-experience-heading" className="ui-kicker">
-            파티 경험 및 가능 시간
-          </p>
-          {draft.experienceSummary ? <PreviewText label="보스 경험" value={draft.experienceSummary} /> : null}
-          {draft.roleSummary ? <PreviewText label="어필 포인트" value={draft.roleSummary} /> : null}
-          <div className="rounded-xl border border-[#d7b98a] bg-[#fbf2e3] p-3 text-sm text-[#5e4030]">
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold">가능 시간</span>
-              <ProvenanceBadge provenance="USER_PROVIDED" />
-            </div>
-            <p className="mt-1 leading-6">
-              {availability
-                ? `${availability.days.join(" · ")} ${availability.startTime}–${availability.endTime} (한국 표준시)`
-                : "입력 필요"}
-            </p>
-          </div>
-        </section>
-
-        <section aria-label="희망 조건" className="grid grid-cols-2 gap-2 text-sm">
-          <PreviewItem
-            label="음성 채팅"
-            value={voiceChatLabels[draft.voiceChat]}
+        <section aria-labelledby="preview-application-heading" className="space-y-2">
+          <PreviewSectionHeading
+            id="preview-application-heading"
+            number="01"
+            title="지원 분야"
             provenance="USER_PROVIDED"
           />
-          <PreviewItem label="분배 방식" value={draft.lootPolicy || "협의"} provenance="USER_PROVIDED" />
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_7.5rem]">
+            <div className="overflow-hidden border border-[#cec5b7]">
+              <PreviewRow label="희망 보스" value={displayOrEmpty(targetBoss)} />
+              <div className="grid grid-cols-2">
+                <div className="border-r border-[#ddd5c8]">
+                  <PreviewRow label="역할" value={roleLabels[draft.role]} last />
+                </div>
+                <PreviewRow label="파티 유형" value={partyTypeLabels[draft.partyType]} last />
+              </div>
+            </div>
+            {selectedBoss ? (
+              <div className="flex min-h-28 items-center justify-center overflow-hidden border border-[#cec5b7] bg-[#f6f2ea] p-2">
+                <img
+                  src={bossArtworkUrl(selectedBoss.artworkKey)}
+                  alt={`${selectedBoss.name} 보스 일러스트`}
+                  data-boss-art-key={selectedBoss.artworkKey}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-contain object-center"
+                />
+              </div>
+            ) : null}
+          </div>
+        </section>
+
+        <section aria-labelledby="preview-reference-metrics-heading" className="space-y-2">
+          <PreviewSectionHeading
+            id="preview-reference-metrics-heading"
+            number="02"
+            title="환산 · 보스 배율"
+            provenance="USER_PROVIDED"
+          />
+          <div className="overflow-hidden border border-[#cec5b7] sm:flex">
+            <PreviewMetric
+              label="환산"
+              value={draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "미입력"}
+            />
+            <PreviewMetric
+              label="보스 배율"
+              value={formatBossMultiplierPercent(draft.bossMultiplierPercent)}
+              last
+            />
+          </div>
+        </section>
+
+        <section aria-labelledby="preview-experience-heading" className="space-y-2">
+          <PreviewSectionHeading
+            id="preview-experience-heading"
+            number="03"
+            title="파티 경험 및 조건"
+            provenance="USER_PROVIDED"
+          />
+          <div className="overflow-hidden border border-[#cec5b7]">
+            <PreviewRow label="보스 경험" value={displayOrEmpty(draft.experienceSummary)} />
+            <PreviewRow label="어필 포인트" value={displayOrEmpty(draft.roleSummary)} />
+            <PreviewRow label="가능 시간" value={formatAvailability(draft)} />
+            <PreviewRow label="디스코드" value={voiceChatLabels[draft.voiceChat]} />
+            <PreviewRow label="분배 방식" value={displayOrEmpty(draft.lootPolicy)} last />
+          </div>
         </section>
 
         {draft.contact?.isPublic && draft.contact.value ? (
-          <section className="rounded-xl border border-[#d7b98a] bg-[#fbf2e3] p-3 text-sm text-[#5e4030]">
+          <section className="border border-[#cec5b7] bg-[#f8f5ef] p-3 text-sm text-[#5e4030]">
             <div className="flex items-center justify-between gap-2">
               <span className="font-semibold">연락 방법</span>
               <ProvenanceBadge provenance="USER_PROVIDED" />
@@ -232,7 +270,7 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
         ) : null}
       </div>
 
-      <footer className="resume-preview-footer space-y-2 border-t border-[#314355] px-5 py-4 text-xs leading-5 text-slate-400">
+      <footer className="space-y-2 border-t-2 border-[#283a48] bg-[#f8f5ef] px-5 py-4 text-xs leading-5 text-[#5e6b78]">
         <div className="flex flex-wrap items-center gap-2">
           <FreshnessBadge fetchedAt={profile.fetchedAt} status={freshness} />
           {versionNumber ? <span>v{versionNumber}</span> : null}
@@ -245,41 +283,9 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
         {freshness === "expired" ? (
           <p>API 데이터가 오래되어 공개가 제한되었습니다. 작성자가 갱신하면 다시 확인할 수 있습니다.</p>
         ) : null}
-        <p className="font-medium text-slate-200">Data based on NEXON Open API</p>
+        <p className="font-medium text-[#314355]">Data based on NEXON Open API</p>
         <p>본 서비스는 NEXON의 공식 제휴 또는 인증 서비스가 아닙니다.</p>
       </footer>
     </article>
-  );
-}
-
-function PreviewItem({
-  label,
-  value,
-  provenance,
-}: {
-  label: string;
-  value: string;
-  provenance: "USER_PROVIDED" | "NEXON_API";
-}) {
-  return (
-    <div className="rounded-xl border border-[#d9cdbd] bg-[#fffefa] p-3">
-      <div className="flex flex-wrap items-center justify-between gap-1">
-        <p className="text-xs text-[#687380]">{label}</p>
-        <ProvenanceBadge provenance={provenance} />
-      </div>
-      <p className="mt-2 break-words font-semibold text-[#202a36]">{value || "입력 필요"}</p>
-    </div>
-  );
-}
-
-function PreviewText({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-[#d7b98a] bg-[#fbf2e3] p-3 text-sm text-[#5e4030]">
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-semibold">{label}</span>
-        <ProvenanceBadge provenance="USER_PROVIDED" />
-      </div>
-      <p className="mt-1 whitespace-pre-wrap break-words leading-6">{value}</p>
-    </div>
   );
 }

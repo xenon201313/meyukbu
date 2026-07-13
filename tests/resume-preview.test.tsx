@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { ResumePreview } from "@/components/resume-preview";
 import type { ResumeDraft } from "@/domain/resume";
@@ -21,7 +21,11 @@ const draft: ResumeDraft = {
 };
 
 describe("ResumePreview", () => {
-  it("uses a larger square character image and labels role copy as an appeal point", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("uses a larger square character image and a document-form field order", () => {
     const profile = getMockProfiles()[0];
     if (!profile) {
       throw new Error("Expected the primary mock profile.");
@@ -31,7 +35,9 @@ describe("ResumePreview", () => {
     render(<ResumePreview profile={profileWithImage} draft={draft} mode="mock" />);
 
     expect(screen.getByText("어필 포인트")).toBeInTheDocument();
-    expect(screen.queryByText("환산·보스 배율")).not.toBeInTheDocument();
+    expect(screen.getByText("환산 · 보스 배율")).toBeInTheDocument();
+    expect(screen.getByText("디스코드")).toBeInTheDocument();
+    expect(screen.getAllByText("미입력").length).toBeGreaterThan(0);
     const avatar = screen.getByAltText(`${profileWithImage.characterName} 캐릭터 이미지`);
     expect(avatar).toHaveClass(
       "h-full",
@@ -60,7 +66,7 @@ describe("ResumePreview", () => {
       />,
     );
 
-    expect(screen.getByText("환산·보스 배율")).toBeInTheDocument();
+    expect(screen.getByText("환산 · 보스 배율")).toBeInTheDocument();
     expect(screen.getByText("환산")).toBeInTheDocument();
     expect(screen.getByText("110,650")).toBeInTheDocument();
     expect(screen.getByText("보스 배율")).toBeInTheDocument();

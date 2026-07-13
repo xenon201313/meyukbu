@@ -52,7 +52,7 @@ function renderShareImage(draft: ResumeDraft) {
 }
 
 describe("ResumeShareImage", () => {
-  it("uses the same document-card visual language as the public resume", () => {
+  it("renders a fixed paper-resume form that remains readable without entered reference values", () => {
     const draft: ResumeDraft = {
       targetBoss: "검은 마법사 (하드)",
       targetBossCadence: "MONTHLY",
@@ -66,12 +66,19 @@ describe("ResumeShareImage", () => {
     const markup = renderShareImage(draft);
 
     expect(markup).toContain("메력서 · RESUMAE");
-    expect(markup).toContain("background:#202d38");
+    expect(markup).toContain("RESUME DOCUMENT");
+    expect(markup).toContain("background:#e8e2d8");
+    expect(markup).toContain("background:#fffefa");
     expect(markup).toContain("overflow:hidden");
     expect(markup).toContain("object-fit:contain");
     expect(markup).toContain("transform:scale(1.55)");
     expect(markup).toContain("font-family:Nanum Barun Gothic");
     expect(markup).toContain("font-weight:700");
+    expect(markup).toContain("지원 분야");
+    expect(markup).toContain("환산 · 보스 배율");
+    expect(markup).toContain("파티 경험 및 조건");
+    expect(markup).toContain("디스코드");
+    expect(markup).toContain("미입력");
     expect(markup).toContain("data:image/png;base64,qr");
     expect(markup).toContain("Data based on NEXON Open API");
   });
@@ -112,5 +119,24 @@ describe("ResumeShareImage", () => {
     });
 
     expect(markup).toContain("업적");
+  });
+
+  it("compacts long written descriptions without losing the verification footer", () => {
+    const markup = renderShareImage({
+      targetBoss: "유피테르 (노멀)",
+      targetBossCadence: "WEEKLY",
+      role: "DAMAGE",
+      partyType: "ACHIEVEMENT",
+      availability: [{ days: ["토"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
+      voiceChat: "OPTIONAL",
+      experienceSummary: "가".repeat(180),
+      roleSummary: "나".repeat(180),
+      theme: "RESUME",
+    });
+
+    expect(markup).toContain(`${"가".repeat(81)}…`);
+    expect(markup).toContain(`${"나".repeat(81)}…`);
+    expect(markup).toContain("검증 페이지 QR");
+    expect(markup).toContain("Data based on NEXON Open API");
   });
 });

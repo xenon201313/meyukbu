@@ -6,12 +6,15 @@ import { notFound } from "next/navigation";
 import { CombatStatsPanel } from "@/components/combat-stats-panel";
 import { OwnerResumeActions } from "@/components/owner-resume-actions";
 import { ProvenanceBadge } from "@/components/provenance-badge";
+import { ResumeTextCopyButton } from "@/components/resume-text-copy-button";
 import { SiteHeader } from "@/components/site-header";
 import { FreshnessBadge } from "@/components/freshness-badge";
 import { toPublicResumeView } from "@/server/services/public-view";
 import { getPublicResume } from "@/server/services/resume-service";
 import { editTokenCookieName, verifyEditToken } from "@/lib/auth/edit-token";
+import { getEnvironment } from "@/lib/env";
 import { resumeImageUrl } from "@/lib/image/resume-image-url";
+import { formatResumePlainText } from "@/lib/resume-plain-text";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +36,11 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
   }
   const resume = toPublicResumeView(result);
   const imageUrl = resumeImageUrl(slug, resume.version.versionNumber);
+  const canonicalUrl = new URL(
+    `/r/${encodeURIComponent(slug)}?v=${resume.version.versionNumber}`,
+    getEnvironment().APP_ORIGIN,
+  ).toString();
+  const resumePlainText = formatResumePlainText(resume, canonicalUrl);
   const cookieStore = await cookies();
   const canEdit = verifyEditToken(
     cookieStore.get(editTokenCookieName(slug))?.value,
@@ -111,6 +119,10 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
             >
               이미지 저장 (1080×1350 PNG)
             </a>
+            <ResumeTextCopyButton text={resumePlainText} className="mt-2" />
+            <p className="mt-2 text-xs leading-5 text-slate-400">
+              입력한 내용을 일정한 이력서 글 양식으로 복사합니다.
+            </p>
             <p className="mt-3 text-xs leading-5 text-slate-400">
               Data based on NEXON Open API
               <br />본 서비스는 NEXON의 공식 제휴 또는 인증 서비스가 아닙니다.

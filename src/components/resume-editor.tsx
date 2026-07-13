@@ -903,7 +903,7 @@ function ResumeEditorContent() {
 
           <FormSection title="희망 조건">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="음성 채팅" htmlFor="voice-chat">
+              <Field label="디스코드" htmlFor="voice-chat">
                 <select
                   id="voice-chat"
                   name="voiceChat"

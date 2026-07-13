@@ -42,7 +42,7 @@
 - 가능한 요일
 - 시작 가능 시간
 - 종료 가능 시간
-- 음성 채팅
+- 디스코드
 - 분배 방식
 - 보스 경험 요약
 - 어필 포인트
@@ -119,6 +119,7 @@ expired 안내:
 - CTA: `메력서 게시하기`
 - success title: `메력서가 완성됐어요`
 - image action: `이미지 저장`
+- text copy action: `이력서 글 복사`
 - link action: `검증 링크 복사`
 - refresh: `최신 데이터로 갱신`
 - delete: `공개 중단`

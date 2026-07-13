@@ -44,9 +44,12 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
   await expect(page.getByRole("heading", { name: "전투력과 최종 능력치" })).toBeVisible();
   await expect(page.getByText("Data based on NEXON Open API").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "최신 데이터로 갱신" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "이력서 글 복사" })).toBeVisible();
+  await page.getByRole("button", { name: "이력서 글 복사" }).click();
+  await expect(page.getByRole("status")).toHaveText("이력서 내용을 클립보드에 복사했습니다.");
 
   const publicPath = new URL(page.url()).pathname;
-  const imageUrl = `${publicPath}/image?v=1&layout=3`;
+  const imageUrl = `${publicPath}/image?v=1&layout=4`;
   await expect(page.locator("[data-resume-share-image]")).toHaveAttribute("src", imageUrl);
   const imageResponse = await page.request.get(imageUrl);
   expect(imageResponse.ok()).toBeTruthy();
@@ -85,6 +88,7 @@ test.describe("375px mobile accessibility", () => {
     await expect(quickSelect).toHaveValue("xblack");
     await expect(page.getByLabel("시작 가능 시간")).toBeVisible();
     await expect(page.getByLabel("종료 가능 시간")).toBeVisible();
+    await expect(page.getByLabel("디스코드")).toBeVisible();
     await expect(page.getByText("메력서 미리보기").first()).toBeVisible();
     await expect(page.getByText("크로아/얀보 제작")).toBeVisible();
   });
