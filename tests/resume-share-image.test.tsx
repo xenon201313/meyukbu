@@ -65,6 +65,8 @@ describe("ResumeShareImage", () => {
     expect(markup).toContain("object-fit:contain");
     expect(markup).toContain("transform:scale(1.55)");
     expect(markup).toContain("font-family:Nanum Barun Gothic");
+    expect(markup).toContain("font-weight:700");
+    expect(markup).not.toContain("font-weight:800");
     expect(markup).not.toContain("크로아/얀보 제작");
   });
 

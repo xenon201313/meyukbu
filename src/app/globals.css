@@ -7,7 +7,7 @@
   --surface-muted: #f8f2e9;
   --ink: #202a36;
   --ink-soft: #52606d;
-  --muted: #687380;
+  --muted: #5d6875;
   --line: #d9cdbd;
   --line-strong: #bfae99;
   --accent: #a44640;
@@ -22,6 +22,7 @@
 
 html {
   background: var(--paper);
+  font-synthesis: none;
 }
 
 body {
@@ -40,6 +41,17 @@ body {
   color: var(--ink);
   font-family: var(--font-nanum-barun-gothic), "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
   font-weight: 400;
+}
+
+/* NanumBarunGothic ships only Regular(400) and Bold(700); prevent synthetic, blurry strokes. */
+.font-black,
+.font-extrabold {
+  font-weight: 700;
+}
+
+/* Negative tracking crowds Korean glyphs and makes dense headings hard to read. */
+.tracking-tight {
+  letter-spacing: normal;
 }
 
 a {
@@ -74,7 +86,7 @@ textarea:focus-visible {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.24);
   color: #f1f5f9;
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1;
   padding: 0.54rem 0.78rem;
@@ -127,12 +139,13 @@ textarea:focus-visible {
   box-shadow: 3px 3px 0 rgba(164, 70, 64, 0.16);
   font-family: var(--font-nanum-barun-gothic), "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .resume-heading {
   color: var(--ink);
   font-family: var(--font-nanum-barun-gothic), "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  letter-spacing: normal;
 }
 
 .resume-paper {
@@ -168,8 +181,8 @@ textarea:focus-visible {
 .resume-kicker {
   color: var(--accent);
   font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.16em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .resume-lead {
@@ -212,7 +225,7 @@ footer {
 }
 
 .resume-search input::placeholder {
-  color: #8b8f96;
+  color: #687380;
 }
 
 .resume-search button {
@@ -296,8 +309,8 @@ footer {
 .ui-kicker {
   color: var(--accent);
   font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -326,7 +339,7 @@ footer {
 }
 
 .ui-input::placeholder {
-  color: #8b8f96 !important;
+  color: #687380 !important;
 }
 
 .ui-input:focus {

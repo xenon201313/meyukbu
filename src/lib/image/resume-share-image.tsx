@@ -109,14 +109,14 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
               color: "#fffdf7",
               background: "linear-gradient(135deg, #183153, #5b7db1)",
               fontSize: 48,
-              fontWeight: 800,
+              fontWeight: 700,
             }}
           >
             {initials(profile.characterName)}
           </div>
         )}
         <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: 8 }}>
-          <div style={{ display: "flex", fontSize: 56, fontWeight: 800, lineHeight: 1.1 }}>
+          <div style={{ display: "flex", fontSize: 56, fontWeight: 700, lineHeight: 1.1 }}>
             {profile.characterName}
           </div>
           <div style={{ display: "flex", fontSize: 28, color: "#52637a" }}>
@@ -141,7 +141,7 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
         <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700 }}>
           지원 분야 · 작성 내용
         </div>
-        <div style={{ display: "flex", fontSize: 42, fontWeight: 800 }}>
+        <div style={{ display: "flex", fontSize: 42, fontWeight: 700 }}>
           {draft.targetBossCadence ? `${targetBossCadenceLabels[draft.targetBossCadence]} · ` : ""}
           {draft.targetBoss} · {draft.difficulty}
         </div>
@@ -180,7 +180,7 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
               <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700 }}>
                 환산 · 작성 내용
               </div>
-              <div style={{ display: "flex", fontSize: 42, fontWeight: 800 }}>
+              <div style={{ display: "flex", fontSize: 42, fontWeight: 700 }}>
                 {formatNumericDisplay(draft.convertedStat)}
               </div>
             </div>
@@ -200,7 +200,7 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
               <div style={{ display: "flex", fontSize: 24, color: "#68788b", fontWeight: 700 }}>
                 보스 배율 · 작성 내용
               </div>
-              <div style={{ display: "flex", fontSize: 42, fontWeight: 800 }}>
+              <div style={{ display: "flex", fontSize: 42, fontWeight: 700 }}>
                 {formatBossMultiplierPercent(draft.bossMultiplierPercent)}
               </div>
             </div>

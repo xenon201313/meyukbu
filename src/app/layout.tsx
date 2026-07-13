@@ -20,6 +20,7 @@ const nanumBarunGothic = localFont({
   ],
   variable: "--font-nanum-barun-gothic",
   display: "swap",
+  adjustFontFallback: false,
   fallback: ["Malgun Gothic", "Apple SD Gothic Neo", "sans-serif"],
 });
 
@@ -59,7 +60,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko" className={`h-full ${nanumBarunGothic.variable}`}>
-      <body className="min-h-full antialiased">
+      <body className="min-h-full">
         {children}
         <SiteWatermark />
       </body>

@@ -264,3 +264,23 @@
 | `pnpm test` | 통과 — 13 files, 38 tests |
 | `pnpm test:e2e` | 통과 — Chromium 2 tests (375px 모바일 및 PNG 생성 포함) |
 | `pnpm build` | 통과 |
+
+## 2026-07-13 — 전체 한글 타이포그래피 안정화
+
+### 구현 범위
+
+- NanumBarunGothic의 실제 로컬 굵기인 400·700만 화면에 사용하도록 정리했다. Tailwind의 `font-black`·`font-extrabold`는 700으로 정규화하고 `font-synthesis: none`으로 브라우저의 가짜 굵기 생성을 막았다.
+- 한글 제목의 `tracking-tight`과 이력서 제목의 음수 자간을 정상 자간으로 되돌렸다. 강한 굵기와 글자 간격이 겹치며 획이 뭉개져 보이던 문제를 해결한다.
+- OS의 기본 글자 렌더링을 쓰도록 전역 강제 안티앨리어싱을 제거했다. `next/font/local`의 fallback 크기 조정도 끄고, 시스템 한글 글꼴 fallback이 자연스럽게 이어지도록 했다.
+- 보조 본문색을 `#5d6875`, 입력 placeholder를 `#687380`으로 조정해 밝은 종이 배경에서도 본문 대비를 4.5:1 이상으로 올렸다.
+- 1080×1350 공유 PNG도 Bold(700)만 사용하도록 같은 정책을 적용했다.
+
+### 최종 검증
+
+| 명령 | 결과 |
+| --- | --- |
+| `pnpm lint` | 통과 |
+| `pnpm typecheck` | 통과 |
+| `pnpm test` | 통과 — 13 files, 38 tests |
+| `pnpm test:e2e` | 통과 — Chromium 2 tests (글꼴 합성 차단·700 굵기·375px 모바일 포함) |
+| `pnpm build` | 통과 |
