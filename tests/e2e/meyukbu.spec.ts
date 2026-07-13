@@ -52,7 +52,11 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
   expect(imageResponse.headers()["content-type"]).toContain("image/png");
   expect((await imageResponse.body()).subarray(1, 4).toString("ascii")).toBe("PNG");
 
-  const bossArtResponse = await page.request.get("/api/boss-art/blackmage");
+  await expect(page.locator('[data-boss-art-key="blackmage"]').first()).toHaveAttribute(
+    "src",
+    "/images/bosses/blackmage.png",
+  );
+  const bossArtResponse = await page.request.get("/images/bosses/blackmage.png");
   expect(bossArtResponse.ok()).toBeTruthy();
   expect(bossArtResponse.headers()["content-type"]).toContain("image/png");
 

@@ -8,7 +8,6 @@ import { createResumeSchema, resumeDraftSchema } from "@/lib/validation/schemas"
 const validDraft: ResumeDraft = {
   targetBoss: "유피테르 (노멀)",
   targetBossCadence: "WEEKLY",
-  difficulty: "하드",
   role: "DAMAGE",
   partyType: "SEMI_FIXED",
   availability: [

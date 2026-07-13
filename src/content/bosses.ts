@@ -1,11 +1,5 @@
 import type { TargetBossCadence } from "@/domain/resume";
 
-/**
- * User-authorized artwork source. Boss images are resolved at request time from
- * this source rather than being copied into the repository.
- */
-export const mapleTrackersArtworkSource = "https://maple-trackers.com/";
-
 export interface BossOption {
   id: string;
   name: string;
@@ -13,7 +7,7 @@ export interface BossOption {
   artworkKey: string;
 }
 
-/** Current weekly/monthly boss names and artwork keys supplied by maple-trackers.com. */
+/** Current weekly/monthly boss names and user-authorized Maple Trackers artwork keys. */
 export const bossOptions: BossOption[] = [
   { id: "czak", name: "자쿰 (카오스)", cadence: "WEEKLY", artworkKey: "zakum" },
   { id: "cbq", name: "블러디퀸 (카오스)", cadence: "WEEKLY", artworkKey: "bloodyqueen" },
@@ -81,7 +75,7 @@ const defaultBossOptionIds: Record<TargetBossCadence, string> = {
 };
 
 export function bossArtworkUrl(artworkKey: string): string {
-  return `/api/boss-art/${encodeURIComponent(artworkKey)}`;
+  return `/images/bosses/${encodeURIComponent(artworkKey)}.png`;
 }
 
 export function findBossOption(cadence: TargetBossCadence, name: string): BossOption | undefined {

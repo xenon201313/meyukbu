@@ -32,7 +32,6 @@ export interface ResumeDraft {
   targetBoss: string;
   /** Weekly/monthly is user-selected context, not a value inferred from API data. */
   targetBossCadence?: TargetBossCadence;
-  difficulty: string;
   /**
    * User-entered converted stat (환산), e.g. the MapleScouter figure. It is
    * displayed as USER_PROVIDED with an external verification link, never as

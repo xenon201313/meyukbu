@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import type { NormalizedCharacterProfile } from "@/domain/character";
 import { getFreshnessStatus } from "@/domain/freshness";
+import { bossArtworkUrl, findBossOption } from "@/content/bosses";
 import {
   partyTypeLabels,
   roleLabels,
@@ -81,6 +82,9 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
   const freshness = getFreshnessStatus(profile.fetchedAt);
   const availability = draft.availability[0];
   const isMock = mode === "mock" || profile.provider === "mock";
+  const selectedBoss = draft.targetBossCadence
+    ? findBossOption(draft.targetBossCadence, draft.targetBoss)
+    : undefined;
 
   return (
     <article
@@ -124,7 +128,7 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
           <p id="preview-application-heading" className="ui-kicker">
             지원 분야
           </p>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+          <div className="mt-2 space-y-2 text-sm">
             <PreviewItem
               label="희망 보스"
               value={
@@ -134,13 +138,14 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
               }
               provenance="USER_PROVIDED"
             />
-            <PreviewItem label="난이도" value={draft.difficulty} provenance="USER_PROVIDED" />
-            <PreviewItem label="역할" value={roleLabels[draft.role]} provenance="USER_PROVIDED" />
-            <PreviewItem
-              label="파티 유형"
-              value={partyTypeLabels[draft.partyType]}
-              provenance="USER_PROVIDED"
-            />
+            <div className="grid grid-cols-2 gap-2">
+              <PreviewItem label="역할" value={roleLabels[draft.role]} provenance="USER_PROVIDED" />
+              <PreviewItem
+                label="파티 유형"
+                value={partyTypeLabels[draft.partyType]}
+                provenance="USER_PROVIDED"
+              />
+            </div>
           </div>
         </section>
 
@@ -155,20 +160,34 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
             >
               환산·보스 배율
             </p>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-              {draft.convertedStat ? (
+            <div className="mt-2 grid gap-3 sm:grid-cols-[minmax(0,1fr)_7.5rem]">
+              <div className="grid gap-2 sm:grid-cols-2">
                 <PreviewItem
                   label="환산"
-                  value={formatNumericDisplay(draft.convertedStat)}
+                  value={draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "입력 필요"}
                   provenance="USER_PROVIDED"
                 />
-              ) : null}
-              {draft.bossMultiplierPercent ? (
                 <PreviewItem
                   label="보스 배율"
-                  value={formatBossMultiplierPercent(draft.bossMultiplierPercent)}
+                  value={
+                    draft.bossMultiplierPercent
+                      ? formatBossMultiplierPercent(draft.bossMultiplierPercent)
+                      : "입력 필요"
+                  }
                   provenance="USER_PROVIDED"
                 />
+              </div>
+              {selectedBoss ? (
+                <div className="relative flex min-h-28 items-center justify-center overflow-hidden rounded-xl border border-[#d9cdbd] bg-[#fffefa] p-2">
+                  <img
+                    src={bossArtworkUrl(selectedBoss.artworkKey)}
+                    alt={`${selectedBoss.name} 보스 일러스트`}
+                    data-boss-art-key={selectedBoss.artworkKey}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-contain object-center"
+                  />
+                </div>
               ) : null}
             </div>
           </section>

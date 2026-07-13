@@ -61,18 +61,17 @@ live provider는 캐릭터 식별자와 기본 정보에 더해 아래를 조회
 
 모든 변수의 설명과 안전한 개발 기본값은 [.env.example](.env.example)에 있습니다.
 
-| 변수                         | 용도                                                       |
-| ---------------------------- | ---------------------------------------------------------- |
-| `NEXON_PROVIDER`             | `mock` 또는 `live` provider 선택                           |
-| `NEXON_OPEN_API_KEY`         | live 모드에서만 필요한 서버 전용 NEXON API key             |
-| `NEXON_BASE_URL`             | live API base URL                                          |
-| `DATABASE_URL`               | PostgreSQL 연결 문자열                                     |
-| `MEYUKBU_STORAGE`            | `memory`(mock demo) 또는 `prisma`(PostgreSQL 영속 저장소)  |
-| `APP_ORIGIN`                 | QR/공유 이미지에 넣을 canonical public origin              |
-| `MEYUKBU_EXTERNAL_ART`       | `false`이면 Maple Trackers 보스 아트 대신 offline fallback |
-| `PROFILE_FRESH_HOURS`        | fresh 판정 시간(기본 24시간)                               |
-| `PROFILE_PUBLIC_EXPIRY_DAYS` | 공개 API 데이터 만료 시간(기본 30일)                       |
-| `APP_SECRET`                 | production에서 token/content hash 보조에 쓰는 긴 비밀값    |
+| 변수                         | 용도                                                      |
+| ---------------------------- | --------------------------------------------------------- |
+| `NEXON_PROVIDER`             | `mock` 또는 `live` provider 선택                          |
+| `NEXON_OPEN_API_KEY`         | live 모드에서만 필요한 서버 전용 NEXON API key            |
+| `NEXON_BASE_URL`             | live API base URL                                         |
+| `DATABASE_URL`               | PostgreSQL 연결 문자열                                    |
+| `MEYUKBU_STORAGE`            | `memory`(mock demo) 또는 `prisma`(PostgreSQL 영속 저장소) |
+| `APP_ORIGIN`                 | QR/공유 이미지에 넣을 canonical public origin             |
+| `PROFILE_FRESH_HOURS`        | fresh 판정 시간(기본 24시간)                              |
+| `PROFILE_PUBLIC_EXPIRY_DAYS` | 공개 API 데이터 만료 시간(기본 30일)                      |
+| `APP_SECRET`                 | production에서 token/content hash 보조에 쓰는 긴 비밀값   |
 
 ## 저장소 동작 원칙
 
@@ -81,7 +80,7 @@ live provider는 캐릭터 식별자와 기본 정보에 더해 아래를 조회
 - production은 DB가 없을 때 메모리 fallback으로 공개 데이터를 만들지 않는다. 자세한 근거는 [DECISIONS.md](docs/DECISIONS.md)를 참고하세요.
 - NEXON API 데이터는 24시간 후 stale, 30일 후 expired로 표시하며, expired snapshot의 API 파생 값은 갱신 전까지 공개하지 않는다.
 - 전투력은 API 종합 능력치의 원값만 사용하며, 장비 기반 점수·환산·합격 판정을 만들지 않는다.
-- 보스 지원은 주간/월간 구분을 먼저 고른 뒤 보스명과 난이도를 입력한다. 사용자가 사용을 허가한 Maple Trackers 보스 원본은 서버 어댑터로만 표시하며, 이미지를 저장소에 복제하지 않는다. `MEYUKBU_EXTERNAL_ART=false`에서는 offline fallback을 쓴다.
+- 보스 지원은 주간/월간 구분과 목록에서 선택한 보스명으로 정한다. 난이도는 보스명에 포함되므로 별도 입력하지 않는다. 사용자가 사용을 허가한 Maple Trackers 보스 원본은 선택한 보스 키와 1:1로 연결된 정적 자산으로 표시한다.
 
 ## 품질 검사
 

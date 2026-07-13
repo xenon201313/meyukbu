@@ -23,7 +23,6 @@ type ResolveMode = "mock" | "live";
 type ResolveState = "idle" | "loading" | "success" | "error";
 type FormErrorKey =
   | "targetBoss"
-  | "difficulty"
   | "convertedStat"
   | "bossMultiplierPercent"
   | "availability"
@@ -96,7 +95,6 @@ function createDefaultDraft(): ResumeDraft {
   return {
     targetBoss: "검은 마법사 (하드)",
     targetBossCadence: "MONTHLY",
-    difficulty: "하드",
     role: "DAMAGE",
     partyType: "FIXED",
     availability: [
@@ -212,7 +210,6 @@ function isResumeDraft(value: unknown): value is ResumeDraft {
     (value.targetBossCadence === undefined ||
       value.targetBossCadence === "WEEKLY" ||
       value.targetBossCadence === "MONTHLY") &&
-    typeof value.difficulty === "string" &&
     (value.role === "DAMAGE" ||
       value.role === "SUPPORT" ||
       value.role === "UTILITY" ||
@@ -291,7 +288,6 @@ function normalizeDraft(draft: ResumeDraft): ResumeDraft {
   return {
     ...draft,
     targetBoss: draft.targetBoss.trim(),
-    difficulty: draft.difficulty.trim(),
     convertedStat: draft.convertedStat?.trim() || undefined,
     bossMultiplierPercent: draft.bossMultiplierPercent?.trim() || undefined,
     availability: draft.availability.map((slot) => ({
@@ -313,12 +309,6 @@ function validateDraft(draft: ResumeDraft): FormErrors {
     errors.targetBoss = "목표 보스를 목록에서 선택해 주세요.";
   } else if (draft.targetBoss.trim().length > 60) {
     errors.targetBoss = "목표 보스는 60자 이하로 입력해 주세요.";
-  }
-
-  if (!draft.difficulty.trim()) {
-    errors.difficulty = "난이도를 입력해 주세요.";
-  } else if (draft.difficulty.trim().length > 40) {
-    errors.difficulty = "난이도는 40자 이하로 입력해 주세요.";
   }
 
   if ((draft.convertedStat?.trim().length ?? 0) > 40) {
@@ -762,23 +752,6 @@ function ResumeEditorContent() {
                 }}
               />
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="난이도" htmlFor="difficulty" error={formErrors.difficulty}>
-                  <input
-                    id="difficulty"
-                    name="difficulty"
-                    autoComplete="off"
-                    className={inputClassName}
-                    maxLength={40}
-                    onChange={(event) => {
-                      updateDraft({ difficulty: event.target.value });
-                      clearError("difficulty");
-                    }}
-                    required
-                    value={draft.difficulty}
-                    aria-describedby={formErrors.difficulty ? "difficulty-error" : undefined}
-                    aria-invalid={Boolean(formErrors.difficulty)}
-                  />
-                </Field>
                 <Field label="역할" htmlFor="role">
                   <select
                     id="role"

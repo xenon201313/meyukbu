@@ -17,7 +17,6 @@ import {
 const validDraft: ResumeDraft = {
   targetBoss: "검은 마법사 (하드)",
   targetBossCadence: "MONTHLY",
-  difficulty: "하드",
   role: "DAMAGE",
   partyType: "SEMI_FIXED",
   availability: [

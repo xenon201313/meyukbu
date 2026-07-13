@@ -10,7 +10,6 @@ import { getMockProfiles } from "@/lib/nexon/fixtures";
 const draft: ResumeDraft = {
   targetBoss: "검은 마법사 (하드)",
   targetBossCadence: "MONTHLY",
-  difficulty: "하드",
   role: "DAMAGE",
   partyType: "FIXED",
   availability: [{ days: ["화", "목"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
@@ -66,5 +65,7 @@ describe("ResumePreview", () => {
     expect(screen.getByText("110,650")).toBeInTheDocument();
     expect(screen.getByText("보스 배율")).toBeInTheDocument();
     expect(screen.getByText("412.5%")).toBeInTheDocument();
+    const bossArtwork = document.querySelector('img[data-boss-art-key="blackmage"]');
+    expect(bossArtwork).toHaveAttribute("src", "/images/bosses/blackmage.png");
   });
 });

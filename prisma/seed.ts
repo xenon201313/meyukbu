@@ -184,7 +184,6 @@ async function main(): Promise<void> {
     userInput: {
       targetBoss: "검은 마법사 (하드)",
       targetBossCadence: "MONTHLY",
-      difficulty: "하드",
       role: "DAMAGE",
       partyType: "FIXED",
       availability: [{ days: ["토"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
@@ -263,7 +262,6 @@ async function main(): Promise<void> {
     userInput: {
       targetBoss: "선택받은 세렌 (하드)",
       targetBossCadence: "WEEKLY",
-      difficulty: "하드",
       role: "SUPPORT",
       partyType: "PROGRESSION",
       availability: [{ days: ["일"], startTime: "21:00", endTime: "23:30", timezone: "Asia/Seoul" }],

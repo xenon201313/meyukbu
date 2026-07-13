@@ -44,7 +44,6 @@ describe("ResumeShareImage", () => {
     const draft: ResumeDraft = {
       targetBoss: "검은 마법사 (하드)",
       targetBossCadence: "MONTHLY",
-      difficulty: "하드",
       role: "DAMAGE",
       partyType: "FIXED",
       availability: [{ days: ["토"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
@@ -74,7 +73,6 @@ describe("ResumeShareImage", () => {
     const draft: ResumeDraft = {
       targetBoss: "검은 마법사 (하드)",
       targetBossCadence: "MONTHLY",
-      difficulty: "하드",
       convertedStat: "110,650",
       bossMultiplierPercent: "412.5",
       role: "DAMAGE",

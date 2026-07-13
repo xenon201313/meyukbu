@@ -129,7 +129,6 @@ const profileSchema = z.object({
 const draftSchema = z.object({
   targetBoss: z.string(),
   targetBossCadence: z.enum(["WEEKLY", "MONTHLY"]).optional(),
-  difficulty: z.string(),
   convertedStat: z.string().optional(),
   bossMultiplierPercent: z.string().optional(),
   role: z.enum(resumeRoleValues),

@@ -143,7 +143,7 @@ export function ResumeShareImage({ resume, qrDataUri, canonicalUrl, avatarDataUr
         </div>
         <div style={{ display: "flex", fontSize: 42, fontWeight: 700 }}>
           {draft.targetBossCadence ? `${targetBossCadenceLabels[draft.targetBossCadence]} · ` : ""}
-          {draft.targetBoss} · {draft.difficulty}
+          {draft.targetBoss}
         </div>
         <div style={{ display: "flex", fontSize: 30, color: "#385a83" }}>
           {roleLabels[draft.role]} ·{" "}

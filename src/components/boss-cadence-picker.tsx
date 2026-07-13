@@ -18,7 +18,6 @@ const cadenceCards: Array<{
   value: TargetBossCadence;
   title: string;
   description: string;
-  fallbackImage: string;
   accentClass: string;
   activeClass: string;
 }> = [
@@ -26,7 +25,6 @@ const cadenceCards: Array<{
     value: "WEEKLY",
     title: "주간 보스",
     description: "매주 함께 도전할 보스를 목록에서 선택하세요.",
-    fallbackImage: "/images/bosses/weekly-raid.png",
     accentClass: "from-[#e9e1f4] via-[#f8f2e9] to-transparent",
     activeClass: "border-[#a44640] ring-[#a44640]/25",
   },
@@ -34,7 +32,6 @@ const cadenceCards: Array<{
     value: "MONTHLY",
     title: "월간 보스",
     description: "월간 일정에 맞춘 도전 목표를 목록에서 선택하세요.",
-    fallbackImage: "/images/bosses/monthly-raid.png",
     accentClass: "from-[#f8e3df] via-[#f8f2e9] to-transparent",
     activeClass: "border-[#a44640] ring-[#a44640]/25",
   },
@@ -52,8 +49,7 @@ interface BossCadencePickerProps {
 }
 
 /**
- * Shows the user-authorized Maple Trackers boss artwork without copying image files
- * into the project. A text fallback remains available if the external source is down.
+ * Shows the user-authorized Maple Trackers artwork associated with the selected boss.
  */
 export function BossCadencePicker({ value, targetBoss, error, onBossSelect }: BossCadencePickerProps) {
   const isHydrated = useSyncExternalStore(
@@ -98,11 +94,11 @@ export function BossCadencePicker({ value, targetBoss, error, onBossSelect }: Bo
                 <img
                   src={bossArtworkUrl(artworkKey)}
                   alt={imageAlt}
+                  data-boss-art-key={artworkKey}
                   loading="lazy"
                   decoding="async"
                   onError={(event) => {
-                    event.currentTarget.onerror = null;
-                    event.currentTarget.src = card.fallbackImage;
+                    event.currentTarget.hidden = true;
                   }}
                   className="relative h-full w-full object-contain object-center"
                 />

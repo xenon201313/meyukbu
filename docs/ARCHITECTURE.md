@@ -148,7 +148,6 @@ interface EquipmentOption {
 interface ResumeDraft {
   targetBoss: string;
   targetBossCadence?: "WEEKLY" | "MONTHLY";
-  difficulty: string;
   role: "DAMAGE" | "SUPPORT" | "UTILITY" | "OTHER";
   partyType: "FIXED" | "SEMI_FIXED" | "TEMPORARY" | "PROGRESSION";
   availability: AvailabilitySlot[];
