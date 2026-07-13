@@ -40,22 +40,24 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
 
   await expect(page.getByRole("heading", { name: "검증 정보" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "전투력과 최종 능력치" })).toBeVisible();
-  await expect(page.getByText("환산·보스 배율")).toBeVisible();
-  await expect(page.getByText("110,650")).toBeVisible();
-  await expect(page.getByText("412.5%")).toBeVisible();
   await expect(page.getByText("Data based on NEXON Open API").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "최신 데이터로 갱신" })).toBeVisible();
 
   const publicPath = new URL(page.url()).pathname;
+  await expect(page.locator("[data-resume-share-image]")).toHaveAttribute("src", `${publicPath}/image?v=1`);
   const imageResponse = await page.request.get(`${publicPath}/image?v=1`);
   expect(imageResponse.ok()).toBeTruthy();
   expect(imageResponse.headers()["content-type"]).toContain("image/png");
-  expect((await imageResponse.body()).subarray(1, 4).toString("ascii")).toBe("PNG");
-
-  await expect(page.locator('[data-boss-art-key="blackmage"]').first()).toHaveAttribute(
-    "src",
-    "/images/bosses/blackmage.png",
+  const imageBody = await imageResponse.body();
+  expect(imageBody.subarray(1, 4).toString("ascii")).toBe("PNG");
+  const imageView = new DataView(imageBody.buffer, imageBody.byteOffset, imageBody.byteLength);
+  expect(imageView.getUint32(16)).toBe(1080);
+  expect(imageView.getUint32(20)).toBe(1350);
+  await expect(page.getByRole("link", { name: "이미지 저장 (1080×1350 PNG)" })).toHaveAttribute(
+    "download",
+    new RegExp(`메력서-${publicPath.slice(3)}-v1\\.png`),
   );
+
   const bossArtResponse = await page.request.get("/images/bosses/blackmage.png");
   expect(bossArtResponse.ok()).toBeTruthy();
   expect(bossArtResponse.headers()["content-type"]).toContain("image/png");

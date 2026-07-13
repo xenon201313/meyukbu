@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { NextRequest } from "next/server";
 
+import { findBossOption } from "@/content/bosses";
+import type { ResumeDraft } from "@/domain/resume";
 import { getEnvironment } from "@/lib/env";
 import { createQrDataUri } from "@/lib/image/qr";
 import { ResumeShareImage } from "@/lib/image/resume-share-image";
@@ -63,6 +65,27 @@ async function loadAvatarDataUri(imageUrl: string | null): Promise<string | null
   }
 }
 
+/** Inlines the catalogued, user-authorized boss art used by the rendered resume. */
+async function loadBossArtworkDataUri(draft: ResumeDraft): Promise<string | null> {
+  const boss = draft.targetBossCadence
+    ? findBossOption(draft.targetBossCadence, draft.targetBoss)
+    : undefined;
+  if (!boss) {
+    return null;
+  }
+
+  try {
+    const imagePath = path.join(process.cwd(), "public", "images", "bosses", `${boss.artworkKey}.png`);
+    const image = await readFile(imagePath);
+    if (!image.byteLength || image.byteLength > 500_000) {
+      return null;
+    }
+    return `data:image/png;base64,${image.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
 interface Context {
   params: Promise<{ slug: string }>;
 }
@@ -77,10 +100,11 @@ export async function GET(request: NextRequest, context: Context) {
   }
   const view = toPublicResumeView(result);
   const canonicalUrl = `${getEnvironment().APP_ORIGIN}/r/${slug}?v=${view.version.versionNumber}`;
-  const [qrDataUri, fontData, avatarDataUri] = await Promise.all([
+  const [qrDataUri, fontData, avatarDataUri, bossArtworkDataUri] = await Promise.all([
     createQrDataUri(canonicalUrl),
     loadKoreanFonts(),
     loadAvatarDataUri(view.version.snapshot.profile.imageUrl),
+    loadBossArtworkDataUri(view.version.draft),
   ]);
   return new ImageResponse(
     <ResumeShareImage
@@ -88,6 +112,7 @@ export async function GET(request: NextRequest, context: Context) {
       qrDataUri={qrDataUri}
       canonicalUrl={canonicalUrl}
       avatarDataUri={avatarDataUri}
+      bossArtworkDataUri={bossArtworkDataUri}
     />,
     {
       width: 1080,

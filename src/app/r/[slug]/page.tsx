@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
@@ -5,7 +6,6 @@ import { notFound } from "next/navigation";
 import { CombatStatsPanel } from "@/components/combat-stats-panel";
 import { OwnerResumeActions } from "@/components/owner-resume-actions";
 import { ProvenanceBadge } from "@/components/provenance-badge";
-import { ResumePreview } from "@/components/resume-preview";
 import { SiteHeader } from "@/components/site-header";
 import { FreshnessBadge } from "@/components/freshness-badge";
 import { toPublicResumeView } from "@/server/services/public-view";
@@ -43,7 +43,7 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
       <SiteHeader currentLabel="메력서 검증" />
 
       <div className="mx-auto grid max-w-5xl gap-7 px-5 pt-7 sm:px-8 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <section className="resume-paper rounded-2xl p-4 sm:p-6">
+        <section className="space-y-4">
           {!resume.isLatestVersion ? (
             <div
               role="status"
@@ -64,11 +64,13 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
               API 데이터가 오래되어 공개가 제한되었습니다. 작성자가 갱신하면 다시 확인할 수 있습니다.
             </div>
           ) : null}
-          <ResumePreview
-            profile={resume.version.snapshot.profile}
-            draft={resume.version.draft}
-            mode={resume.version.snapshot.provider}
-            versionNumber={resume.version.versionNumber}
+          <img
+            src={imageUrl}
+            alt={`${resume.version.snapshot.profile.characterName} 메력서 v${resume.version.versionNumber}`}
+            width={1080}
+            height={1350}
+            data-resume-share-image
+            className="block w-full rounded-2xl border border-[#d9cdbd] bg-[#fffefa] shadow-[0_20px_50px_rgba(74,53,35,0.14)]"
           />
           <CombatStatsPanel profile={resume.version.snapshot.profile} />
         </section>
@@ -103,7 +105,7 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
             </dl>
             <a
               href={imageUrl}
-              download
+              download={`메력서-${slug}-v${resume.version.versionNumber}.png`}
               className="ui-action mt-4 block rounded-xl px-4 py-3 text-center text-sm font-bold transition"
             >
               이미지 저장 (1080×1350 PNG)
