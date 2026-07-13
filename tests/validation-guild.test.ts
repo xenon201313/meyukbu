@@ -10,6 +10,8 @@ const validDraft: ResumeDraft = {
   targetBossCadence: "WEEKLY",
   role: "DAMAGE",
   partyType: "SEMI_FIXED",
+  partySize: 3,
+  availabilityMode: "SCHEDULED",
   availability: [
     {
       days: ["월", "수"],
@@ -90,6 +92,61 @@ describe("resume draft validation", () => {
     expect(resumeDraftSchema.safeParse({ ...validDraft, bossMultiplierPercent: "412.5%" }).success).toBe(
       false,
     );
+  });
+
+  it("enforces boss entry-size limits on both direct API input and stored drafts", () => {
+    expect(
+      resumeDraftSchema.safeParse({
+        ...validDraft,
+        targetBoss: "스우 (하드)",
+        targetBossCadence: "WEEKLY",
+        partySize: 3,
+      }).success,
+    ).toBe(false);
+    expect(
+      resumeDraftSchema.safeParse({
+        ...validDraft,
+        targetBoss: "유피테르 (노멀)",
+        targetBossCadence: "WEEKLY",
+        partySize: 4,
+      }).success,
+    ).toBe(false);
+    expect(
+      resumeDraftSchema.safeParse({
+        ...validDraft,
+        targetBoss: "검은 마법사 (하드)",
+        targetBossCadence: "MONTHLY",
+        partySize: 6,
+      }).success,
+    ).toBe(true);
+    expect(resumeDraftSchema.safeParse({ ...validDraft, partySize: 0 }).success).toBe(false);
+    expect(resumeDraftSchema.safeParse({ ...validDraft, partySize: 2.5 }).success).toBe(false);
+    expect(resumeDraftSchema.safeParse({ ...validDraft, partySize: 7 }).success).toBe(false);
+  });
+
+  it("allows flexible and negotiable schedules without a fixed time slot", () => {
+    expect(
+      resumeDraftSchema.safeParse({ ...validDraft, availabilityMode: "FLEXIBLE", availability: [] }).success,
+    ).toBe(true);
+    expect(
+      resumeDraftSchema.safeParse({ ...validDraft, availabilityMode: "NEGOTIABLE", availability: [] })
+        .success,
+    ).toBe(true);
+    expect(
+      resumeDraftSchema.safeParse({ ...validDraft, availabilityMode: "SCHEDULED", availability: [] }).success,
+    ).toBe(false);
+    expect(resumeDraftSchema.safeParse({ ...validDraft, availabilityMode: "INVALID" }).success).toBe(false);
+  });
+
+  it("interprets legacy stored drafts as scheduled while retaining an absent party size", () => {
+    const legacyDraft = { ...validDraft };
+    delete legacyDraft.availabilityMode;
+    delete legacyDraft.partySize;
+
+    const parsed = parseStoredDraft(legacyDraft);
+
+    expect(parsed.availabilityMode).toBe("SCHEDULED");
+    expect(parsed.partySize).toBeUndefined();
   });
 
   it("round-trips the optional boss multiplier through stored draft JSON", () => {

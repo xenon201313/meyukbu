@@ -5,7 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import type { NormalizedCharacterProfile } from "@/domain/character";
 import {
+  availabilityModeLabels,
+  partySizeValues,
   partyTypeLabels,
+  type AvailabilityMode,
   type ContactType,
   type ResumeDraft,
   type ResumeRole,
@@ -14,6 +17,7 @@ import {
   roleLabels,
   voiceChatLabels,
 } from "@/domain/resume";
+import { findBossOption, maxPartySizeForBoss, type BossOption } from "@/content/bosses";
 
 import { BossCadencePicker } from "@/components/boss-cadence-picker";
 import { CharacterDataPanel } from "@/components/character-data-panel";
@@ -25,6 +29,7 @@ type FormErrorKey =
   | "targetBoss"
   | "convertedStat"
   | "bossMultiplierPercent"
+  | "partySize"
   | "availability"
   | "lootPolicy"
   | "experienceSummary"
@@ -51,6 +56,7 @@ interface EditableResumePayload {
       draft: ResumeDraft;
     };
   };
+  canEdit: boolean;
 }
 
 const dayOptions = ["월", "화", "수", "목", "금", "토", "일"];
@@ -71,6 +77,12 @@ const voiceChatOptions: ReadonlyArray<{ value: VoiceChat; label: string }> = [
   { value: "AVAILABLE", label: voiceChatLabels.AVAILABLE },
   { value: "OPTIONAL", label: voiceChatLabels.OPTIONAL },
   { value: "UNAVAILABLE", label: voiceChatLabels.UNAVAILABLE },
+];
+
+const availabilityModeOptions: ReadonlyArray<{ value: AvailabilityMode; label: string }> = [
+  { value: "SCHEDULED", label: availabilityModeLabels.SCHEDULED },
+  { value: "NEGOTIABLE", label: availabilityModeLabels.NEGOTIABLE },
+  { value: "FLEXIBLE", label: availabilityModeLabels.FLEXIBLE },
 ];
 
 const contactTypeOptions: ReadonlyArray<{ value: ContactType; label: string }> = [
@@ -98,6 +110,8 @@ function createDefaultDraft(): ResumeDraft {
     targetBossCadence: "MONTHLY",
     role: "DAMAGE",
     partyType: "FIXED",
+    partySize: 6,
+    availabilityMode: "SCHEDULED",
     availability: [
       {
         days: ["화", "목", "일"],
@@ -220,6 +234,17 @@ function isResumeDraft(value: unknown): value is ResumeDraft {
       value.partyType === "TEMPORARY" ||
       value.partyType === "PROGRESSION" ||
       value.partyType === "ACHIEVEMENT") &&
+    (value.partySize === undefined ||
+      value.partySize === 1 ||
+      value.partySize === 2 ||
+      value.partySize === 3 ||
+      value.partySize === 4 ||
+      value.partySize === 5 ||
+      value.partySize === 6) &&
+    (value.availabilityMode === undefined ||
+      value.availabilityMode === "SCHEDULED" ||
+      value.availabilityMode === "NEGOTIABLE" ||
+      value.availabilityMode === "FLEXIBLE") &&
     validAvailability &&
     (value.voiceChat === "AVAILABLE" ||
       value.voiceChat === "OPTIONAL" ||
@@ -258,6 +283,7 @@ function isEditableResumePayload(value: unknown): value is EditableResumePayload
   return (
     typeof value.resume.slug === "string" &&
     value.resume.slug.length > 0 &&
+    typeof value.canEdit === "boolean" &&
     isRecord(snapshot) &&
     isNormalizedProfile(snapshot.profile) &&
     isResumeDraft(value.resume.version.draft)
@@ -286,12 +312,20 @@ function messageFromPayload(payload: unknown, fallback: string) {
 
 function normalizeDraft(draft: ResumeDraft): ResumeDraft {
   const contactValue = draft.contact?.value.trim() ?? "";
+  const boss = draft.targetBossCadence
+    ? findBossOption(draft.targetBossCadence, draft.targetBoss)
+    : undefined;
+  const maxPartySize = maxPartySizeForBoss(boss);
+  const partySize =
+    partySizeValues.find((size) => size === Math.min(draft.partySize ?? 6, maxPartySize)) ?? maxPartySize;
 
   return {
     ...draft,
     targetBoss: draft.targetBoss.trim(),
     convertedStat: draft.convertedStat?.trim() || undefined,
     bossMultiplierPercent: draft.bossMultiplierPercent?.trim() || undefined,
+    partySize,
+    availabilityMode: draft.availabilityMode ?? "SCHEDULED",
     availability: draft.availability.map((slot) => ({
       ...slot,
       days: [...slot.days],
@@ -306,11 +340,18 @@ function normalizeDraft(draft: ResumeDraft): ResumeDraft {
 function validateDraft(draft: ResumeDraft): FormErrors {
   const errors: FormErrors = {};
   const slot = draft.availability[0];
+  const boss = draft.targetBossCadence
+    ? findBossOption(draft.targetBossCadence, draft.targetBoss)
+    : undefined;
 
   if (!draft.targetBoss.trim()) {
     errors.targetBoss = "목표 보스를 목록에서 선택해 주세요.";
   } else if (draft.targetBoss.trim().length > 60) {
     errors.targetBoss = "목표 보스는 60자 이하로 입력해 주세요.";
+  }
+
+  if (boss && draft.partySize && draft.partySize > maxPartySizeForBoss(boss)) {
+    errors.partySize = `${boss.name}은(는) 최대 ${maxPartySizeForBoss(boss)}인격까지 입장할 수 있습니다.`;
   }
 
   if ((draft.convertedStat?.trim().length ?? 0) > 40) {
@@ -324,10 +365,12 @@ function validateDraft(draft: ResumeDraft): FormErrors {
     errors.bossMultiplierPercent = "보스 배율은 % 기호 없이 숫자로 입력해 주세요.";
   }
 
-  if (!slot?.days.length) {
-    errors.availability = "가능한 요일을 하나 이상 선택해 주세요.";
-  } else if (!slot.startTime || !slot.endTime || slot.startTime >= slot.endTime) {
-    errors.availability = "종료 시간은 시작 시간보다 뒤여야 합니다.";
+  if ((draft.availabilityMode ?? "SCHEDULED") === "SCHEDULED") {
+    if (!slot?.days.length) {
+      errors.availability = "가능한 요일을 하나 이상 선택해 주세요.";
+    } else if (!slot.startTime || !slot.endTime || slot.startTime >= slot.endTime) {
+      errors.availability = "종료 시간은 시작 시간보다 뒤여야 합니다.";
+    }
   }
 
   if ((draft.lootPolicy?.trim().length ?? 0) > 80) {
@@ -379,6 +422,9 @@ function ResumeEditorContent() {
   const searchParams = useSearchParams();
   const queryName = (searchParams.get("name") ?? "").trim();
   const editSlug = (searchParams.get("edit") ?? "").trim();
+  const copySlug = (searchParams.get("copy") ?? "").trim();
+  const sourceSlug = editSlug || copySlug;
+  const isCopyMode = Boolean(copySlug && !editSlug);
   const [draft, setDraft] = useState<ResumeDraft>(createDefaultDraft);
   const [profile, setProfile] = useState<NormalizedCharacterProfile | null>(null);
   const [mode, setMode] = useState<ResolveMode | null>(null);
@@ -386,10 +432,10 @@ function ResumeEditorContent() {
   const [resolveError, setResolveError] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
-  const hadResolveRequest = useRef(Boolean(editSlug || queryName));
+  const hadResolveRequest = useRef(Boolean(sourceSlug || queryName));
 
   useEffect(() => {
-    if (!editSlug && !queryName) {
+    if (!sourceSlug && !queryName) {
       if (!hadResolveRequest.current) {
         return;
       }
@@ -421,8 +467,8 @@ function ResumeEditorContent() {
       setFormErrors({});
 
       try {
-        if (editSlug) {
-          const response = await fetch(`/api/resumes/${encodeURIComponent(editSlug)}`, {
+        if (sourceSlug) {
+          const response = await fetch(`/api/resumes/${encodeURIComponent(sourceSlug)}`, {
             credentials: "same-origin",
             headers: { Accept: "application/json" },
             signal: controller.signal,
@@ -435,12 +481,15 @@ function ResumeEditorContent() {
           if (!isEditableResumePayload(payload)) {
             throw new Error("기존 메력서 응답 형식을 확인할 수 없습니다.");
           }
+          if (isCopyMode && !payload.canEdit) {
+            throw new Error("기존 메력서를 복제할 권한이 없습니다.");
+          }
           if (controller.signal.aborted) {
             return;
           }
 
           setProfile(payload.resume.version.snapshot.profile);
-          setDraft(payload.resume.version.draft);
+          setDraft(normalizeDraft(payload.resume.version.draft));
           setMode(payload.resume.version.snapshot.profile.provider);
           setResolveState("success");
           return;
@@ -482,7 +531,7 @@ function ResumeEditorContent() {
     })();
 
     return () => controller.abort();
-  }, [editSlug, queryName]);
+  }, [isCopyMode, queryName, sourceSlug]);
 
   function clearError(key: FormErrorKey) {
     setFormErrors((current) => {
@@ -498,6 +547,23 @@ function ResumeEditorContent() {
 
   function updateDraft(update: Partial<ResumeDraft>) {
     setDraft((current) => ({ ...current, ...update }));
+  }
+
+  function selectBoss(boss: BossOption) {
+    const maxPartySize = maxPartySizeForBoss(boss);
+    setDraft((current) => {
+      const partySize =
+        partySizeValues.find((size) => size === Math.min(current.partySize ?? 6, maxPartySize)) ??
+        maxPartySize;
+      return {
+        ...current,
+        targetBossCadence: boss.cadence,
+        targetBoss: boss.name,
+        partySize,
+      };
+    });
+    clearError("targetBoss");
+    clearError("partySize");
   }
 
   function updateAvailability(update: Partial<ResumeDraft["availability"][number]>) {
@@ -619,20 +685,27 @@ function ResumeEditorContent() {
   }
 
   const availability = draft.availability[0];
+  const availabilityMode = draft.availabilityMode ?? "SCHEDULED";
+  const selectedBoss = draft.targetBossCadence
+    ? findBossOption(draft.targetBossCadence, draft.targetBoss)
+    : undefined;
+  const maxPartySize = maxPartySizeForBoss(selectedBoss);
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="mb-6 max-w-2xl">
         <p className="ui-kicker">메력서 · 메이플 파티 구직용 캐릭터 이력서</p>
         <h1 className="resume-heading mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-          {editSlug ? "메력서 수정" : "메력서 작성"}
+          {isCopyMode ? "새 메력서로 저장" : editSlug ? "메력서 수정" : "메력서 작성"}
         </h1>
         <p className="mt-2 leading-7 text-[#52606d]">
-          API 조회 정보와 작성자 입력을 구분해 한 장의 메력서로 정리합니다.
+          {isCopyMode
+            ? "기존 메력서는 그대로 두고, 목표 보스별 새 메력서를 따로 저장합니다."
+            : "API 조회 정보와 작성자 입력을 구분해 한 장의 메력서로 정리합니다."}
         </p>
       </div>
 
-      {!queryName && !editSlug ? (
+      {!queryName && !sourceSlug ? (
         <section
           className="rounded-xl border border-amber-800/35 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
           role="alert"
@@ -748,12 +821,9 @@ function ResumeEditorContent() {
                 value={draft.targetBossCadence}
                 targetBoss={draft.targetBoss}
                 error={formErrors.targetBoss}
-                onBossSelect={(boss) => {
-                  updateDraft({ targetBossCadence: boss.cadence, targetBoss: boss.name });
-                  clearError("targetBoss");
-                }}
+                onBossSelect={selectBoss}
               />
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-3">
                 <Field label="역할" htmlFor="role">
                   <select
                     id="role"
@@ -794,74 +864,143 @@ function ResumeEditorContent() {
                     ))}
                   </select>
                 </Field>
+                <Field label="희망 인원" htmlFor="party-size" error={formErrors.partySize}>
+                  <select
+                    id="party-size"
+                    name="partySize"
+                    className={inputClassName}
+                    value={draft.partySize ?? ""}
+                    onChange={(event) => {
+                      const partySize = partySizeValues.find((size) => String(size) === event.target.value);
+                      if (partySize) {
+                        updateDraft({ partySize });
+                        clearError("partySize");
+                      }
+                    }}
+                    aria-describedby={formErrors.partySize ? "party-size-error" : undefined}
+                    aria-invalid={Boolean(formErrors.partySize)}
+                  >
+                    {partySizeValues
+                      .filter((size) => size <= maxPartySize)
+                      .map((size) => (
+                        <option key={size} value={size}>
+                          {size}인격
+                        </option>
+                      ))}
+                  </select>
+                </Field>
               </div>
+              <p className="text-xs leading-5 text-[#687380]">
+                선택한 보스는 최대 {maxPartySize}인격까지 입장할 수 있습니다.
+              </p>
             </div>
           </FormSection>
 
           <FormSection title="가능 시간">
             <fieldset>
-              <legend className="text-sm font-semibold text-slate-100">가능한 요일</legend>
-              <div
-                className="mt-2 flex flex-wrap gap-2"
-                aria-describedby={formErrors.availability ? "availability-error" : undefined}
-              >
-                {dayOptions.map((day) => {
-                  const isChecked = availability?.days.includes(day) ?? false;
+              <legend className="text-sm font-semibold text-[#202a36]">참여 시간 방식</legend>
+              <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                {availabilityModeOptions.map((option) => {
+                  const isChecked = availabilityMode === option.value;
                   return (
                     <label
-                      key={day}
-                      className={`cursor-pointer rounded-full border px-3 py-2 text-sm font-medium transition ${
+                      key={option.value}
+                      className={`cursor-pointer rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
                         isChecked
-                          ? "border-[#a44640] bg-[#f8e6e1] text-[#7c2f2c] shadow-[0_0_0_1px_rgba(164,70,64,0.14)_inset]"
-                          : "border-[#d9cdbd] bg-[#fffefa] text-[#52606d] hover:border-[#a44640]/60 hover:text-[#7c2f2c]"
+                          ? "border-[#a44640] bg-[#f8e6e1] text-[#7c2f2c]"
+                          : "border-[#d9cdbd] bg-[#fffefa] text-[#52606d] hover:border-[#a44640]/60"
                       }`}
                     >
                       <input
                         className="sr-only"
-                        type="checkbox"
+                        type="radio"
+                        name="availabilityMode"
+                        value={option.value}
                         checked={isChecked}
-                        onChange={() => toggleDay(day)}
+                        onChange={() => {
+                          updateDraft({ availabilityMode: option.value });
+                          clearError("availability");
+                        }}
                       />
-                      {day}
+                      {option.label}
                     </label>
                   );
                 })}
               </div>
             </fieldset>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Field label="시작 가능 시간" htmlFor="start-time">
-                <input
-                  id="start-time"
-                  name="startTime"
-                  type="time"
-                  className={inputClassName}
-                  value={availability?.startTime ?? ""}
-                  onChange={(event) => {
-                    updateAvailability({ startTime: event.target.value });
-                    clearError("availability");
-                  }}
-                  required
-                />
-              </Field>
-              <Field label="종료 가능 시간" htmlFor="end-time">
-                <input
-                  id="end-time"
-                  name="endTime"
-                  type="time"
-                  className={inputClassName}
-                  value={availability?.endTime ?? ""}
-                  onChange={(event) => {
-                    updateAvailability({ endTime: event.target.value });
-                    clearError("availability");
-                  }}
-                  required
-                />
-              </Field>
-            </div>
-            <FieldError id="availability-error" message={formErrors.availability} />
-            <p className="mt-3 text-xs leading-5 text-slate-400">
-              모든 시간은 한국 표준시(Asia/Seoul) 기준입니다.
-            </p>
+            {availabilityMode === "SCHEDULED" ? (
+              <>
+                <fieldset className="mt-5">
+                  <legend className="text-sm font-semibold text-[#202a36]">가능한 요일</legend>
+                  <div
+                    className="mt-2 flex flex-wrap gap-2"
+                    aria-describedby={formErrors.availability ? "availability-error" : undefined}
+                  >
+                    {dayOptions.map((day) => {
+                      const isChecked = availability?.days.includes(day) ?? false;
+                      return (
+                        <label
+                          key={day}
+                          className={`cursor-pointer rounded-full border px-3 py-2 text-sm font-medium transition ${
+                            isChecked
+                              ? "border-[#a44640] bg-[#f8e6e1] text-[#7c2f2c] shadow-[0_0_0_1px_rgba(164,70,64,0.14)_inset]"
+                              : "border-[#d9cdbd] bg-[#fffefa] text-[#52606d] hover:border-[#a44640]/60 hover:text-[#7c2f2c]"
+                          }`}
+                        >
+                          <input
+                            className="sr-only"
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleDay(day)}
+                          />
+                          {day}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <Field label="시작 가능 시간" htmlFor="start-time">
+                    <input
+                      id="start-time"
+                      name="startTime"
+                      type="time"
+                      className={inputClassName}
+                      value={availability?.startTime ?? ""}
+                      onChange={(event) => {
+                        updateAvailability({ startTime: event.target.value });
+                        clearError("availability");
+                      }}
+                      required
+                    />
+                  </Field>
+                  <Field label="종료 가능 시간" htmlFor="end-time">
+                    <input
+                      id="end-time"
+                      name="endTime"
+                      type="time"
+                      className={inputClassName}
+                      value={availability?.endTime ?? ""}
+                      onChange={(event) => {
+                        updateAvailability({ endTime: event.target.value });
+                        clearError("availability");
+                      }}
+                      required
+                    />
+                  </Field>
+                </div>
+                <FieldError id="availability-error" message={formErrors.availability} />
+                <p className="mt-3 text-xs leading-5 text-[#687380]">
+                  모든 시간은 한국 표준시(Asia/Seoul) 기준입니다.
+                </p>
+              </>
+            ) : (
+              <p className="mt-4 rounded-xl border border-[#d9cdbd] bg-[#f6f2ea] px-3 py-3 text-sm leading-6 text-[#52606d]">
+                {availabilityMode === "FLEXIBLE"
+                  ? "요일과 시간 제한 없이 참여할 수 있습니다."
+                  : "파티와 협의한 뒤 참여 요일과 시간을 조율합니다."}
+              </p>
+            )}
           </FormSection>
 
           <FormSection title="파티 경험">
@@ -1039,10 +1178,14 @@ function ResumeEditorContent() {
             {submitting
               ? editSlug
                 ? "수정하는 중…"
-                : "게시하는 중…"
+                : isCopyMode
+                  ? "새 메력서를 저장하는 중…"
+                  : "게시하는 중…"
               : editSlug
                 ? "메력서 수정하기"
-                : "메력서 게시하기"}
+                : isCopyMode
+                  ? "새 메력서로 저장하기"
+                  : "메력서 게시하기"}
           </button>
         </form>
 

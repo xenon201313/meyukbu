@@ -49,7 +49,7 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
   await expect(page.getByRole("status")).toHaveText("이력서 내용을 클립보드에 복사했습니다.");
 
   const publicPath = new URL(page.url()).pathname;
-  const imageUrl = `${publicPath}/image?v=1&layout=4`;
+  const imageUrl = `${publicPath}/image?v=1&layout=5`;
   await expect(page.locator("[data-resume-share-image]")).toHaveAttribute("src", imageUrl);
   const imageResponse = await page.request.get(imageUrl);
   expect(imageResponse.ok()).toBeTruthy();
@@ -71,6 +71,28 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
   await page.getByRole("button", { name: "최신 데이터로 갱신" }).click();
   await expect(page.getByText(/버전 \/ content hash/)).toBeVisible();
   await expect(page.getByText(/v2 ·/)).toBeVisible();
+
+  const originalResumeUrl = page.url();
+  await page.getByRole("link", { name: "새 메력서로 저장" }).click();
+  await expect(page).toHaveURL(/\/create\?copy=/);
+  await expect(page.getByRole("heading", { name: "새 메력서로 저장" })).toBeVisible();
+  await expect(page.locator("#boss-quick-select")).toBeEnabled();
+  await page.getByRole("button", { name: /^주간 보스/ }).click();
+  await expect(page.locator("#boss-quick-select")).toHaveValue("njup");
+  await page.locator("#boss-quick-select").selectOption("xsu");
+  await expect(page.locator("#party-size")).toHaveValue("2");
+  await expect(page.locator("#party-size option")).toHaveCount(2);
+  await Promise.all([
+    page.waitForURL(/\/r\/m-[a-z0-9_-]+$/),
+    page.getByRole("button", { name: "새 메력서로 저장하기" }).click(),
+  ]);
+  expect(new URL(page.url()).pathname).not.toBe(publicPath);
+
+  await page.goto(originalResumeUrl);
+  await expect(page.locator("[data-resume-share-image]")).toHaveAttribute(
+    "src",
+    `${publicPath}/image?v=2&layout=5`,
+  );
 });
 
 test.describe("375px mobile accessibility", () => {
@@ -88,6 +110,9 @@ test.describe("375px mobile accessibility", () => {
     await expect(quickSelect).toHaveValue("xblack");
     await expect(page.getByLabel("시작 가능 시간")).toBeVisible();
     await expect(page.getByLabel("종료 가능 시간")).toBeVisible();
+    await page.getByText("요일·시간 협의 가능", { exact: true }).click();
+    await expect(page.locator("#start-time")).toHaveCount(0);
+    await expect(page.locator("#end-time")).toHaveCount(0);
     await expect(page.getByLabel("디스코드")).toBeVisible();
     await expect(page.getByText("메력서 미리보기").first()).toBeVisible();
     await expect(page.getByText("크로아/얀보 제작")).toBeVisible();

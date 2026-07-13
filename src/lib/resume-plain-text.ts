@@ -1,4 +1,5 @@
 import {
+  partySizeLabel,
   partyTypeLabels,
   roleLabels,
   targetBossCadenceLabels,
@@ -6,6 +7,7 @@ import {
   type ResumeContact,
 } from "@/domain/resume";
 import { formatNumericDisplay } from "@/lib/format";
+import { formatResumeAvailability } from "@/lib/resume-presentation";
 import type { PublicResumeView } from "@/server/services/public-view";
 
 const notProvided = "미입력";
@@ -25,14 +27,7 @@ function formatBossMultiplier(value: string | undefined): string {
 }
 
 function formatAvailability(resume: PublicResumeView): string {
-  const slots = resume.version.draft.availability;
-  if (!slots.length) {
-    return notProvided;
-  }
-
-  return slots
-    .map((slot) => `${slot.days.join(" · ")} ${slot.startTime} - ${slot.endTime} (한국 표준시)`)
-    .join(" / ");
+  return formatResumeAvailability(resume.version.draft.availability, resume.version.draft.availabilityMode);
 }
 
 function formatContact(contact: ResumeContact | undefined): string | null {
@@ -84,6 +79,7 @@ export function formatResumePlainText(resume: PublicResumeView, canonicalUrl: st
     `희망 보스: ${bossCadence}${oneLine(draft.targetBoss)}`,
     `역할: ${roleLabels[draft.role]}`,
     `파티 유형: ${partyTypeLabels[draft.partyType]}`,
+    `희망 인원: ${partySizeLabel(draft.partySize)}`,
     "",
     "[파티 조건]",
     `환산: ${oneLine(draft.convertedStat) === notProvided ? notProvided : formatNumericDisplay(oneLine(draft.convertedStat))}`,

@@ -12,6 +12,8 @@ const draft: ResumeDraft = {
   targetBossCadence: "MONTHLY",
   role: "DAMAGE",
   partyType: "FIXED",
+  partySize: 6,
+  availabilityMode: "SCHEDULED",
   availability: [{ days: ["화", "목"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
   voiceChat: "OPTIONAL",
   lootPolicy: "상호 협의",
@@ -37,6 +39,8 @@ describe("ResumePreview", () => {
     expect(screen.getByText("어필 포인트")).toBeInTheDocument();
     expect(screen.getByText("환산 · 보스 배율")).toBeInTheDocument();
     expect(screen.getByText("디스코드")).toBeInTheDocument();
+    expect(screen.getByText("희망 인원")).toBeInTheDocument();
+    expect(screen.getByText("6인격")).toBeInTheDocument();
     expect(screen.getAllByText("미입력").length).toBeGreaterThan(0);
     const avatar = screen.getByAltText(`${profileWithImage.characterName} 캐릭터 이미지`);
     expect(avatar).toHaveClass(
@@ -84,5 +88,18 @@ describe("ResumePreview", () => {
     render(<ResumePreview profile={profile} draft={{ ...draft, partyType: "ACHIEVEMENT" }} mode="mock" />);
 
     expect(screen.getByText("업적")).toBeInTheDocument();
+  });
+
+  it("shows flexible availability without rendering a made-up fixed schedule", () => {
+    const profile = getMockProfiles()[0];
+    if (!profile) {
+      throw new Error("Expected the primary mock profile.");
+    }
+
+    render(
+      <ResumePreview profile={profile} draft={{ ...draft, availabilityMode: "FLEXIBLE" }} mode="mock" />,
+    );
+
+    expect(screen.getByText("요일·시간 무관")).toBeInTheDocument();
   });
 });

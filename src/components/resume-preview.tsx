@@ -5,12 +5,14 @@ import type { NormalizedCharacterProfile } from "@/domain/character";
 import { getFreshnessStatus } from "@/domain/freshness";
 import {
   partyTypeLabels,
+  partySizeLabel,
   roleLabels,
   targetBossCadenceLabels,
   type ResumeDraft,
   voiceChatLabels,
 } from "@/domain/resume";
 import { formatNumericDisplay } from "@/lib/format";
+import { formatResumeAvailability } from "@/lib/resume-presentation";
 
 import { FreshnessBadge } from "@/components/freshness-badge";
 import { ProvenanceBadge } from "@/components/provenance-badge";
@@ -41,13 +43,7 @@ function formatBossMultiplierPercent(value: string | undefined): string {
 }
 
 function formatAvailability(draft: ResumeDraft): string {
-  if (!draft.availability.length) {
-    return "미입력";
-  }
-
-  return draft.availability
-    .map((slot) => `${slot.days.join(" · ")} ${slot.startTime}–${slot.endTime} (한국 표준시)`)
-    .join(" / ");
+  return formatResumeAvailability(draft.availability, draft.availabilityMode);
 }
 
 function displayOrEmpty(value: string | undefined): string {
@@ -207,6 +203,7 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
                 </div>
                 <PreviewRow label="파티 유형" value={partyTypeLabels[draft.partyType]} last />
               </div>
+              <PreviewRow label="희망 인원" value={partySizeLabel(draft.partySize)} last />
             </div>
             {selectedBoss ? (
               <div className="flex min-h-28 items-center justify-center overflow-hidden border border-[#cec5b7] bg-[#f6f2ea] p-2">

@@ -41,7 +41,7 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
     <section aria-label="작성자 관리" className="ui-panel rounded-xl p-4">
       <p className="text-sm font-bold text-[#202a36]">작성자 관리</p>
       <p className="mt-1 text-xs leading-5 text-[#687380]">
-        이 브라우저에만 저장된 편집 권한으로 새 버전을 만들거나 공개를 중단할 수 있습니다.
+        이 브라우저에만 저장된 편집 권한으로 수정하거나, 기존 이력서를 남긴 채 새 메력서를 저장할 수 있습니다.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <a
@@ -49,6 +49,12 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
           className="rounded-lg border border-[#bfae99] bg-[#fffefa] px-3 py-2 text-sm font-semibold text-[#202a36] transition hover:border-[#a44640]/70 hover:text-[#7c2f2c]"
         >
           수정
+        </a>
+        <a
+          href={`/create?copy=${encodeURIComponent(slug)}`}
+          className="rounded-lg border border-[#a44640]/45 bg-[#f8e6e1] px-3 py-2 text-sm font-semibold text-[#7c2f2c] transition hover:bg-[#f3d9d2]"
+        >
+          새 메력서로 저장
         </a>
         <button
           type="button"

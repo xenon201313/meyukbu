@@ -3,7 +3,14 @@ import { Prisma } from "@prisma/client";
 
 import type { NormalizedCharacterProfile } from "@/domain/character";
 import { dataProvenanceValues } from "@/domain/provenance";
-import { contactTypeValues, partyTypeValues, resumeRoleValues, voiceChatValues } from "@/domain/resume";
+import {
+  availabilityModeValues,
+  contactTypeValues,
+  partySizeValues,
+  partyTypeValues,
+  resumeRoleValues,
+  voiceChatValues,
+} from "@/domain/resume";
 
 /** Serializes data for Prisma JSON fields without trusting a type assertion. */
 export function toPrismaJson(value: unknown): Prisma.InputJsonValue {
@@ -133,6 +140,8 @@ const draftSchema = z.object({
   bossMultiplierPercent: z.string().optional(),
   role: z.enum(resumeRoleValues),
   partyType: z.enum(partyTypeValues),
+  partySize: z.union(partySizeValues.map((value) => z.literal(value))).optional(),
+  availabilityMode: z.enum(availabilityModeValues).default("SCHEDULED"),
   availability: z.array(
     z.object({
       days: z.array(z.string()),

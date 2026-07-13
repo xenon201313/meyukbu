@@ -45,6 +45,8 @@ const baseDraft: ResumeDraft = {
   bossMultiplierPercent: "412.5",
   role: "DAMAGE",
   partyType: "ACHIEVEMENT",
+  partySize: 3,
+  availabilityMode: "SCHEDULED",
   availability: [{ days: ["화", "목"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
   voiceChat: "OPTIONAL",
   lootPolicy: "상호 협의",
@@ -66,6 +68,7 @@ describe("formatResumePlainText", () => {
     expect(text).toContain("[지원 분야]");
     expect(text).toContain("희망 보스: 월간 · 검은 마법사 (하드)");
     expect(text).toContain("파티 유형: 업적");
+    expect(text).toContain("희망 인원: 3인격");
     expect(text).toContain("환산: 110,650");
     expect(text).toContain("보스 배율: 412.5%");
     expect(text).toContain("가능 시간: 화 · 목 20:00 - 23:00 (한국 표준시)");
@@ -89,5 +92,14 @@ describe("formatResumePlainText", () => {
     expect(text).not.toContain("private-discord");
     expect(text).not.toContain("[공개 연락처]");
     expect(text).not.toContain("Remark");
+  });
+
+  it("uses the same flexible-availability label as the preview and share PNG", () => {
+    const text = formatResumePlainText(
+      createResumeView({ ...baseDraft, availabilityMode: "NEGOTIABLE", availability: [] }),
+      "https://maple-resume.com/r/m-plain-text?v=3",
+    );
+
+    expect(text).toContain("가능 시간: 요일·시간 협의 가능");
   });
 });

@@ -58,6 +58,8 @@ describe("ResumeShareImage", () => {
       targetBossCadence: "MONTHLY",
       role: "DAMAGE",
       partyType: "FIXED",
+      partySize: 6,
+      availabilityMode: "FLEXIBLE",
       availability: [{ days: ["화"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
       voiceChat: "OPTIONAL",
       theme: "RESUME",
@@ -78,6 +80,9 @@ describe("ResumeShareImage", () => {
     expect(markup).toContain("환산 · 보스 배율");
     expect(markup).toContain("파티 경험 및 조건");
     expect(markup).toContain("디스코드");
+    expect(markup).toContain("희망 인원");
+    expect(markup).toContain("6인격");
+    expect(markup).toContain("요일·시간 무관");
     expect(markup).toContain("미입력");
     expect(markup).toContain("data:image/png;base64,qr");
     expect(markup).toContain("Data based on NEXON Open API");

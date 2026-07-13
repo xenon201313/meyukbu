@@ -105,6 +105,39 @@ describe("resume publishing service", () => {
     expect(published.isLatestVersion).toBe(true);
   });
 
+  it("keeps separate boss resumes for the same character instead of overwriting the first record", async () => {
+    const repository = new TestResumeRepository();
+    const provider = new MockNexonProvider();
+    const first = await createResume(
+      { characterName: testCharacterName(), draft: validDraft },
+      { repository, provider },
+    );
+    const second = await createResume(
+      {
+        characterName: testCharacterName(),
+        draft: {
+          ...validDraft,
+          targetBossCadence: "WEEKLY",
+          targetBoss: "스우 (하드)",
+          partySize: 2,
+        },
+      },
+      { repository, provider },
+    );
+
+    expect(second.record.id).not.toBe(first.record.id);
+    expect(second.record.slug).not.toBe(first.record.slug);
+    expect(first.record.versions).toHaveLength(1);
+    expect(second.record.versions).toHaveLength(1);
+    expect(first.record.versions[0]?.versionNumber).toBe(1);
+    expect(second.record.versions[0]?.versionNumber).toBe(1);
+
+    const original = await getPublicResume(first.record.slug, undefined, repository);
+    const copied = await getPublicResume(second.record.slug, undefined, repository);
+    expect(original?.version.draft.targetBoss).toBe(validDraft.targetBoss);
+    expect(copied?.version.draft.targetBoss).toBe("스우 (하드)");
+  });
+
   it("requires the edit token for mutations and preserves immutable published versions", async () => {
     const repository = new TestResumeRepository();
     const created = await createResume(

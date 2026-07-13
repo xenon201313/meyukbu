@@ -1,7 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
 
-import { partyTypeLabels, roleLabels, targetBossCadenceLabels, voiceChatLabels } from "@/domain/resume";
+import {
+  partySizeLabel,
+  partyTypeLabels,
+  roleLabels,
+  targetBossCadenceLabels,
+  voiceChatLabels,
+} from "@/domain/resume";
 import { formatNumericDisplay } from "@/lib/format";
+import { formatResumeAvailability } from "@/lib/resume-presentation";
 import type { PublicResumeView } from "@/server/services/public-view";
 
 interface ResumeShareImageProps {
@@ -38,14 +45,7 @@ function formatBossMultiplierPercent(value: string | undefined): string {
 }
 
 function formatAvailability(resume: PublicResumeView): string {
-  const slots = resume.version.draft.availability;
-  if (!slots.length) {
-    return "미입력";
-  }
-
-  return slots
-    .map((slot) => `${slot.days.join(" · ")} ${slot.startTime} - ${slot.endTime} (한국 표준시)`)
-    .join(" / ");
+  return formatResumeAvailability(resume.version.draft.availability, resume.version.draft.availabilityMode);
 }
 
 function SourceBadge({ label }: { label: string }) {
@@ -463,7 +463,7 @@ export function ResumeShareImage({
 
           <div style={{ display: "flex", flexDirection: "column", flexShrink: 0, gap: 8 }}>
             <SectionHeading number="01" title="지원 분야" source="작성 내용" />
-            <div style={{ display: "flex", height: 122, gap: 14 }}>
+            <div style={{ display: "flex", height: 170, gap: 14 }}>
               <div
                 style={{
                   display: "flex",
@@ -480,6 +480,13 @@ export function ResumeShareImage({
                   leftValue={roleLabels[draft.role]}
                   rightLabel="파티 유형"
                   rightValue={partyTypeLabels[draft.partyType]}
+                />
+                <TableRow
+                  label="희망 인원"
+                  value={partySizeLabel(draft.partySize)}
+                  height={48}
+                  last
+                  valueLimit={20}
                 />
               </div>
               <div

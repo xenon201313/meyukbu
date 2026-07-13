@@ -9,6 +9,12 @@ export type PartyType = (typeof partyTypeValues)[number];
 export const voiceChatValues = ["AVAILABLE", "OPTIONAL", "UNAVAILABLE"] as const;
 export type VoiceChat = (typeof voiceChatValues)[number];
 
+export const availabilityModeValues = ["SCHEDULED", "NEGOTIABLE", "FLEXIBLE"] as const;
+export type AvailabilityMode = (typeof availabilityModeValues)[number];
+
+export const partySizeValues = [1, 2, 3, 4, 5, 6] as const;
+export type PartySize = (typeof partySizeValues)[number];
+
 export const contactTypeValues = ["DISCORD", "OPEN_CHAT", "COMMUNITY"] as const;
 export type ContactType = (typeof contactTypeValues)[number];
 
@@ -46,6 +52,10 @@ export interface ResumeDraft {
   bossMultiplierPercent?: string;
   role: ResumeRole;
   partyType: PartyType;
+  /** Desired total party size. Older immutable versions may not contain this field. */
+  partySize?: PartySize;
+  /** Undefined legacy values are treated as SCHEDULED. */
+  availabilityMode?: AvailabilityMode;
   availability: AvailabilitySlot[];
   voiceChat: VoiceChat;
   lootPolicy?: string;
@@ -122,6 +132,17 @@ export const voiceChatLabels: Record<VoiceChat, string> = {
   OPTIONAL: "선택",
   UNAVAILABLE: "불가",
 };
+
+export const availabilityModeLabels: Record<AvailabilityMode, string> = {
+  SCHEDULED: "요일·시간 지정",
+  NEGOTIABLE: "요일·시간 협의 가능",
+  FLEXIBLE: "요일·시간 무관",
+};
+
+/** Keeps the wording of the optional party-size field consistent across every output. */
+export function partySizeLabel(partySize: PartySize | undefined): string {
+  return partySize ? `${partySize}인격` : "미입력";
+}
 
 export const targetBossCadenceLabels: Record<TargetBossCadence, string> = {
   WEEKLY: "주간",
