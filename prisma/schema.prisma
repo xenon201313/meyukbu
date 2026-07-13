@@ -61,20 +61,22 @@ enum TemperatureFeedbackStatus {
 
 /// A stable character identity. Mutable character properties belong to snapshots.
 model Character {
-  id                String             @id @default(cuid())
-  ocid              String             @unique @db.VarChar(128)
-  name              String             @db.VarChar(64)
-  worldName         String?            @db.VarChar(64)
+  id                           String                        @id @default(cuid())
+  ocid                         String                        @unique @db.VarChar(128)
+  name                         String                        @db.VarChar(64)
+  worldName                    String?                       @db.VarChar(64)
   /// Highest raw combat power the service has observed for this character.
-  peakCombatPower   BigInt?
-  peakCombatPowerAt DateTime?          @db.Timestamptz(3)
-  firstSeenAt       DateTime           @default(now()) @db.Timestamptz(3)
-  lastSeenAt        DateTime           @default(now()) @db.Timestamptz(3)
-  createdAt         DateTime           @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime           @updatedAt @db.Timestamptz(3)
-  snapshots         ProfileSnapshot[]
-  resumes           Resume[]
-  guildObservations GuildObservation[]
+  peakCombatPower              BigInt?
+  peakCombatPowerAt            DateTime?                     @db.Timestamptz(3)
+  firstSeenAt                  DateTime                      @default(now()) @db.Timestamptz(3)
+  lastSeenAt                   DateTime                      @default(now()) @db.Timestamptz(3)
+  createdAt                    DateTime                      @default(now()) @db.Timestamptz(3)
+  updatedAt                    DateTime                      @updatedAt @db.Timestamptz(3)
+  snapshots                    ProfileSnapshot[]
+  resumes                      Resume[]
+  guildObservations            GuildObservation[]
+  temperatureSurveyInvitations TemperatureSurveyInvitation[]
+  temperatureSurveyResponses   TemperatureSurveyResponse[]
 
   @@index([name])
   @@index([lastSeenAt])
@@ -251,4 +253,38 @@ model TemperatureFeedback {
   @@unique([resumeId, reviewerOcid], name: "resumeId_reviewerOcid")
   @@index([resumeVersionId, status, createdAt])
   @@index([reviewerResumeId])
+}
+
+/// Anonymous one-time survey invite, scoped to the stable Character identity.
+/// The raw token is only delivered in a URL fragment; this table stores its hash.
+model TemperatureSurveyInvitation {
+  id          String                     @id @default(cuid())
+  characterId String
+  tokenHash   String                     @unique @db.VarChar(128)
+  expiresAt   DateTime                   @db.Timestamptz(3)
+  usedAt      DateTime?                  @db.Timestamptz(3)
+  revokedAt   DateTime?                  @db.Timestamptz(3)
+  createdAt   DateTime                   @default(now()) @db.Timestamptz(3)
+  character   Character                  @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  response    TemperatureSurveyResponse?
+
+  @@index([characterId, expiresAt])
+  @@index([expiresAt])
+}
+
+/// Anonymous survey answers persist at the character level across resume copies.
+/// No reviewer identity, resume, OCID, name, or contact field is stored here.
+model TemperatureSurveyResponse {
+  id               String                      @id @default(cuid())
+  characterId      String
+  invitationId     String                      @unique
+  experienceScore  Int
+  proficiencyScore Int
+  punctualityScore Int
+  totalDelta       Int
+  createdAt        DateTime                    @default(now()) @db.Timestamptz(3)
+  character        Character                   @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  invitation       TemperatureSurveyInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([characterId, createdAt])
 }

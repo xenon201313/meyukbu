@@ -112,50 +112,88 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
   );
 });
 
-test("메숭이 체온은 별점 없이 기명 동행 태그만 공개하고 공유 이미지는 바꾸지 않는다", async ({
+test("메숭이 체온 설문은 익명 3문항으로 한 번만 제출되고 같은 캐릭터의 새 메력서에도 남는다", async ({
   browser,
   page,
 }) => {
   const ownerResumeUrl = await publishMockResume(page, "별빛검사");
+  const originalPath = new URL(ownerResumeUrl).pathname;
   const originalImageUrl = await page.locator("[data-resume-share-image]").getAttribute("src");
   expect(originalImageUrl).toMatch(/^\/r\/m-[a-z0-9_-]+\/image\?v=1&layout=5$/);
+  await expect(page.getByTestId("mesoongi-temperature-gauge")).toContainText("36.5°C");
 
-  await page.getByRole("button", { name: "동행 확인 링크 만들기" }).click();
-  await expect(page.getByLabel("동행 확인 링크")).toBeVisible();
+  await page.getByRole("button", { name: "메숭이 체온 설문 링크 만들기" }).click();
+  await expect(page.getByLabel("메숭이 체온 설문 링크")).toBeVisible();
   const invitationUrl = await page.locator("#temperature-invite-url").inputValue();
   const invitation = new URL(invitationUrl);
   expect(invitation.hash).toMatch(/^#invite=.+/);
 
-  const reviewerContext = await browser.newContext();
+  const respondentContext = await browser.newContext();
   try {
-    const reviewerPage = await reviewerContext.newPage();
-    const reviewerResumeUrl = await publishMockResume(reviewerPage, "루나힐러");
-
-    // The invitation uses the canonical public origin. Keep this isolated E2E
-    // server on its own port while preserving the one-time fragment verbatim.
-    await reviewerPage.goto(`${invitation.pathname}${invitation.search}${invitation.hash}`);
-    await expect(reviewerPage.getByText("동행 기록 초대 링크를 확인했습니다.")).toBeVisible();
-    await reviewerPage.getByLabel("내 공개 메력서").fill(reviewerResumeUrl);
-    await reviewerPage.getByLabel("약속 시간 준수").check();
-    await reviewerPage.getByLabel("공략 준비").check();
-    await reviewerPage.getByRole("button", { name: "동행 기록 남기기" }).click();
+    const respondentPage = await respondentContext.newPage();
+    await respondentPage.goto(`${invitation.pathname}${invitation.search}${invitation.hash}`);
     await expect(
-      reviewerPage.getByText("동행 기록을 남겼습니다. 메력서에 작성 내용으로 표시됩니다."),
+      respondentPage.getByRole("heading", { name: "메숭이 체온 설문에 참여해 주세요." }),
     ).toBeVisible();
+    await expect(respondentPage.locator("#temperature-reviewer-slug")).toHaveCount(0);
+    await expect(respondentPage.getByTestId("temperature-experience-score").locator("input")).toHaveCount(5);
+    await expect(respondentPage.getByTestId("temperature-proficiency-score").locator("input")).toHaveCount(5);
+    await expect(respondentPage.getByTestId("temperature-punctuality-score").locator("input")).toHaveCount(2);
 
-    await page.goto(ownerResumeUrl);
-    const temperaturePanel = page.getByRole("region", { name: "메숭이 체온 · 동행 기록" });
-    await expect(temperaturePanel).toContainText("루나힐러");
-    await expect(temperaturePanel).toContainText("약속 시간 준수");
-    await expect(temperaturePanel).toContainText("공략 준비");
-    await expect(temperaturePanel.getByRole("progressbar")).toHaveCount(0);
-    await expect(
-      temperaturePanel.locator("[aria-valuenow], [aria-label*='별점'], [aria-label*='점수']"),
-    ).toHaveCount(0);
-    await expect(temperaturePanel.getByText(/별점|평균|온도\s*\d|\d+\s*(점|℃|도)/)).toHaveCount(0);
-    await expect(page.locator("[data-resume-share-image]")).toHaveAttribute("src", originalImageUrl ?? "");
+    await respondentPage.getByTestId("temperature-experience-score").locator('input[value="2"]').check();
+    await respondentPage.getByTestId("temperature-proficiency-score").locator('input[value="2"]').check();
+    await respondentPage.getByTestId("temperature-punctuality-score").locator('input[value="1"]').check();
+    const submissionRequest = respondentPage.waitForRequest(
+      (request) => request.method() === "POST" && request.url().includes("/temperature"),
+    );
+    const submissionResponse = respondentPage.waitForResponse(
+      (response) => response.request().method() === "POST" && response.url().includes("/temperature"),
+    );
+    await respondentPage.getByTestId("temperature-survey-submit").click();
+
+    expect(await (await submissionRequest).postDataJSON()).toEqual({
+      invitationToken: invitation.hash.slice("#invite=".length),
+      experienceScore: 2,
+      proficiencyScore: 2,
+      punctualityScore: 1,
+    });
+    const submitted = await submissionResponse;
+    expect(submitted.status()).toBe(200);
+    await expect(respondentPage.getByRole("status").last()).toContainText("익명으로 집계");
   } finally {
-    await reviewerContext.close();
+    await respondentContext.close();
+  }
+
+  await page.goto(ownerResumeUrl);
+  const publicGauge = page.getByTestId("mesoongi-temperature-gauge");
+  await expect(publicGauge).toContainText("41.5°C");
+  await expect(publicGauge).toContainText("익명 설문 1건");
+  await expect(publicGauge.locator("a")).toHaveCount(0);
+  await expect(page.locator("[data-resume-share-image]")).toHaveAttribute("src", originalImageUrl ?? "");
+
+  await page.getByRole("link", { name: "새 메력서로 저장" }).click();
+  await expect(page).toHaveURL(/\/create\?copy=/);
+  await Promise.all([
+    page.waitForURL(/\/r\/m-[a-z0-9_-]+$/),
+    page.getByRole("button", { name: "새 메력서로 저장하기" }).click(),
+  ]);
+  expect(new URL(page.url()).pathname).not.toBe(originalPath);
+  await expect(page.getByTestId("mesoongi-temperature-gauge")).toContainText("41.5°C");
+
+  const reusedContext = await browser.newContext();
+  try {
+    const reusedPage = await reusedContext.newPage();
+    await reusedPage.goto(`${invitation.pathname}${invitation.search}${invitation.hash}`);
+    await reusedPage.getByTestId("temperature-experience-score").locator('input[value="0"]').check();
+    await reusedPage.getByTestId("temperature-proficiency-score").locator('input[value="0"]').check();
+    await reusedPage.getByTestId("temperature-punctuality-score").locator('input[value="1"]').check();
+    const reusedResponse = reusedPage.waitForResponse(
+      (response) => response.request().method() === "POST" && response.url().includes("/temperature"),
+    );
+    await reusedPage.getByTestId("temperature-survey-submit").click();
+    expect((await reusedResponse).status()).toBe(409);
+  } finally {
+    await reusedContext.close();
   }
 });
 
@@ -180,5 +218,19 @@ test.describe("375px mobile accessibility", () => {
     await expect(page.getByLabel("디스코드")).toBeVisible();
     await expect(page.getByText("메력서 미리보기").first()).toBeVisible();
     await expect(page.getByText("크로아/얀보 제작")).toBeVisible();
+  });
+
+  test("익명 메숭이 체온 설문을 가로 375px에서도 읽고 선택할 수 있다", async ({ page }) => {
+    await publishMockResume(page, "별빛검사");
+    await page.getByRole("button", { name: "메숭이 체온 설문 링크 만들기" }).click();
+    const invitation = new URL(await page.locator("#temperature-invite-url").inputValue());
+
+    await page.goto(`${invitation.pathname}${invitation.search}${invitation.hash}`);
+    await expect(page.getByRole("heading", { name: "메숭이 체온 설문에 참여해 주세요." })).toBeVisible();
+    await expect(page.getByTestId("temperature-experience-score")).toBeVisible();
+    await expect(page.getByTestId("temperature-proficiency-score")).toBeVisible();
+    await expect(page.getByTestId("temperature-punctuality-score")).toBeVisible();
+    await page.getByTestId("temperature-experience-score").locator('input[value="0"]').check();
+    await expect(page.getByTestId("temperature-survey-submit")).toBeVisible();
   });
 });

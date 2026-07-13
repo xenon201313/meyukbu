@@ -5,7 +5,8 @@ import { useState } from "react";
 
 interface ApiMessage {
   message?: string;
-  url?: string;
+  invitationUrl?: string;
+  expiresAt?: string;
 }
 
 async function readApiMessage(response: Response): Promise<ApiMessage | null> {
@@ -25,6 +26,7 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
   const [busy, setBusy] = useState(false);
   const [isIssuingInvitation, setIsIssuingInvitation] = useState(false);
   const [invitationUrl, setInvitationUrl] = useState<string | null>(null);
+  const [invitationExpiresAt, setInvitationExpiresAt] = useState<string | null>(null);
 
   async function refresh() {
     setBusy(true);
@@ -77,12 +79,13 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
         body: JSON.stringify({}),
       });
       const body = await readApiMessage(response);
-      if (!response.ok || !body?.url) {
-        setMessage(body?.message ?? "동행 확인 링크를 만들지 못했습니다.");
+      if (!response.ok || !body?.invitationUrl) {
+        setMessage(body?.message ?? "메숭이 체온 설문 링크를 만들지 못했습니다.");
         return;
       }
-      setInvitationUrl(body.url);
-      setMessage("동행 확인 링크를 만들었습니다. 실제 함께한 파티원에게만 전달해 주세요.");
+      setInvitationUrl(body.invitationUrl);
+      setInvitationExpiresAt(body.expiresAt ?? null);
+      setMessage("메숭이 체온 설문 링크를 만들었습니다. 함께한 파티원에게만 전달해 주세요.");
     } catch {
       setMessage("네트워크 연결을 확인한 뒤 다시 시도해 주세요.");
     } finally {
@@ -96,9 +99,9 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
     }
     try {
       await navigator.clipboard.writeText(invitationUrl);
-      setMessage("동행 확인 링크를 클립보드에 복사했습니다.");
+      setMessage("메숭이 체온 설문 링크를 클립보드에 복사했습니다.");
     } catch {
-      setMessage("링크를 선택해서 복사해 주세요.");
+      setMessage("설문 링크를 선택해서 복사해 주세요.");
     }
   }
 
@@ -140,10 +143,10 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
       </div>
 
       <div className="mt-5 border-t border-[#d9cdbd] pt-4">
-        <p className="text-sm font-bold text-[#202a36]">메숭이 체온 · 동행 기록</p>
+        <p className="text-sm font-bold text-[#202a36]">메숭이 체온 설문</p>
         <p className="mt-1 text-xs leading-5 text-[#687380]">
-          실제 함께한 파티원에게만 1회용 확인 링크를 전달하세요. 링크는 7일 안에 한 번만 사용할 수 있으며,
-          점수나 자유 코멘트가 아닌 긍정 동행 태그만 남길 수 있습니다.
+          실제 함께한 파티원에게만 1회용 설문 링크를 전달하세요. 설문은 익명으로 집계되며, 개별 답변이나
+          응답자 정보는 공개되지 않습니다.
         </p>
         <button
           type="button"
@@ -151,12 +154,12 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
           onClick={issueTemperatureInvitation}
           className="mt-3 rounded-lg border border-[#a44640]/45 bg-[#f8e6e1] px-3 py-2 text-sm font-semibold text-[#7c2f2c] transition hover:bg-[#f3d9d2] disabled:opacity-50"
         >
-          {isIssuingInvitation ? "동행 확인 링크 만드는 중…" : "동행 확인 링크 만들기"}
+          {isIssuingInvitation ? "설문 링크 만드는 중…" : "메숭이 체온 설문 링크 만들기"}
         </button>
         {invitationUrl ? (
           <div className="mt-3 rounded-xl border border-[#d9cdbd] bg-[#fffefa] p-3">
             <label htmlFor="temperature-invite-url" className="text-xs font-semibold text-[#52606d]">
-              동행 확인 링크
+              메숭이 체온 설문 링크
             </label>
             <input
               id="temperature-invite-url"
@@ -169,12 +172,22 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
             <p id="temperature-invite-help" className="mt-2 text-xs leading-5 text-[#687380]">
               링크의 확인 코드는 주소의 `#invite` 뒤에만 들어 있으며 서비스에 원문으로 저장되지 않습니다.
             </p>
+            {invitationExpiresAt ? (
+              <p className="mt-1 text-xs leading-5 text-[#687380]">
+                사용 기한:{" "}
+                {new Intl.DateTimeFormat("ko-KR", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                  timeZone: "Asia/Seoul",
+                }).format(new Date(invitationExpiresAt))}
+              </p>
+            ) : null}
             <button
               type="button"
               onClick={copyInvitationUrl}
               className="mt-2 rounded-lg border border-[#bfae99] bg-[#f6f2ea] px-3 py-1.5 text-xs font-bold text-[#202a36] transition hover:border-[#a44640]/70"
             >
-              링크 복사
+              설문 링크 복사
             </button>
           </div>
         ) : null}

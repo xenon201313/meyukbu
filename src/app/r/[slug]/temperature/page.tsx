@@ -1,15 +1,15 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 import { MesoongiTemperatureForm } from "@/components/mesoongi-temperature-form";
 import { SiteHeader } from "@/components/site-header";
 import { getPublicResume } from "@/server/services/resume-service";
-import { notFound } from "next/navigation";
 
 interface TemperaturePageProps {
   params: Promise<{ slug: string }>;
 }
 
-/** Dedicated, fragment-token based entry point for a companion's tag-only record. */
+/** Dedicated, fragment-token based entry point for an anonymous temperature survey. */
 export default async function MesoongiTemperaturePage({ params }: TemperaturePageProps) {
   const { slug } = await params;
   const resume = await getPublicResume(slug);
@@ -19,16 +19,16 @@ export default async function MesoongiTemperaturePage({ params }: TemperaturePag
 
   return (
     <main className="resume-shell pb-14">
-      <SiteHeader currentLabel="동행 기록 남기기" />
+      <SiteHeader currentLabel="메숭이 체온 설문" />
       <div className="mx-auto max-w-2xl px-5 pt-7 sm:px-8">
         <div className="resume-paper rounded-2xl p-4 sm:p-7">
           <div className="mb-5 border-b border-[#d9cdbd] pb-5">
-            <p className="resume-kicker">COMPANION RECORD</p>
+            <p className="resume-kicker">ANONYMOUS SURVEY</p>
             <h1 className="resume-heading mt-2 text-2xl font-bold text-[#202a36]">
-              함께한 기록을 남겨 주세요
+              메숭이 체온 설문에 참여해 주세요.
             </h1>
             <p className="resume-lead mt-2 text-sm leading-6">
-              이 기록은 점수나 순위를 매기지 않고, 함께한 경험을 긍정적인 태그로만 남깁니다.
+              세 가지 질문의 답변은 익명으로 집계되며, 개별 답변이나 응답자 정보는 공개되지 않습니다.
             </p>
           </div>
           <MesoongiTemperatureForm resumeSlug={slug} />

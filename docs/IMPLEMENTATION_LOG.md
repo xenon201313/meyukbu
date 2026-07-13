@@ -1,5 +1,33 @@
 # 구현 및 검증 로그
 
+## 2026-07-14 — 익명 메숭이 체온 설문
+
+### 구현 범위
+
+- 사용자 명시 승인에 따라 기존 기명 태그 UI를 `메숭이 체온` 익명 3문항 설문으로 교체했다. 보스 경험과 숙련도는 각각 -2~+2, 시간 약속은 -1/+1이며, 기본값은 36.5℃다.
+- 작성자 edit token으로만 7일 만료·1회용 설문 링크를 발급한다. 원문 token은 URL `#invite` fragment로만 전달하고, DB에는 hash만 저장한다.
+- `TemperatureSurveyInvitation`과 `TemperatureSurveyResponse`를 Character OCID에 연결했다. 응답에는 닉네임, 메력서 slug, reviewer OCID, 연락처, 자유 댓글을 저장하지 않는다. 점수는 익명 집계에만 사용한다.
+- 공개 검증 페이지에는 현재 온도, 게이지, 익명 응답 수만 표시한다. 공유 PNG, QR 공유 이미지, 이력서 글 복사에는 동적 온도를 포함하지 않아 immutable ResumeVersion과 content hash를 유지한다.
+- 같은 캐릭터로 새 메력서를 만들면 온도가 이어지며, 다른 캐릭터의 링크 제출·만료 링크·재사용 링크는 차단한다. Next route bundle 간 error prototype 차이로 재사용 링크가 500이 되던 문제는 안정적인 error code 판별로 409 처리하도록 수정했다.
+- 기존 기명 태그 데이터에는 점수 대응 관계가 없으므로 임의 변환하지 않고 보존했다. 새 익명 설문이 없는 캐릭터는 36.5℃로 시작한다.
+
+### 검증 결과
+
+| 명령 | 결과 |
+| --- | --- |
+| `pnpm db:generate` | 통과 |
+| `pnpm lint` | 통과 |
+| `pnpm typecheck` | 통과 |
+| `pnpm test` | 20 files, 69 tests 통과 |
+| `pnpm test:e2e` | Chromium 6 tests 통과 — 익명 입력 제거, 3문항 값, 36.5℃, 1회용 409, 새 메력서 지속, PNG 분리, 375px 설문 흐름을 검증 |
+| `pnpm build` | 통과 |
+| `pnpm format:check` | 통과 |
+| `git diff --check` | 통과 |
+
+### 배포 전제
+
+- 새 Prisma migration `20260714110000_add_anonymous_temperature_surveys`를 포함했다. 배포 환경에서는 기존 `vercel-build` 명령이 `prisma migrate deploy`를 먼저 실행하므로, DATABASE_URL_UNPOOLED 설정이 유지되어야 한다.
+
 ## 2026-07-14 — 메숭이 체온 기명 동행 기록
 
 ### 구현 범위

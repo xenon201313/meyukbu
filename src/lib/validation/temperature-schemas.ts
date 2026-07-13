@@ -35,5 +35,28 @@ export const mesoongiTemperatureSubmitSchema = z
   })
   .strict();
 
+/** Exact score choices used by the anonymous Mesoongi temperature survey. */
+export const mesoongiTemperatureExperienceScoreSchema = z.union([
+  z.literal(-2),
+  z.literal(-1),
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+]);
+
+/** The time-promise question is deliberately binary. */
+export const mesoongiTemperaturePunctualityScoreSchema = z.union([z.literal(-1), z.literal(1)]);
+
+/** Input for the anonymous character-wide survey; it must contain no reviewer identity. */
+export const mesoongiTemperatureSurveySubmitSchema = z
+  .object({
+    invitationToken: mesoongiTemperatureInvitationTokenSchema,
+    experienceScore: mesoongiTemperatureExperienceScoreSchema,
+    proficiencyScore: mesoongiTemperatureExperienceScoreSchema,
+    punctualityScore: mesoongiTemperaturePunctualityScoreSchema,
+  })
+  .strict();
+
 export type MesoongiTemperatureInviteInput = z.infer<typeof mesoongiTemperatureInviteSchema>;
 export type MesoongiTemperatureSubmitInput = z.infer<typeof mesoongiTemperatureSubmitSchema>;
+export type MesoongiTemperatureSurveySubmitInput = z.infer<typeof mesoongiTemperatureSurveySubmitSchema>;

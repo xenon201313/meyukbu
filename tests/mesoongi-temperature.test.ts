@@ -88,7 +88,7 @@ async function createDifferentResumes(repository: ResumeRepository) {
   return { target, reviewer };
 }
 
-describe("메숭이 체온 동행 기록", () => {
+describe("기존 기명 태그 데이터 보존", () => {
   it("records named tag-only companion feedback for the immutable version and hides it when reviewer unpublishes", async () => {
     const { repository, temperatureRepository } = testDependencies();
     const { target, reviewer } = await createDifferentResumes(repository);
