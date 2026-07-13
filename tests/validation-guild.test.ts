@@ -4,6 +4,7 @@ import { transitionGuildObservation } from "@/domain/guild-observation";
 import type { ResumeDraft } from "@/domain/resume";
 import { parseStoredDraft } from "@/lib/db/json";
 import { createResumeSchema, resumeDraftSchema } from "@/lib/validation/schemas";
+import { mesoongiTemperatureSubmitSchema } from "@/lib/validation/temperature-schemas";
 
 const validDraft: ResumeDraft = {
   targetBoss: "유피테르 (노멀)",
@@ -153,6 +154,31 @@ describe("resume draft validation", () => {
     const stored = parseStoredDraft({ ...validDraft, bossMultiplierPercent: "412.5" });
 
     expect(stored.bossMultiplierPercent).toBe("412.5");
+  });
+});
+
+describe("메숭이 체온 입력 검증", () => {
+  const validFeedback = {
+    invitationToken: "a".repeat(43),
+    reviewerSlug: "m-reviewer",
+    tags: ["PUNCTUAL", "COMMUNICATIVE"],
+  };
+
+  it("accepts one to three distinct tags and rejects score or comment fields", () => {
+    expect(mesoongiTemperatureSubmitSchema.safeParse(validFeedback).success).toBe(true);
+    expect(
+      mesoongiTemperatureSubmitSchema.safeParse({ ...validFeedback, tags: ["PUNCTUAL", "PUNCTUAL"] }).success,
+    ).toBe(false);
+    expect(
+      mesoongiTemperatureSubmitSchema.safeParse({
+        ...validFeedback,
+        tags: ["PUNCTUAL", "PREPARED", "COMMUNICATIVE", "PERSISTENT"],
+      }).success,
+    ).toBe(false);
+    expect(mesoongiTemperatureSubmitSchema.safeParse({ ...validFeedback, score: 36 }).success).toBe(false);
+    expect(mesoongiTemperatureSubmitSchema.safeParse({ ...validFeedback, comment: "좋아요" }).success).toBe(
+      false,
+    );
   });
 });
 

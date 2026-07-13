@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { CombatStatsPanel } from "@/components/combat-stats-panel";
+import { MesoongiTemperaturePanel } from "@/components/mesoongi-temperature-panel";
 import { OwnerResumeActions } from "@/components/owner-resume-actions";
 import { ProvenanceBadge } from "@/components/provenance-badge";
 import { ResumeTextCopyButton } from "@/components/resume-text-copy-button";
@@ -11,6 +12,7 @@ import { SiteHeader } from "@/components/site-header";
 import { FreshnessBadge } from "@/components/freshness-badge";
 import { toPublicResumeView } from "@/server/services/public-view";
 import { getPublicResume } from "@/server/services/resume-service";
+import { getPublicMesoongiTemperatureFeedbacks } from "@/server/services/mesoongi-temperature-service";
 import { editTokenCookieName, verifyEditToken } from "@/lib/auth/edit-token";
 import { getEnvironment } from "@/lib/env";
 import { resumeImageUrl } from "@/lib/image/resume-image-url";
@@ -46,6 +48,7 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
     cookieStore.get(editTokenCookieName(slug))?.value,
     result.resume.editTokenHash,
   );
+  const temperatureFeedbacks = await getPublicMesoongiTemperatureFeedbacks(result.resume, result.version);
 
   return (
     <main className="resume-shell pb-14">
@@ -82,6 +85,19 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
             className="block w-full rounded-2xl border border-[#d9cdbd] bg-[#fffefa] shadow-[0_20px_50px_rgba(74,53,35,0.14)]"
           />
           <CombatStatsPanel profile={resume.version.snapshot.profile} />
+          <MesoongiTemperaturePanel
+            feedbacks={temperatureFeedbacks.map((feedback) => ({
+              id: feedback.id,
+              reviewer: {
+                slug: feedback.reviewerSlug,
+                characterName: feedback.reviewerName,
+                worldName: feedback.reviewerWorldName,
+                className: feedback.reviewerClassName,
+              },
+              tags: feedback.tags,
+              publishedAt: feedback.publishedAt,
+            }))}
+          />
         </section>
 
         <aside className="space-y-4 lg:sticky lg:top-6 lg:h-fit">

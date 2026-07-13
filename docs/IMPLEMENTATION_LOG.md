@@ -1,5 +1,32 @@
 # 구현 및 검증 로그
 
+## 2026-07-14 — 메숭이 체온 기명 동행 기록
+
+### 구현 범위
+
+- `메숭이 체온`을 숫자·별점·순위가 없는 긍정 태그형 동행 기록으로 구현했다. 허용 태그는 약속 시간 준수, 공략 준비, 원활한 소통, 재도전 적극성, 공정한 분배이며 1~3개만 제출할 수 있다.
+- 작성자만 HttpOnly edit token으로 7일 만료·1회 사용 확인 링크를 발급한다. 원문 token은 URL fragment의 `#invite`로만 전달하고 DB에는 해시만 보관한다.
+- 평가자는 본인이 관리하는 공개 메력서와 해당 브라우저의 edit token을 사용한다. 자기 평가, 동일 OCID의 대상 메력서 중복 기록, 만료·재사용 링크, 다른 version에 발급한 링크는 차단한다.
+- `TemperatureInvitation`·`TemperatureFeedback` Prisma migration과 memory/Prisma 저장소를 추가했다. `(resumeVersionId, resumeId)` 복합 foreign key로 이력서와 다른 version을 연결할 수 없게 했다.
+- 공개 검증 페이지는 해당 immutable version의 기명 태그와 평가자 공개 메력서 링크만 보여 준다. 평가자 메력서가 공개 중단되면 해당 기록은 숨긴다.
+- 공유 PNG, QR 이미지, 이력서 글 복사에는 동행 기록을 넣지 않아 기존 content hash와 이미지 version을 유지한다.
+
+### 검증 결과
+
+| 명령 | 결과 |
+| --- | --- |
+| `pnpm format:check` | 통과 |
+| `pnpm lint` | 통과 |
+| `pnpm typecheck` | 통과 |
+| `pnpm test` | 17 files, 61 tests 통과 |
+| `pnpm test:e2e` | Chromium 3 tests 통과 — 작성자/평가자 분리 세션, 초대 링크, 기명 태그, PNG 불변, 375px 흐름 포함 |
+| `pnpm build` | 통과 |
+| `git diff --check` | 통과 |
+
+### 남은 환경 확인
+
+- 로컬 Docker가 없어 PostgreSQL migration의 실제 적용은 실행하지 못했다. 배포 환경에서는 `pnpm prisma migrate deploy`를 실행해야 하며, 기존 Vercel `vercel-build` 명령은 이를 수행한다.
+
 ## 2026-07-13 — 보스별 별도 저장·희망 인원·참여 시간 방식
 
 - 공개 메력서의 작성자 관리 영역에 `새 메력서로 저장`을 추가했다. 이 흐름은 기존 메력서의 edit token을 확인한 뒤 같은 캐릭터·작성 내용을 새 slug와 version 1로 생성하므로, 보스별·일자별 기록이 원본 공개 URL이나 기존 version을 덮어쓰지 않는다.

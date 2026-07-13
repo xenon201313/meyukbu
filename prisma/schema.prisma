@@ -53,21 +53,27 @@ enum ReportState {
   DISMISSED
 }
 
+/// A non-numeric, tag-only record left after a party run.
+enum TemperatureFeedbackStatus {
+  PUBLISHED
+  WITHDRAWN
+}
+
 /// A stable character identity. Mutable character properties belong to snapshots.
 model Character {
-  id               String             @id @default(cuid())
-  ocid             String             @unique @db.VarChar(128)
-  name             String             @db.VarChar(64)
-  worldName        String?            @db.VarChar(64)
+  id                String             @id @default(cuid())
+  ocid              String             @unique @db.VarChar(128)
+  name              String             @db.VarChar(64)
+  worldName         String?            @db.VarChar(64)
   /// Highest raw combat power the service has observed for this character.
   peakCombatPower   BigInt?
-  peakCombatPowerAt DateTime?         @db.Timestamptz(3)
-  firstSeenAt      DateTime           @default(now()) @db.Timestamptz(3)
-  lastSeenAt       DateTime           @default(now()) @db.Timestamptz(3)
-  createdAt        DateTime           @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime           @updatedAt @db.Timestamptz(3)
-  snapshots        ProfileSnapshot[]
-  resumes          Resume[]
+  peakCombatPowerAt DateTime?          @db.Timestamptz(3)
+  firstSeenAt       DateTime           @default(now()) @db.Timestamptz(3)
+  lastSeenAt        DateTime           @default(now()) @db.Timestamptz(3)
+  createdAt         DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime           @updatedAt @db.Timestamptz(3)
+  snapshots         ProfileSnapshot[]
+  resumes           Resume[]
   guildObservations GuildObservation[]
 
   @@index([name])
@@ -76,22 +82,22 @@ model Character {
 
 /// An immutable, normalized response from either the live or mock character provider.
 model ProfileSnapshot {
-  id                String              @id @default(cuid())
+  id                String             @id @default(cuid())
   characterId       String
-  fetchedAt         DateTime            @default(now()) @db.Timestamptz(3)
+  fetchedAt         DateTime           @default(now()) @db.Timestamptz(3)
   /// Source game date is deliberately kept as the provider's YYYY-MM-DD/string value.
-  sourceDate        String?             @db.VarChar(32)
+  sourceDate        String?            @db.VarChar(32)
   provider          SnapshotProvider
   normalized        Json
   /// Limited/encrypted raw payload only; it is never returned by public handlers.
   rawPayload        Json?
   rawAvailability   Json
-  freshness         SnapshotFreshness   @default(FRESH)
-  freshUntil        DateTime            @db.Timestamptz(3)
-  expiresAt         DateTime            @db.Timestamptz(3)
-  contentHash       String              @db.VarChar(64)
-  createdAt         DateTime            @default(now()) @db.Timestamptz(3)
-  character         Character           @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  freshness         SnapshotFreshness  @default(FRESH)
+  freshUntil        DateTime           @db.Timestamptz(3)
+  expiresAt         DateTime           @db.Timestamptz(3)
+  contentHash       String             @db.VarChar(64)
+  createdAt         DateTime           @default(now()) @db.Timestamptz(3)
+  character         Character          @relation(fields: [characterId], references: [id], onDelete: Cascade)
   resumeVersions    ResumeVersion[]
   calculatedMetrics CalculatedMetric[]
   guildObservations GuildObservation[]
@@ -103,20 +109,21 @@ model ProfileSnapshot {
 
 /// A public resume has one mutable pointer to its latest immutable version.
 model Resume {
-  id               String           @id @default(cuid())
-  slug             String           @unique @db.VarChar(96)
-  characterId      String
-  currentVersionId String?          @unique
-  visibility       ResumeVisibility @default(PUBLIC)
+  id                        String                @id @default(cuid())
+  slug                      String                @unique @db.VarChar(96)
+  characterId               String
+  currentVersionId          String?               @unique
+  visibility                ResumeVisibility      @default(PUBLIC)
   /// SHA-256 (or stronger) hash only; the plaintext edit token is never persisted.
-  editTokenHash    String           @db.VarChar(128)
-  createdAt        DateTime         @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime         @updatedAt @db.Timestamptz(3)
-  withdrawnAt      DateTime?        @db.Timestamptz(3)
-  character        Character        @relation(fields: [characterId], references: [id], onDelete: Cascade)
-  currentVersion   ResumeVersion?   @relation("CurrentResumeVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
-  versions         ResumeVersion[]  @relation("ResumeVersions")
-  reports          Report[]
+  editTokenHash             String                @db.VarChar(128)
+  createdAt                 DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt                 DateTime              @updatedAt @db.Timestamptz(3)
+  withdrawnAt               DateTime?             @db.Timestamptz(3)
+  character                 Character             @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  currentVersion            ResumeVersion?        @relation("CurrentResumeVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
+  versions                  ResumeVersion[]       @relation("ResumeVersions")
+  reports                   Report[]
+  temperatureFeedbacksGiven TemperatureFeedback[] @relation("TemperatureFeedbackReviewerResume")
 
   @@index([characterId])
   @@index([visibility, updatedAt])
@@ -124,21 +131,24 @@ model Resume {
 
 /// Published content is versioned rather than overwritten, preserving image/verifier integrity.
 model ResumeVersion {
-  id                 String              @id @default(cuid())
-  resumeId           String
-  snapshotId         String
-  userInput          Json
-  theme              ResumeTheme         @default(RESUME)
-  contentHash        String              @db.VarChar(64)
-  versionNumber      Int
-  publishedAt        DateTime            @default(now()) @db.Timestamptz(3)
-  createdAt          DateTime            @default(now()) @db.Timestamptz(3)
-  resume             Resume              @relation("ResumeVersions", fields: [resumeId], references: [id], onDelete: Cascade)
-  snapshot           ProfileSnapshot     @relation(fields: [snapshotId], references: [id])
-  currentFor         Resume?             @relation("CurrentResumeVersion")
-  calculatedMetrics  CalculatedMetric[]
+  id                     String                  @id @default(cuid())
+  resumeId               String
+  snapshotId             String
+  userInput              Json
+  theme                  ResumeTheme             @default(RESUME)
+  contentHash            String                  @db.VarChar(64)
+  versionNumber          Int
+  publishedAt            DateTime                @default(now()) @db.Timestamptz(3)
+  createdAt              DateTime                @default(now()) @db.Timestamptz(3)
+  resume                 Resume                  @relation("ResumeVersions", fields: [resumeId], references: [id], onDelete: Cascade)
+  snapshot               ProfileSnapshot         @relation(fields: [snapshotId], references: [id])
+  currentFor             Resume?                 @relation("CurrentResumeVersion")
+  calculatedMetrics      CalculatedMetric[]
+  temperatureInvitations TemperatureInvitation[] @relation("TemperatureInvitationTargetVersion")
+  temperatureFeedbacks   TemperatureFeedback[]   @relation("TemperatureFeedbackTargetVersion")
 
   @@unique([resumeId, versionNumber], name: "resumeId_versionNumber")
+  @@unique([id, resumeId], name: "id_resumeId")
   @@index([snapshotId])
   @@index([contentHash])
 }
@@ -198,4 +208,47 @@ model Report {
 
   @@index([resumeId, state])
   @@index([state, createdAt])
+}
+
+/// One-time, expiring proof that a party member may leave a tag-only record.
+/// Only the hash is stored; the raw token is present solely in the issued URL.
+model TemperatureInvitation {
+  id              String               @id @default(cuid())
+  resumeId        String
+  resumeVersionId String
+  tokenHash       String               @unique @db.VarChar(128)
+  expiresAt       DateTime             @db.Timestamptz(3)
+  usedAt          DateTime?            @db.Timestamptz(3)
+  revokedAt       DateTime?            @db.Timestamptz(3)
+  createdAt       DateTime             @default(now()) @db.Timestamptz(3)
+  resumeVersion   ResumeVersion        @relation("TemperatureInvitationTargetVersion", fields: [resumeVersionId, resumeId], references: [id, resumeId], onDelete: Cascade)
+  feedback        TemperatureFeedback?
+
+  @@index([resumeId, resumeVersionId, expiresAt])
+  @@index([expiresAt])
+}
+
+/// The resulting non-numeric, non-anonymous positive feedback.
+model TemperatureFeedback {
+  id                String                    @id @default(cuid())
+  resumeId          String
+  resumeVersionId   String
+  invitationId      String                    @unique
+  reviewerResumeId  String
+  reviewerSlug      String                    @db.VarChar(96)
+  reviewerOcid      String                    @db.VarChar(128)
+  reviewerName      String                    @db.VarChar(64)
+  reviewerWorldName String?                   @db.VarChar(64)
+  reviewerClassName String?                   @db.VarChar(64)
+  tags              Json
+  status            TemperatureFeedbackStatus @default(PUBLISHED)
+  createdAt         DateTime                  @default(now()) @db.Timestamptz(3)
+  withdrawnAt       DateTime?                 @db.Timestamptz(3)
+  resumeVersion     ResumeVersion             @relation("TemperatureFeedbackTargetVersion", fields: [resumeVersionId, resumeId], references: [id, resumeId], onDelete: Cascade)
+  invitation        TemperatureInvitation     @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  reviewerResume    Resume                    @relation("TemperatureFeedbackReviewerResume", fields: [reviewerResumeId], references: [id], onDelete: Cascade)
+
+  @@unique([resumeId, reviewerOcid], name: "resumeId_reviewerOcid")
+  @@index([resumeVersionId, status, createdAt])
+  @@index([reviewerResumeId])
 }

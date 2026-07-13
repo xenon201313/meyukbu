@@ -51,6 +51,7 @@ routes:
     - "/"
     - "/create"
     - "/r/[slug]"
+    - "/r/[slug]/temperature"
     - "/r/[slug]/image"
     - "/privacy"
     - "/terms"
@@ -61,6 +62,9 @@ routes:
     - "POST /api/resumes/[slug]/refresh"
     - "PATCH /api/resumes/[slug]"
     - "DELETE /api/resumes/[slug]"
+    - "GET /api/resumes/[slug]/temperature"
+    - "POST /api/resumes/[slug]/temperature"
+    - "POST /api/resumes/[slug]/temperature/invitations"
     - "GET /api/health"
 
 mvp:
@@ -80,11 +84,13 @@ mvp:
     - "출처 배지"
     - "기준 시각과 stale/expired"
     - "NEXON 데이터/비제휴 고지"
+    - "메숭이 체온 기명 태그형 동행 기록"
     - "테스트와 production build"
   forbidden:
     - "단일 종합 점수"
     - "합격/불합격 판정"
     - "익명 평판"
+    - "별점·온도 수치·순위형 평판"
     - "블랙리스트"
     - "공식 제휴로 오해할 표현"
     - "클라이언트 API key"
