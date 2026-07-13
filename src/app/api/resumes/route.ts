@@ -6,6 +6,7 @@ import { createResumeSchema } from "@/lib/validation/schemas";
 import { requestRateLimitKey, takeRateLimit } from "@/lib/rate-limit";
 import { createResume } from "@/server/services/resume-service";
 import { NexonProviderError, userFacingNexonError } from "@/lib/nexon/errors";
+import { resumeImageUrl } from "@/lib/image/resume-image-url";
 
 export const runtime = "nodejs";
 
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       slug: result.record.slug,
       versionNumber: 1,
-      imageUrl: `/r/${result.record.slug}/image?v=1`,
+      imageUrl: resumeImageUrl(result.record.slug, 1),
     });
     response.cookies.set(editTokenCookieName(result.record.slug), result.editToken, {
       httpOnly: true,

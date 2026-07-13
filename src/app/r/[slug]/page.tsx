@@ -11,6 +11,7 @@ import { FreshnessBadge } from "@/components/freshness-badge";
 import { toPublicResumeView } from "@/server/services/public-view";
 import { getPublicResume } from "@/server/services/resume-service";
 import { editTokenCookieName, verifyEditToken } from "@/lib/auth/edit-token";
+import { resumeImageUrl } from "@/lib/image/resume-image-url";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
     notFound();
   }
   const resume = toPublicResumeView(result);
-  const imageUrl = `/r/${slug}/image?v=${resume.version.versionNumber}`;
+  const imageUrl = resumeImageUrl(slug, resume.version.versionNumber);
   const cookieStore = await cookies();
   const canEdit = verifyEditToken(
     cookieStore.get(editTokenCookieName(slug))?.value,

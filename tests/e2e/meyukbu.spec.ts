@@ -44,8 +44,9 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
   await expect(page.getByRole("button", { name: "최신 데이터로 갱신" })).toBeVisible();
 
   const publicPath = new URL(page.url()).pathname;
-  await expect(page.locator("[data-resume-share-image]")).toHaveAttribute("src", `${publicPath}/image?v=1`);
-  const imageResponse = await page.request.get(`${publicPath}/image?v=1`);
+  const imageUrl = `${publicPath}/image?v=1&layout=2`;
+  await expect(page.locator("[data-resume-share-image]")).toHaveAttribute("src", imageUrl);
+  const imageResponse = await page.request.get(imageUrl);
   expect(imageResponse.ok()).toBeTruthy();
   expect(imageResponse.headers()["content-type"]).toContain("image/png");
   const imageBody = await imageResponse.body();
