@@ -22,7 +22,7 @@
 - 메숭이 체온은 합격 판단, 자동 파티 매칭, 직업 비교, 검색 정렬, 노출 우대에 사용하지 않는다.
 - 1회용 invitation hash와 rate limit으로 반복 제출을 제한한다. 익명성 때문에 자기 설문·동일인의 여러 링크 사용을 신원 기반으로 판별하지는 않는다.
 - 초대 token 원문과 설문자 식별 정보는 로그에 남기지 않는다.
-- 동적인 누적값은 immutable ResumeVersion/PNG의 content hash와 충돌하지 않도록 공개 검증 페이지에만 표시한다.
+- 동적인 누적값은 공개 검증 페이지, 이력서 미리보기, 공유 PNG, 이력서 글 복사에 표시한다. ResumeVersion content hash에는 포함하지 않으며, PNG route를 `no-store`로 제공해 최신 집계값을 반영한다.
 
 ## D-004: 로그인 전 나의 이력서 목록은 edit token cookie를 기준으로 제한
 

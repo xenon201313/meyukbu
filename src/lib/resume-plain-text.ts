@@ -6,6 +6,7 @@ import {
   voiceChatLabels,
   type ResumeContact,
 } from "@/domain/resume";
+import type { PublicMesoongiTemperatureSummary } from "@/domain/mesoongi-temperature-survey";
 import { formatNumericDisplay } from "@/lib/format";
 import { formatResumeAvailability } from "@/lib/resume-presentation";
 import type { PublicResumeView } from "@/server/services/public-view";
@@ -61,7 +62,11 @@ function formatKoreanDateTime(value: string): string {
  * Builds a stable, plain-text recruiting post from public resume data.
  * Private contacts and non-public author fields are deliberately excluded.
  */
-export function formatResumePlainText(resume: PublicResumeView, canonicalUrl: string): string {
+export function formatResumePlainText(
+  resume: PublicResumeView,
+  canonicalUrl: string,
+  temperatureSummary: PublicMesoongiTemperatureSummary,
+): string {
   const { draft, snapshot } = resume.version;
   const profile = snapshot.profile;
   const bossCadence = draft.targetBossCadence ? `${targetBossCadenceLabels[draft.targetBossCadence]} · ` : "";
@@ -84,6 +89,7 @@ export function formatResumePlainText(resume: PublicResumeView, canonicalUrl: st
     "[파티 조건]",
     `환산: ${oneLine(draft.convertedStat) === notProvided ? notProvided : formatNumericDisplay(oneLine(draft.convertedStat))}`,
     `보스 배율: ${formatBossMultiplier(draft.bossMultiplierPercent)}`,
+    `메숭이 체온: ${temperatureSummary.temperatureCelsius.toFixed(1)}℃ · 익명 설문 ${temperatureSummary.responseCount}건`,
     `가능 시간: ${formatAvailability(resume)}`,
     `디스코드: ${voiceChatLabels[draft.voiceChat]}`,
     `분배 방식: ${oneLine(draft.lootPolicy)}`,

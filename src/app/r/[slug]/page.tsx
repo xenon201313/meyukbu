@@ -42,13 +42,13 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
     `/r/${encodeURIComponent(slug)}?v=${resume.version.versionNumber}`,
     getEnvironment().APP_ORIGIN,
   ).toString();
-  const resumePlainText = formatResumePlainText(resume, canonicalUrl);
+  const temperatureSummary = await getPublicMesoongiTemperatureSummary(result.resume);
+  const resumePlainText = formatResumePlainText(resume, canonicalUrl, temperatureSummary);
   const cookieStore = await cookies();
   const canEdit = verifyEditToken(
     cookieStore.get(editTokenCookieName(slug))?.value,
     result.resume.editTokenHash,
   );
-  const temperatureSummary = await getPublicMesoongiTemperatureSummary(result.resume);
 
   return (
     <main className="resume-shell pb-14">
@@ -78,7 +78,7 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
           ) : null}
           <img
             src={imageUrl}
-            alt={`${resume.version.snapshot.profile.characterName} 메력서 v${resume.version.versionNumber}`}
+            alt={`${resume.version.snapshot.profile.characterName} 메력서 v${resume.version.versionNumber}. 메숭이 체온 ${temperatureSummary.temperatureCelsius.toFixed(1)}℃, 익명 설문 ${temperatureSummary.responseCount}건.`}
             width={1080}
             height={1350}
             data-resume-share-image

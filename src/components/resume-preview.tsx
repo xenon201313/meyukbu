@@ -15,6 +15,8 @@ import { formatNumericDisplay } from "@/lib/format";
 import { formatResumeAvailability } from "@/lib/resume-presentation";
 
 import { FreshnessBadge } from "@/components/freshness-badge";
+import { MesoongiTemperatureResumeBlock } from "@/components/mesoongi-temperature-resume-block";
+import type { MesoongiTemperatureSummary } from "@/components/mesoongi-temperature-panel";
 import { ProvenanceBadge } from "@/components/provenance-badge";
 
 interface ResumePreviewProps {
@@ -22,6 +24,7 @@ interface ResumePreviewProps {
   draft: ResumeDraft;
   mode?: "mock" | "live";
   versionNumber?: number;
+  temperatureSummary?: MesoongiTemperatureSummary;
   className?: string;
 }
 
@@ -125,7 +128,14 @@ function PreviewMetric({ label, value, last = false }: { label: string; value: s
 }
 
 /** A read-only, mobile-first paper-form representation of the resume being edited. */
-export function ResumePreview({ profile, draft, mode, versionNumber, className = "" }: ResumePreviewProps) {
+export function ResumePreview({
+  profile,
+  draft,
+  mode,
+  versionNumber,
+  temperatureSummary,
+  className = "",
+}: ResumePreviewProps) {
   if (!profile) {
     return (
       <section
@@ -240,10 +250,20 @@ export function ResumePreview({ profile, draft, mode, versionNumber, className =
           </div>
         </section>
 
+        <section aria-labelledby="preview-temperature-heading" className="space-y-2">
+          <PreviewSectionHeading
+            id="preview-temperature-heading"
+            number="03"
+            title="메숭이 체온"
+            provenance="USER_PROVIDED"
+          />
+          <MesoongiTemperatureResumeBlock summary={temperatureSummary} />
+        </section>
+
         <section aria-labelledby="preview-experience-heading" className="space-y-2">
           <PreviewSectionHeading
             id="preview-experience-heading"
-            number="03"
+            number="04"
             title="파티 경험 및 조건"
             provenance="USER_PROVIDED"
           />

@@ -9,9 +9,13 @@ import { getEnvironment } from "@/lib/env";
 import { createQrDataUri } from "@/lib/image/qr";
 import { ResumeShareImage } from "@/lib/image/resume-share-image";
 import { toPublicResumeView } from "@/server/services/public-view";
+import { getPublicMesoongiTemperatureSummary } from "@/server/services/mesoongi-temperature-survey-service";
 import { getPublicResume } from "@/server/services/resume-service";
 
 export const runtime = "nodejs";
+/** The survey aggregate is live data, so a fixed resume version cannot be edge-cached forever. */
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface KoreanFonts {
   regular: ArrayBuffer;
@@ -100,15 +104,17 @@ export async function GET(request: NextRequest, context: Context) {
   }
   const view = toPublicResumeView(result);
   const canonicalUrl = `${getEnvironment().APP_ORIGIN}/r/${slug}?v=${view.version.versionNumber}`;
-  const [qrDataUri, fontData, avatarDataUri, bossArtworkDataUri] = await Promise.all([
+  const [qrDataUri, fontData, avatarDataUri, bossArtworkDataUri, temperatureSummary] = await Promise.all([
     createQrDataUri(canonicalUrl),
     loadKoreanFonts(),
     loadAvatarDataUri(view.version.snapshot.profile.imageUrl),
     loadBossArtworkDataUri(view.version.draft),
+    getPublicMesoongiTemperatureSummary(result.resume),
   ]);
   return new ImageResponse(
     <ResumeShareImage
       resume={view}
+      temperatureSummary={temperatureSummary}
       qrDataUri={qrDataUri}
       canonicalUrl={canonicalUrl}
       avatarDataUri={avatarDataUri}
@@ -123,7 +129,9 @@ export async function GET(request: NextRequest, context: Context) {
       ],
       headers: {
         "Content-Type": "image/png",
-        "Cache-Control": `public, max-age=31536000, immutable`,
+        // A survey response can change a character-wide temperature while the
+        // resume snapshot/version stays the same. Do not serve an old PNG.
+        "Cache-Control": "no-store, max-age=0, must-revalidate",
       },
     },
   );

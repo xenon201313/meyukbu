@@ -8,6 +8,9 @@ export default defineConfig({
   testDir: "./tests/e2e",
   timeout: 30_000,
   expect: { timeout: 8_000 },
+  // The mock app intentionally shares one in-memory repository and rate limiter.
+  // Keep cross-file creation flows isolated instead of weakening production limits.
+  workers: 1,
   fullyParallel: false,
   reporter: "list",
   use: {

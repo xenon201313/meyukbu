@@ -79,6 +79,39 @@ describe("ResumePreview", () => {
     expect(bossArtwork).toHaveAttribute("src", "/images/bosses/blackmage.png");
   });
 
+  it("keeps the anonymous Mesoongi temperature inside the paper resume", () => {
+    const profile = getMockProfiles()[0];
+    if (!profile) {
+      throw new Error("Expected the primary mock profile.");
+    }
+
+    const { rerender } = render(<ResumePreview profile={profile} draft={draft} mode="mock" />);
+
+    const gauge = screen.getByTestId("resume-temperature-gauge");
+    expect(gauge).toHaveTextContent("기본 메숭이 체온");
+    expect(gauge).toHaveTextContent("36.5℃");
+    expect(gauge).toHaveTextContent("익명 설문 응답 대기 중");
+
+    rerender(
+      <ResumePreview
+        profile={profile}
+        draft={draft}
+        mode="mock"
+        temperatureSummary={{
+          temperatureCelsius: 40.5,
+          responseCount: 2,
+          baselineCelsius: 36.5,
+          minCelsius: 0,
+          maxCelsius: 100,
+        }}
+      />,
+    );
+
+    expect(gauge).toHaveTextContent("현재 메숭이 체온");
+    expect(gauge).toHaveTextContent("40.5℃");
+    expect(gauge).toHaveTextContent("익명 설문 2건 반영");
+  });
+
   it("shows the achievement party type in the live preview", () => {
     const profile = getMockProfiles()[0];
     if (!profile) {

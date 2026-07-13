@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import type { PublicMesoongiTemperatureSummary } from "@/domain/mesoongi-temperature-survey";
 import type { ResumeDraft } from "@/domain/resume";
 import { ResumeShareImage } from "@/lib/image/resume-share-image";
 import { getMockProfiles } from "@/lib/nexon/fixtures";
@@ -39,10 +40,22 @@ function createResumeView(draft: ResumeDraft): PublicResumeView {
   };
 }
 
-function renderShareImage(draft: ResumeDraft) {
+const baselineTemperatureSummary: PublicMesoongiTemperatureSummary = {
+  temperatureCelsius: 36.5,
+  responseCount: 0,
+  baselineCelsius: 36.5,
+  minCelsius: 0,
+  maxCelsius: 100,
+};
+
+function renderShareImage(
+  draft: ResumeDraft,
+  temperatureSummary: PublicMesoongiTemperatureSummary = baselineTemperatureSummary,
+) {
   return renderToStaticMarkup(
     <ResumeShareImage
       resume={createResumeView(draft)}
+      temperatureSummary={temperatureSummary}
       qrDataUri="data:image/png;base64,qr"
       canonicalUrl="https://example.test/r/m-test"
       avatarDataUri="data:image/png;base64,avatar"
@@ -86,6 +99,34 @@ describe("ResumeShareImage", () => {
     expect(markup).toContain("미입력");
     expect(markup).toContain("data:image/png;base64,qr");
     expect(markup).toContain("Data based on NEXON Open API");
+    expect(markup).toContain("메숭이 체온");
+    expect(markup).toContain("36.5℃");
+    expect(markup).toContain("익명 설문 0건");
+  });
+
+  it("renders the current Mesoongi temperature and response count inside the PNG resume", () => {
+    const markup = renderShareImage(
+      {
+        targetBoss: "검은 마법사 (하드)",
+        targetBossCadence: "MONTHLY",
+        role: "DAMAGE",
+        partyType: "FIXED",
+        availability: [{ days: ["화"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
+        voiceChat: "OPTIONAL",
+        theme: "RESUME",
+      },
+      {
+        temperatureCelsius: 41.5,
+        responseCount: 1,
+        baselineCelsius: 36.5,
+        minCelsius: 0,
+        maxCelsius: 100,
+      },
+    );
+
+    expect(markup).toContain("메숭이 체온");
+    expect(markup).toContain("41.5℃");
+    expect(markup).toContain("익명 설문 1건");
   });
 
   it("includes both reference metrics and the selected boss artwork in the PNG card", () => {

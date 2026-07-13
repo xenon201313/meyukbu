@@ -7,12 +7,14 @@ import {
   targetBossCadenceLabels,
   voiceChatLabels,
 } from "@/domain/resume";
+import type { PublicMesoongiTemperatureSummary } from "@/domain/mesoongi-temperature-survey";
 import { formatNumericDisplay } from "@/lib/format";
 import { formatResumeAvailability } from "@/lib/resume-presentation";
 import type { PublicResumeView } from "@/server/services/public-view";
 
 interface ResumeShareImageProps {
   resume: PublicResumeView;
+  temperatureSummary: PublicMesoongiTemperatureSummary;
   qrDataUri: string;
   canonicalUrl: string;
   avatarDataUri: string | null;
@@ -278,11 +280,102 @@ function MetricCell({ label, value, last = false }: { label: string; value: stri
 }
 
 /**
- * The canonical 1080×1350 resume sheet. The public page shows this exact PNG,
- * keeping the document-like preview and downloaded image on the same version.
+ * Compact, aggregate-only temperature indicator for the share PNG. It never
+ * renders a respondent or any individual survey answer.
+ */
+function TemperatureMetricCell({
+  summary,
+  last = false,
+}: {
+  summary: PublicMesoongiTemperatureSummary;
+  last?: boolean;
+}) {
+  const minimum = summary.minCelsius;
+  const maximum = summary.maxCelsius > minimum ? summary.maxCelsius : minimum + 1;
+  const baseline = Math.min(maximum, Math.max(minimum, summary.baselineCelsius));
+  const temperature = Math.min(maximum, Math.max(minimum, summary.temperatureCelsius));
+  const position = ((temperature - minimum) / (maximum - minimum)) * 100;
+  const baselinePosition = ((baseline - minimum) / (maximum - minimum)) * 100;
+  const tone = temperature >= baseline ? accent : "#4b728d";
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flex: 1,
+        minWidth: 0,
+        flexDirection: "column",
+        justifyContent: "center",
+        boxSizing: "border-box",
+        borderRight: last ? "0" : `1px solid ${rule}`,
+        padding: "0 20px",
+      }}
+    >
+      <div style={{ display: "flex", color: mutedInk, fontSize: 16, fontWeight: 700 }}>메숭이 체온</div>
+      <div
+        style={{
+          display: "flex",
+          color: documentInk,
+          fontSize: 30,
+          fontWeight: 700,
+          lineHeight: 1.15,
+          marginTop: 4,
+        }}
+      >
+        {temperature.toFixed(1)}℃
+      </div>
+      <div style={{ display: "flex", color: mutedInk, fontSize: 12, marginTop: 3 }}>
+        익명 설문 {summary.responseCount}건
+      </div>
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          height: 8,
+          flexShrink: 0,
+          marginTop: 8,
+          borderRadius: 999,
+          background: "linear-gradient(90deg, #91b8cc 0%, #f3d4a0 50%, #c85a52 100%)",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -2,
+            left: `${baselinePosition}%`,
+            display: "flex",
+            width: 2,
+            height: 12,
+            marginLeft: -1,
+            background: documentInk,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: -3,
+            left: `${position}%`,
+            display: "flex",
+            width: 14,
+            height: 14,
+            marginLeft: -7,
+            border: `2px solid ${paper}`,
+            borderRadius: 999,
+            background: tone,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The canonical 1080×1350 resume sheet. Resume fields come from one immutable
+ * version; the aggregate-only temperature is intentionally read live per render.
  */
 export function ResumeShareImage({
   resume,
+  temperatureSummary,
   qrDataUri,
   canonicalUrl,
   avatarDataUri,
@@ -520,7 +613,7 @@ export function ResumeShareImage({
             <SectionHeading number="02" title="환산 · 보스 배율" source="작성 내용" />
             <div
               style={{
-                height: 92,
+                height: 116,
                 display: "flex",
                 flexShrink: 0,
                 boxSizing: "border-box",
@@ -528,7 +621,8 @@ export function ResumeShareImage({
               }}
             >
               <MetricCell label="환산" value={referenceStat} />
-              <MetricCell label="보스 배율" value={bossMultiplier} last />
+              <MetricCell label="보스 배율" value={bossMultiplier} />
+              <TemperatureMetricCell summary={temperatureSummary} last />
             </div>
           </div>
 

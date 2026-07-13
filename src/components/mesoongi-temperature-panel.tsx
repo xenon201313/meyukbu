@@ -18,7 +18,7 @@ function finiteOr(value: number | null, fallback: number): number {
 }
 
 function formatTemperature(value: number): string {
-  return `${value.toFixed(1)}°C`;
+  return `${value.toFixed(1)}℃`;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {
@@ -26,8 +26,8 @@ function clamp(value: number, minimum: number, maximum: number): number {
 }
 
 /**
- * Shows an anonymous, aggregated temperature indicator outside the immutable
- * resume PNG. It never renders an individual respondent or individual answer.
+ * Shows an anonymous, aggregated temperature indicator on the public resume
+ * page. It never renders an individual respondent or individual answer.
  */
 export function MesoongiTemperaturePanel({ summary, className = "" }: MesoongiTemperaturePanelProps) {
   const minimum = finiteOr(summary.minCelsius, 30);
@@ -108,8 +108,8 @@ export function MesoongiTemperaturePanel({ summary, className = "" }: MesoongiTe
       <aside className="mt-5 rounded-xl border border-[#d9cdbd] bg-[#f6f2ea] px-4 py-3" role="note">
         <p className="text-sm font-semibold text-[#202a36]">메숭이 체온 안내</p>
         <p className="mt-1 text-xs leading-5 text-[#52606d]">
-          36.5°C를 기준으로 보여 주며, 설문 응답이 쌓이면 집계값이 갱신됩니다. 이 지표는 공유 PNG와 QR
-          이미지에는 포함되지 않습니다.
+          36.5℃를 기준으로 보여 주며, 설문 응답이 쌓이면 집계값이 갱신됩니다. 이 지표는 공유 PNG와 공개
+          이력서에 함께 표시됩니다.
         </p>
       </aside>
     </section>

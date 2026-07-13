@@ -21,6 +21,7 @@ import { findBossOption, maxPartySizeForBoss, type BossOption } from "@/content/
 
 import { BossCadencePicker } from "@/components/boss-cadence-picker";
 import { CharacterDataPanel } from "@/components/character-data-panel";
+import type { MesoongiTemperatureSummary } from "@/components/mesoongi-temperature-panel";
 import { ResumePreview } from "@/components/resume-preview";
 
 type ResolveMode = "mock" | "live";
@@ -57,6 +58,10 @@ interface EditableResumePayload {
     };
   };
   canEdit: boolean;
+}
+
+interface TemperatureSummaryPayload {
+  summary: MesoongiTemperatureSummary;
 }
 
 const dayOptions = ["월", "화", "수", "목", "금", "토", "일"];
@@ -290,6 +295,29 @@ function isEditableResumePayload(value: unknown): value is EditableResumePayload
   );
 }
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isMesoongiTemperatureSummary(value: unknown): value is MesoongiTemperatureSummary {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    (value.temperatureCelsius === null || isFiniteNumber(value.temperatureCelsius)) &&
+    isFiniteNumber(value.responseCount) &&
+    value.responseCount >= 0 &&
+    isFiniteNumber(value.baselineCelsius) &&
+    isFiniteNumber(value.minCelsius) &&
+    isFiniteNumber(value.maxCelsius)
+  );
+}
+
+function isTemperatureSummaryPayload(value: unknown): value is TemperatureSummaryPayload {
+  return isRecord(value) && isMesoongiTemperatureSummary(value.summary);
+}
+
 async function responseJson(response: Response): Promise<unknown> {
   try {
     return await response.json();
@@ -428,6 +456,10 @@ function ResumeEditorContent() {
   const [draft, setDraft] = useState<ResumeDraft>(createDefaultDraft);
   const [profile, setProfile] = useState<NormalizedCharacterProfile | null>(null);
   const [mode, setMode] = useState<ResolveMode | null>(null);
+  const [loadedTemperature, setLoadedTemperature] = useState<{
+    sourceSlug: string;
+    summary: MesoongiTemperatureSummary;
+  }>();
   const [resolveState, setResolveState] = useState<ResolveState>("idle");
   const [resolveError, setResolveError] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -532,6 +564,40 @@ function ResumeEditorContent() {
 
     return () => controller.abort();
   }, [isCopyMode, queryName, sourceSlug]);
+
+  useEffect(() => {
+    if (!sourceSlug) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    void (async () => {
+      try {
+        const response = await fetch(`/api/resumes/${encodeURIComponent(sourceSlug)}/temperature`, {
+          credentials: "same-origin",
+          headers: { Accept: "application/json" },
+          signal: controller.signal,
+        });
+        const payload = await responseJson(response);
+
+        if (!response.ok || !isTemperatureSummaryPayload(payload) || controller.signal.aborted) {
+          return;
+        }
+
+        setLoadedTemperature({ sourceSlug, summary: payload.summary });
+      } catch {
+        if (!controller.signal.aborted) {
+          setLoadedTemperature((current) => (current?.sourceSlug === sourceSlug ? undefined : current));
+        }
+      }
+    })();
+
+    return () => controller.abort();
+  }, [sourceSlug]);
+
+  const temperatureSummary =
+    loadedTemperature?.sourceSlug === sourceSlug ? loadedTemperature.summary : undefined;
 
   function clearError(key: FormErrorKey) {
     setFormErrors((current) => {
@@ -1191,7 +1257,12 @@ function ResumeEditorContent() {
 
         <aside className="lg:sticky lg:top-6" aria-label="메력서 미리보기">
           <p className="mb-3 text-sm font-bold text-[#202a36]">메력서 미리보기</p>
-          <ResumePreview profile={profile} draft={draft} mode={mode ?? undefined} />
+          <ResumePreview
+            profile={profile}
+            draft={draft}
+            mode={mode ?? undefined}
+            temperatureSummary={temperatureSummary}
+          />
         </aside>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ResumeDraft } from "@/domain/resume";
+import type { PublicMesoongiTemperatureSummary } from "@/domain/mesoongi-temperature-survey";
 import { formatResumePlainText } from "@/lib/resume-plain-text";
 import { getMockProfiles } from "@/lib/nexon/fixtures";
 import type { PublicResumeView } from "@/server/services/public-view";
@@ -55,6 +56,14 @@ const baseDraft: ResumeDraft = {
   theme: "RESUME",
 };
 
+const temperatureSummary: PublicMesoongiTemperatureSummary = {
+  temperatureCelsius: 41.5,
+  responseCount: 2,
+  baselineCelsius: 36.5,
+  minCelsius: 0,
+  maxCelsius: 100,
+};
+
 describe("formatResumePlainText", () => {
   it("formats public resume data in the fixed Korean posting order", () => {
     const resume = createResumeView({
@@ -62,7 +71,11 @@ describe("formatResumePlainText", () => {
       contact: { type: "DISCORD", value: "resumae#1234", isPublic: true },
     });
 
-    const text = formatResumePlainText(resume, "https://maple-resume.com/r/m-plain-text?v=3");
+    const text = formatResumePlainText(
+      resume,
+      "https://maple-resume.com/r/m-plain-text?v=3",
+      temperatureSummary,
+    );
 
     expect(text).toContain("[메력서 · RESUMAE]");
     expect(text).toContain("[지원 분야]");
@@ -71,6 +84,7 @@ describe("formatResumePlainText", () => {
     expect(text).toContain("희망 인원: 3인격");
     expect(text).toContain("환산: 110,650");
     expect(text).toContain("보스 배율: 412.5%");
+    expect(text).toContain("메숭이 체온: 41.5℃ · 익명 설문 2건");
     expect(text).toContain("가능 시간: 화 · 목 20:00 - 23:00 (한국 표준시)");
     expect(text).toContain("디스코드: 선택");
     expect(text).toContain("[공개 연락처]\n디스코드: resumae#1234");
@@ -87,7 +101,11 @@ describe("formatResumePlainText", () => {
       contact: { type: "DISCORD", value: "private-discord", isPublic: false },
     });
 
-    const text = formatResumePlainText(resume, "https://maple-resume.com/r/m-plain-text?v=3");
+    const text = formatResumePlainText(
+      resume,
+      "https://maple-resume.com/r/m-plain-text?v=3",
+      temperatureSummary,
+    );
 
     expect(text).not.toContain("private-discord");
     expect(text).not.toContain("[공개 연락처]");
@@ -98,6 +116,7 @@ describe("formatResumePlainText", () => {
     const text = formatResumePlainText(
       createResumeView({ ...baseDraft, availabilityMode: "NEGOTIABLE", availability: [] }),
       "https://maple-resume.com/r/m-plain-text?v=3",
+      temperatureSummary,
     );
 
     expect(text).toContain("가능 시간: 요일·시간 협의 가능");
