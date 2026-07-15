@@ -78,7 +78,7 @@ export default async function PublicResumePage({ params, searchParams }: PagePro
           ) : null}
           <img
             src={imageUrl}
-            alt={`${resume.version.snapshot.profile.characterName} 메력서 v${resume.version.versionNumber}. 메숭이 체온 ${temperatureSummary.temperatureCelsius.toFixed(1)}℃, 익명 설문 ${temperatureSummary.responseCount}건.`}
+            alt={`${resume.version.snapshot.profile.characterName} 메력서 v${resume.version.versionNumber}. 메붕이 온도 ${temperatureSummary.temperatureCelsius.toFixed(1)}℃, 익명 설문 ${temperatureSummary.responseCount}건.`}
             width={1080}
             height={1350}
             data-resume-share-image

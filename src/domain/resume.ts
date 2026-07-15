@@ -21,6 +21,24 @@ export type ContactType = (typeof contactTypeValues)[number];
 export const targetBossCadenceValues = ["WEEKLY", "MONTHLY"] as const;
 export type TargetBossCadence = (typeof targetBossCadenceValues)[number];
 
+/** A resume can show at most six boss/multiplier pairs without overflowing its share card. */
+export const maxResumeBossTargets = 6;
+
+/**
+ * One catalogued boss included in a multi-boss party application.
+ *
+ * New drafts always contain the catalog `bossId` and `cadence`. They are
+ * optional here only so an immutable legacy version with a historical scalar
+ * target can still be rendered after the catalog changes.
+ */
+export interface ResumeBossTarget {
+  bossId?: string;
+  bossName: string;
+  cadence?: TargetBossCadence;
+  /** User-provided MapleScouter-style percentage; never a service calculation. */
+  bossMultiplierPercent?: string;
+}
+
 export interface AvailabilitySlot {
   days: string[];
   startTime: string;
@@ -35,8 +53,15 @@ export interface ResumeContact {
 }
 
 export interface ResumeDraft {
+  /**
+   * Ordered boss/multiplier pairs for new multi-boss resumes. The old scalar
+   * fields below remain as a compatibility alias for the primary target until
+   * every immutable historical version has naturally aged out.
+   */
+  bossTargets?: ResumeBossTarget[];
+  /** @deprecated Use `bossTargets`; retained to render legacy immutable versions. */
   targetBoss: string;
-  /** Weekly/monthly is user-selected context, not a value inferred from API data. */
+  /** @deprecated Use `bossTargets`; retained to render legacy immutable versions. */
   targetBossCadence?: TargetBossCadence;
   /**
    * User-entered converted stat (환산), e.g. the MapleScouter figure. It is
@@ -44,11 +69,7 @@ export interface ResumeDraft {
    * an API value or a service calculation.
    */
   convertedStat?: string;
-  /**
-   * User-entered boss multiplier percentage. This is intentionally kept
-   * separate from the conversion figure and is never inferred or calculated
-   * by the service.
-   */
+  /** @deprecated Use the per-target multiplier in `bossTargets`. */
   bossMultiplierPercent?: string;
   role: ResumeRole;
   partyType: PartyType;
@@ -119,6 +140,8 @@ export interface OwnedResumeSummary {
   characterImageUrl: string | null;
   targetBoss: string;
   targetBossCadence: TargetBossCadence | null;
+  /** Ordered public boss bundle, with the primary target retained above for legacy consumers. */
+  bossTargets: ResumeBossTarget[];
   role: ResumeRole;
   partyType: PartyType;
   partySize: PartySize | null;
@@ -174,6 +197,24 @@ export const targetBossCadenceLabels: Record<TargetBossCadence, string> = {
   WEEKLY: "주간",
   MONTHLY: "월간",
 };
+
+/**
+ * Returns the canonical multi-boss list while keeping old scalar-only
+ * immutable versions readable. Callers must not mutate the returned list.
+ */
+export function getResumeBossTargets(draft: ResumeDraft): readonly ResumeBossTarget[] {
+  if (draft.bossTargets?.length) {
+    return draft.bossTargets;
+  }
+
+  return [
+    {
+      bossName: draft.targetBoss,
+      cadence: draft.targetBossCadence,
+      bossMultiplierPercent: draft.bossMultiplierPercent,
+    },
+  ];
+}
 
 export function prioritizedFields(profile: NormalizedCharacterProfile, role: ResumeRole) {
   return [...profile.fields]

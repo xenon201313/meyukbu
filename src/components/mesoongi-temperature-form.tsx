@@ -159,7 +159,7 @@ export function MesoongiTemperatureForm({ resumeSlug, onSubmitted }: MesoongiTem
     setStatus("");
 
     if (!invitationToken) {
-      setError("메숭이 체온 설문 링크가 확인되지 않습니다. 받은 링크를 그대로 열어 주세요.");
+      setError("메붕이 온도 설문 링크가 확인되지 않습니다. 받은 링크를 그대로 열어 주세요.");
       return;
     }
     if (experienceScore === null || proficiencyScore === null || punctualityScore === null) {
@@ -179,12 +179,12 @@ export function MesoongiTemperatureForm({ resumeSlug, onSubmitted }: MesoongiTem
 
       if (!response.ok) {
         setError(
-          messageFromResponse(body, "메숭이 체온 설문을 제출하지 못했습니다. 잠시 후 다시 시도해 주세요."),
+          messageFromResponse(body, "메붕이 온도 설문을 제출하지 못했습니다. 잠시 후 다시 시도해 주세요."),
         );
         return;
       }
 
-      setStatus("메숭이 체온 설문이 익명으로 집계되었습니다. 참여해 주셔서 감사합니다.");
+      setStatus("메붕이 온도 설문이 익명으로 집계되었습니다. 참여해 주셔서 감사합니다.");
       onSubmitted?.();
     } catch {
       setError("네트워크 연결을 확인한 뒤 다시 시도해 주세요.");
@@ -197,7 +197,7 @@ export function MesoongiTemperatureForm({ resumeSlug, onSubmitted }: MesoongiTem
     <form className="ui-panel rounded-xl p-5 sm:p-6" onSubmit={handleSubmit} noValidate>
       <div>
         <p className="ui-kicker">ANONYMOUS SURVEY</p>
-        <h2 className="mt-1 text-xl font-bold text-[#202a36]">메숭이 체온 설문</h2>
+        <h2 className="mt-1 text-xl font-bold text-[#202a36]">메붕이 온도 설문</h2>
         <p className="mt-2 text-sm leading-6 text-[#52606d]">
           함께한 파티 경험을 익명으로 남겨 주세요. 닉네임, 메력서 링크, 자유 입력은 수집하지 않습니다.
         </p>
@@ -260,7 +260,7 @@ export function MesoongiTemperatureForm({ resumeSlug, onSubmitted }: MesoongiTem
       <aside className="mt-5 rounded-xl border border-[#d9cdbd] bg-[#f6f2ea] px-4 py-3" role="note">
         <p className="text-sm font-semibold text-[#202a36]">익명 설문 안내</p>
         <p className="mt-1 text-xs leading-5 text-[#52606d]">
-          설문은 한 번만 제출할 수 있으며, 공개 이력서에는 개별 답변이나 작성자 정보 없이 메숭이 체온의
+          설문은 한 번만 제출할 수 있으며, 공개 이력서에는 개별 답변이나 작성자 정보 없이 메붕이 온도의
           집계값만 표시됩니다.
         </p>
       </aside>
@@ -272,7 +272,7 @@ export function MesoongiTemperatureForm({ resumeSlug, onSubmitted }: MesoongiTem
         aria-describedby={formStatusId}
         className="ui-action mt-5 flex min-h-12 w-full items-center justify-center rounded-xl px-5 py-3 text-base font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isSubmitting ? "설문 제출 중…" : "메숭이 체온 설문 제출"}
+        {isSubmitting ? "설문 제출 중…" : "메붕이 온도 설문 제출"}
       </button>
     </form>
   );

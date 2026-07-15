@@ -19,13 +19,13 @@ export default async function MesoongiTemperaturePage({ params }: TemperaturePag
 
   return (
     <main className="resume-shell pb-14">
-      <SiteHeader currentLabel="메숭이 체온 설문" />
+      <SiteHeader currentLabel="메붕이 온도 설문" />
       <div className="mx-auto max-w-2xl px-5 pt-7 sm:px-8">
         <div className="resume-paper rounded-2xl p-4 sm:p-7">
           <div className="mb-5 border-b border-[#d9cdbd] pb-5">
             <p className="resume-kicker">ANONYMOUS SURVEY</p>
             <h1 className="resume-heading mt-2 text-2xl font-bold text-[#202a36]">
-              메숭이 체온 설문에 참여해 주세요.
+              메붕이 온도 설문에 참여해 주세요.
             </h1>
             <p className="resume-lead mt-2 text-sm leading-6">
               세 가지 질문의 답변은 익명으로 집계되며, 개별 답변이나 응답자 정보는 공개되지 않습니다.

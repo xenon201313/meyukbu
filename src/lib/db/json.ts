@@ -1,14 +1,18 @@
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 
+import { findBossOption } from "@/content/bosses";
 import type { NormalizedCharacterProfile } from "@/domain/character";
 import { dataProvenanceValues } from "@/domain/provenance";
 import {
   availabilityModeValues,
   contactTypeValues,
+  maxResumeBossTargets,
   partySizeValues,
   partyTypeValues,
   resumeRoleValues,
+  type ResumeBossTarget,
+  type ResumeDraft,
   voiceChatValues,
 } from "@/domain/resume";
 
@@ -133,35 +137,96 @@ const profileSchema = z.object({
   notice: z.string().optional(),
 });
 
-const draftSchema = z.object({
-  targetBoss: z.string(),
-  targetBossCadence: z.enum(["WEEKLY", "MONTHLY"]).optional(),
-  convertedStat: z.string().optional(),
+const storedBossTargetSchema = z.object({
+  bossId: z.string().optional(),
+  bossName: z.string(),
+  cadence: z.enum(["WEEKLY", "MONTHLY"]).optional(),
   bossMultiplierPercent: z.string().optional(),
-  role: z.enum(resumeRoleValues),
-  partyType: z.enum(partyTypeValues),
-  partySize: z.union(partySizeValues.map((value) => z.literal(value))).optional(),
-  availabilityMode: z.enum(availabilityModeValues).default("SCHEDULED"),
-  availability: z.array(
-    z.object({
-      days: z.array(z.string()),
-      startTime: z.string(),
-      endTime: z.string(),
-      timezone: z.literal("Asia/Seoul"),
-    }),
-  ),
-  voiceChat: z.enum(voiceChatValues),
-  lootPolicy: z.string().optional(),
-  experienceSummary: z.string().optional(),
-  roleSummary: z.string().optional(),
-  contact: z.object({ type: z.enum(contactTypeValues), value: z.string(), isPublic: z.boolean() }).optional(),
-  theme: z.enum(["RESUME", "MINIMAL"]),
 });
+
+function normalizeStoredBossTarget(target: ResumeBossTarget): ResumeBossTarget {
+  if (target.bossId || !target.cadence) {
+    return target;
+  }
+  const catalogued = findBossOption(target.cadence, target.bossName);
+  return catalogued ? { ...target, bossId: catalogued.id } : target;
+}
+
+/**
+ * Parses both immutable scalar-only versions and new multi-boss versions.
+ * It only derives a catalog id for legacy display; it never rewrites database JSON.
+ */
+const draftSchema = z
+  .object({
+    targetBoss: z.string().optional(),
+    targetBossCadence: z.enum(["WEEKLY", "MONTHLY"]).optional(),
+    convertedStat: z.string().optional(),
+    bossMultiplierPercent: z.string().optional(),
+    bossTargets: z.array(storedBossTargetSchema).min(1).max(maxResumeBossTargets).optional(),
+    role: z.enum(resumeRoleValues),
+    partyType: z.enum(partyTypeValues),
+    partySize: z.union(partySizeValues.map((value) => z.literal(value))).optional(),
+    availabilityMode: z.enum(availabilityModeValues).default("SCHEDULED"),
+    availability: z.array(
+      z.object({
+        days: z.array(z.string()),
+        startTime: z.string(),
+        endTime: z.string(),
+        timezone: z.literal("Asia/Seoul"),
+      }),
+    ),
+    voiceChat: z.enum(voiceChatValues),
+    lootPolicy: z.string().optional(),
+    experienceSummary: z.string().optional(),
+    roleSummary: z.string().optional(),
+    contact: z
+      .object({ type: z.enum(contactTypeValues), value: z.string(), isPublic: z.boolean() })
+      .optional(),
+    theme: z.enum(["RESUME", "MINIMAL"]),
+  })
+  .transform((draft, context) => {
+    const explicitTargets = draft.bossTargets?.map(normalizeStoredBossTarget);
+    if (explicitTargets?.length) {
+      const primaryTarget = explicitTargets[0];
+      if (!primaryTarget) {
+        context.addIssue({
+          code: "custom",
+          path: ["bossTargets"],
+          message: "Stored boss target is missing.",
+        });
+        return z.NEVER;
+      }
+      return {
+        ...draft,
+        bossTargets: explicitTargets,
+        targetBoss: primaryTarget.bossName,
+        targetBossCadence: primaryTarget.cadence,
+        bossMultiplierPercent: primaryTarget.bossMultiplierPercent,
+      };
+    }
+
+    if (!draft.targetBoss) {
+      context.addIssue({ code: "custom", path: ["targetBoss"], message: "Stored target boss is missing." });
+      return z.NEVER;
+    }
+    const legacyTarget = normalizeStoredBossTarget({
+      bossName: draft.targetBoss,
+      cadence: draft.targetBossCadence,
+      bossMultiplierPercent: draft.bossMultiplierPercent,
+    });
+    return {
+      ...draft,
+      bossTargets: [legacyTarget],
+      targetBoss: legacyTarget.bossName,
+      targetBossCadence: legacyTarget.cadence,
+      bossMultiplierPercent: legacyTarget.bossMultiplierPercent,
+    };
+  });
 
 export function parseStoredProfile(value: unknown): NormalizedCharacterProfile {
   return profileSchema.parse(value);
 }
 
-export function parseStoredDraft(value: unknown) {
+export function parseStoredDraft(value: unknown): ResumeDraft {
   return draftSchema.parse(value);
 }

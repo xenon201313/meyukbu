@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { ownedResumeEditTokenReferences } from "@/lib/auth/edit-token";
+import { isPartyResumeEligible } from "@/lib/party/eligibility";
 import { getOwnedResumeSummaries } from "@/server/services/resume-service";
 
 export const runtime = "nodejs";
@@ -18,7 +19,15 @@ export async function GET(request: NextRequest) {
   try {
     const references = ownedResumeEditTokenReferences(request.cookies.getAll());
     const resumes = await getOwnedResumeSummaries(references);
-    return NextResponse.json({ resumes }, { headers: privateListHeaders });
+    return NextResponse.json(
+      {
+        resumes: resumes.map((resume) => ({
+          ...resume,
+          partyEligible: isPartyResumeEligible(resume.visibility, resume.fetchedAt),
+        })),
+      },
+      { headers: privateListHeaders },
+    );
   } catch {
     return NextResponse.json(
       { message: "내 메력서 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요." },

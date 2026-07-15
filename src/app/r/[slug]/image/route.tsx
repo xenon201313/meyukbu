@@ -3,8 +3,8 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { NextRequest } from "next/server";
 
-import { findBossOption } from "@/content/bosses";
-import type { ResumeDraft } from "@/domain/resume";
+import { findBossOption, findBossOptionById } from "@/content/bosses";
+import { getResumeBossTargets, type ResumeBossTarget } from "@/domain/resume";
 import { getEnvironment } from "@/lib/env";
 import { createQrDataUri } from "@/lib/image/qr";
 import { ResumeShareImage } from "@/lib/image/resume-share-image";
@@ -69,11 +69,13 @@ async function loadAvatarDataUri(imageUrl: string | null): Promise<string | null
   }
 }
 
-/** Inlines the catalogued, user-authorized boss art used by the rendered resume. */
-async function loadBossArtworkDataUri(draft: ResumeDraft): Promise<string | null> {
-  const boss = draft.targetBossCadence
-    ? findBossOption(draft.targetBossCadence, draft.targetBoss)
-    : undefined;
+/** Inlines one catalogued artwork for each target, preserving their draft order. */
+async function loadBossArtworkDataUri(target: ResumeBossTarget): Promise<string | null> {
+  const boss = target.bossId
+    ? findBossOptionById(target.bossId)
+    : target.cadence
+      ? findBossOption(target.cadence, target.bossName)
+      : undefined;
   if (!boss) {
     return null;
   }
@@ -104,11 +106,11 @@ export async function GET(request: NextRequest, context: Context) {
   }
   const view = toPublicResumeView(result);
   const canonicalUrl = `${getEnvironment().APP_ORIGIN}/r/${slug}?v=${view.version.versionNumber}`;
-  const [qrDataUri, fontData, avatarDataUri, bossArtworkDataUri, temperatureSummary] = await Promise.all([
+  const [qrDataUri, fontData, avatarDataUri, bossArtworkDataUris, temperatureSummary] = await Promise.all([
     createQrDataUri(canonicalUrl),
     loadKoreanFonts(),
     loadAvatarDataUri(view.version.snapshot.profile.imageUrl),
-    loadBossArtworkDataUri(view.version.draft),
+    Promise.all(getResumeBossTargets(view.version.draft).map((target) => loadBossArtworkDataUri(target))),
     getPublicMesoongiTemperatureSummary(result.resume),
   ]);
   return new ImageResponse(
@@ -118,7 +120,7 @@ export async function GET(request: NextRequest, context: Context) {
       qrDataUri={qrDataUri}
       canonicalUrl={canonicalUrl}
       avatarDataUri={avatarDataUri}
-      bossArtworkDataUri={bossArtworkDataUri}
+      bossArtworkDataUris={bossArtworkDataUris}
     />,
     {
       width: 1080,

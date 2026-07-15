@@ -9,6 +9,7 @@ import {
   roleLabels,
   targetBossCadenceLabels,
   type PartyType,
+  type ResumeBossTarget,
   type ResumeRole,
   type TargetBossCadence,
 } from "@/domain/resume";
@@ -23,6 +24,7 @@ interface MyResumeSummary {
   characterImageUrl: string | null;
   targetBoss: string;
   targetBossCadence: TargetBossCadence | null;
+  bossTargets: ResumeBossTarget[];
   role: ResumeRole;
   partyType: PartyType;
   partySize: number | null;
@@ -76,7 +78,15 @@ function characterGroups(resumes: MyResumeSummary[]): Array<[string, MyResumeSum
 }
 
 function ResumeCard({ resume }: { resume: MyResumeSummary }) {
-  const bossCadence = resume.targetBossCadence ? targetBossCadenceLabels[resume.targetBossCadence] : "보스";
+  const primaryTarget = resume.bossTargets[0];
+  const bossCadence = primaryTarget?.cadence
+    ? targetBossCadenceLabels[primaryTarget.cadence]
+    : resume.targetBossCadence
+      ? targetBossCadenceLabels[resume.targetBossCadence]
+      : "보스";
+  const bossNames = resume.bossTargets.length
+    ? resume.bossTargets.map((target) => target.bossName).join(" · ")
+    : resume.targetBoss;
   const characterInitial = resume.characterName.slice(0, 1);
   const canManage = resume.visibility === "PUBLIC";
 
@@ -84,7 +94,7 @@ function ResumeCard({ resume }: { resume: MyResumeSummary }) {
     <article
       data-testid="my-resume-card"
       className="ui-panel rounded-2xl p-4 sm:p-5"
-      aria-label={`${resume.targetBoss} 메력서`}
+      aria-label={`${bossNames} 메력서`}
     >
       <div className="flex items-start gap-3">
         {resume.characterImageUrl ? (
@@ -110,7 +120,7 @@ function ResumeCard({ resume }: { resume: MyResumeSummary }) {
               {visibilityLabel(resume.visibility)}
             </span>
           </div>
-          <h3 className="resume-heading mt-1 truncate text-xl font-black">{resume.targetBoss}</h3>
+          <h3 className="resume-heading mt-1 line-clamp-2 text-xl font-black">{bossNames}</h3>
           <p className="mt-1 text-sm font-semibold text-[#52606d]">
             {resume.characterName} · {resume.worldName} · {resume.className}
           </p>
@@ -209,7 +219,14 @@ export function MyResumeList() {
   const bossTabs = useMemo(() => {
     const counts = new Map<string, number>();
     for (const resume of resumes) {
-      counts.set(resume.targetBoss, (counts.get(resume.targetBoss) ?? 0) + 1);
+      const names = new Set(
+        (resume.bossTargets.length ? resume.bossTargets : [{ bossName: resume.targetBoss }]).map(
+          (target) => target.bossName,
+        ),
+      );
+      for (const name of names) {
+        counts.set(name, (counts.get(name) ?? 0) + 1);
+      }
     }
     return [
       { label: "전체", count: resumes.length },
@@ -219,7 +236,13 @@ export function MyResumeList() {
 
   const visibleResumes = useMemo(
     () =>
-      selectedBoss === "전체" ? resumes : resumes.filter((resume) => resume.targetBoss === selectedBoss),
+      selectedBoss === "전체"
+        ? resumes
+        : resumes.filter((resume) =>
+            (resume.bossTargets.length ? resume.bossTargets : [{ bossName: resume.targetBoss }]).some(
+              (target) => target.bossName === selectedBoss,
+            ),
+          ),
     [resumes, selectedBoss],
   );
   const selectedBossIndex = Math.max(

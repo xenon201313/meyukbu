@@ -7,8 +7,8 @@ async function publishMockResume(page: Page, characterName: string): Promise<str
 
   await expect(page).toHaveURL(/\/create\?name=/);
   await page.locator("#converted-stat").fill("110,650");
-  await page.locator("#boss-multiplier-percent").fill("412.5");
-  await page.locator("#boss-quick-select").selectOption("xblack");
+  await page.locator("#boss-target-0").selectOption("xblack");
+  await page.locator("#boss-multiplier-0").fill("412.5");
   await Promise.all([
     page.waitForURL(/\/r\/m-[a-z0-9_-]+$/),
     page.getByRole("button", { name: "메력서 게시하기" }).click(),
@@ -47,11 +47,15 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
   await expect(page.getByRole("button", { name: "메력서 게시하기" })).toBeEnabled();
 
   await page.locator("#converted-stat").fill("110,650");
-  await page.locator("#boss-multiplier-percent").fill("412.5");
   await page.locator("#party-type").selectOption("ACHIEVEMENT");
   await expect(page.locator("#party-type")).toHaveValue("ACHIEVEMENT");
   await expect(page.locator("#target-boss")).toHaveCount(0);
-  await page.locator("#boss-quick-select").selectOption("xblack");
+  await page.locator("#boss-target-0").selectOption("xblack");
+  await page.locator("#boss-multiplier-0").fill("412.5");
+  await page.locator("#boss-target-0").selectOption("hblack");
+  await expect(page.locator("#boss-multiplier-0")).toHaveValue("");
+  await page.locator("#boss-target-0").selectOption("xblack");
+  await page.locator("#boss-multiplier-0").fill("412.5");
   await Promise.all([
     page.waitForURL(/\/r\/m-[a-z0-9_-]+$/),
     page.getByRole("button", { name: "메력서 게시하기" }).click(),
@@ -66,7 +70,7 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
   await expect(page.getByRole("status")).toHaveText("이력서 내용을 클립보드에 복사했습니다.");
 
   const publicPath = new URL(page.url()).pathname;
-  const imageUrl = `${publicPath}/image?v=1&layout=6`;
+  const imageUrl = `${publicPath}/image?v=1&layout=7`;
   await expect(page.locator("[data-resume-share-image]")).toHaveAttribute("src", imageUrl);
   const imageResponse = await page.request.get(imageUrl);
   expect(imageResponse.ok()).toBeTruthy();
@@ -94,10 +98,10 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
   await page.getByRole("link", { name: "새 메력서로 저장" }).click();
   await expect(page).toHaveURL(/\/create\?copy=/);
   await expect(page.getByRole("heading", { name: "새 메력서로 저장" })).toBeVisible();
-  await expect(page.locator("#boss-quick-select")).toBeEnabled();
-  await page.getByRole("button", { name: /^주간 보스/ }).click();
-  await expect(page.locator("#boss-quick-select")).toHaveValue("njup");
-  await page.locator("#boss-quick-select").selectOption("xsu");
+  await expect(page.locator("#boss-target-0")).toBeEnabled();
+  await page.locator("#boss-target-0").selectOption("njup");
+  await expect(page.locator("#boss-target-0")).toHaveValue("njup");
+  await page.locator("#boss-target-0").selectOption("xsu");
   await expect(page.locator("#party-size")).toHaveValue("2");
   await expect(page.locator("#party-size option")).toHaveCount(2);
   await Promise.all([
@@ -109,18 +113,89 @@ test("mock 검색부터 게시, 검증, PNG 및 버전 갱신까지 동작한다
   await page.goto(originalResumeUrl);
   await expect(page.locator("[data-resume-share-image]")).toHaveAttribute(
     "src",
-    `${publicPath}/image?v=2&layout=6`,
+    `${publicPath}/image?v=2&layout=7`,
   );
 });
 
-test("메숭이 체온 설문은 익명 3문항으로 한 번만 제출되고 같은 캐릭터의 새 메력서에도 남는다", async ({
+test("최대 6개 보스 묶음도 1080×1350 PNG와 하단 검증 영역을 유지한다", async ({ page }) => {
+  await page.setExtraHTTPHeaders({ "x-forwarded-for": "198.51.100.43" });
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "캐릭터명" }).fill("별빛검사");
+  await page.getByRole("button", { name: "메력서 만들기" }).click();
+  await expect(page).toHaveURL(/\/create\?name=/);
+
+  const bossIds = ["hblack", "czak", "cbq", "cban", "cpier", "hmag"];
+  await page.locator("#converted-stat").fill("110,650");
+  await page.locator("#boss-target-0").selectOption(bossIds[0]);
+  for (const [offset, bossId] of bossIds.slice(1).entries()) {
+    const index = offset + 1;
+    await page.locator("#boss-target-add-select").selectOption(bossId);
+    await page.getByRole("button", { name: "보스 추가", exact: true }).click();
+    await expect(page.locator(`#boss-target-${index}`)).toHaveValue(bossId);
+  }
+  await expect(page.getByText("6/6개 선택됨", { exact: true })).toBeVisible();
+  await expect(page.locator("#boss-target-add-select")).toBeDisabled();
+
+  for (const [index] of bossIds.entries()) {
+    await page.locator(`#boss-multiplier-${index}`).fill(`${index + 1}0.5`);
+  }
+  await Promise.all([
+    page.waitForURL(/\/r\/m-[a-z0-9_-]+$/),
+    page.getByRole("button", { name: "메력서 게시하기" }).click(),
+  ]);
+
+  const image = page.locator("[data-resume-share-image]");
+  await expect(image).toHaveJSProperty("naturalWidth", 1080);
+  await expect(image).toHaveJSProperty("naturalHeight", 1350);
+  const imageUrl = await image.getAttribute("src");
+  expect(imageUrl).toMatch(/^\/r\/m-[a-z0-9_-]+\/image\?v=1&layout=7$/);
+  if (!imageUrl) {
+    throw new Error("Expected a share image URL for the six-boss resume.");
+  }
+
+  const imageResponse = await page.request.get(imageUrl);
+  expect(imageResponse.ok()).toBeTruthy();
+  expect(imageResponse.headers()["content-type"]).toContain("image/png");
+  const imageBody = await imageResponse.body();
+  expect(imageBody.subarray(1, 4).toString("ascii")).toBe("PNG");
+  const imageView = new DataView(imageBody.buffer, imageBody.byteOffset, imageBody.byteLength);
+  expect(imageView.getUint32(16)).toBe(1080);
+  expect(imageView.getUint32(20)).toBe(1350);
+
+  const footerHasVisibleQr = await image.evaluate((node) => {
+    const imageElement = node as HTMLImageElement;
+    const canvas = document.createElement("canvas");
+    canvas.width = imageElement.naturalWidth;
+    canvas.height = imageElement.naturalHeight;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      return false;
+    }
+    context.drawImage(imageElement, 0, 0);
+    const pixels = context.getImageData(54, 1190, 110, 110).data;
+    let darkPixelCount = 0;
+    for (let index = 0; index < pixels.length; index += 4) {
+      const red = pixels[index] ?? 255;
+      const green = pixels[index + 1] ?? 255;
+      const blue = pixels[index + 2] ?? 255;
+      const alpha = pixels[index + 3] ?? 0;
+      if (alpha > 0 && red < 90 && green < 90 && blue < 90) {
+        darkPixelCount += 1;
+      }
+    }
+    return darkPixelCount > 400;
+  });
+  expect(footerHasVisibleQr).toBe(true);
+});
+
+test("메붕이 온도 설문은 익명 3문항으로 한 번만 제출되고 같은 캐릭터의 새 메력서에도 남는다", async ({
   browser,
   page,
 }) => {
   const ownerResumeUrl = await publishMockResume(page, "별빛검사");
   const originalPath = new URL(ownerResumeUrl).pathname;
   const originalImageUrl = await page.locator("[data-resume-share-image]").getAttribute("src");
-  expect(originalImageUrl).toMatch(/^\/r\/m-[a-z0-9_-]+\/image\?v=1&layout=6$/);
+  expect(originalImageUrl).toMatch(/^\/r\/m-[a-z0-9_-]+\/image\?v=1&layout=7$/);
   if (!originalImageUrl) {
     throw new Error("Expected the published resume to have a share image URL.");
   }
@@ -130,8 +205,8 @@ test("메숭이 체온 설문은 익명 3문항으로 한 번만 제출되고 �
   const originalImageBody = await originalImageResponse.body();
   await expect(page.getByTestId("mesoongi-temperature-gauge")).toContainText("36.5℃");
 
-  await page.getByRole("button", { name: "메숭이 체온 설문 링크 만들기" }).click();
-  await expect(page.getByLabel("메숭이 체온 설문 링크")).toBeVisible();
+  await page.getByRole("button", { name: "메붕이 온도 설문 링크 만들기" }).click();
+  await expect(page.getByLabel("메붕이 온도 설문 링크")).toBeVisible();
   const invitationUrl = await page.locator("#temperature-invite-url").inputValue();
   const invitation = new URL(invitationUrl);
   expect(invitation.hash).toMatch(/^#invite=.+/);
@@ -141,7 +216,7 @@ test("메숭이 체온 설문은 익명 3문항으로 한 번만 제출되고 �
     const respondentPage = await respondentContext.newPage();
     await respondentPage.goto(`${invitation.pathname}${invitation.search}${invitation.hash}`);
     await expect(
-      respondentPage.getByRole("heading", { name: "메숭이 체온 설문에 참여해 주세요." }),
+      respondentPage.getByRole("heading", { name: "메붕이 온도 설문에 참여해 주세요." }),
     ).toBeVisible();
     await expect(respondentPage.locator("#temperature-reviewer-slug")).toHaveCount(0);
     await expect(respondentPage.getByTestId("temperature-experience-score").locator("input")).toHaveCount(5);
@@ -218,8 +293,8 @@ test.describe("375px mobile accessibility", () => {
     await page.getByRole("textbox", { name: "캐릭터명" }).fill("루나힐러");
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/\/create\?name=/);
-    await expect(page.getByLabel("희망 보스 선택")).toBeVisible();
-    const quickSelect = page.locator("#boss-quick-select");
+    await expect(page.getByRole("group", { name: "희망 보스 묶음" })).toBeVisible();
+    const quickSelect = page.locator("#boss-target-0");
     await expect(quickSelect).toBeEnabled();
     await quickSelect.selectOption("xblack");
     await expect(quickSelect).toHaveValue("xblack");
@@ -233,13 +308,13 @@ test.describe("375px mobile accessibility", () => {
     await expect(page.getByText("크로아/얀보 제작")).toBeVisible();
   });
 
-  test("익명 메숭이 체온 설문을 가로 375px에서도 읽고 선택할 수 있다", async ({ page }) => {
+  test("익명 메붕이 온도 설문을 가로 375px에서도 읽고 선택할 수 있다", async ({ page }) => {
     await publishMockResume(page, "별빛검사");
-    await page.getByRole("button", { name: "메숭이 체온 설문 링크 만들기" }).click();
+    await page.getByRole("button", { name: "메붕이 온도 설문 링크 만들기" }).click();
     const invitation = new URL(await page.locator("#temperature-invite-url").inputValue());
 
     await page.goto(`${invitation.pathname}${invitation.search}${invitation.hash}`);
-    await expect(page.getByRole("heading", { name: "메숭이 체온 설문에 참여해 주세요." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "메붕이 온도 설문에 참여해 주세요." })).toBeVisible();
     await expect(page.getByTestId("temperature-experience-score")).toBeVisible();
     await expect(page.getByTestId("temperature-proficiency-score")).toBeVisible();
     await expect(page.getByTestId("temperature-punctuality-score")).toBeVisible();

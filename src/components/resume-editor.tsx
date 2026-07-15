@@ -6,10 +6,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { NormalizedCharacterProfile } from "@/domain/character";
 import {
   availabilityModeLabels,
+  getResumeBossTargets,
   partySizeValues,
   partyTypeLabels,
   type AvailabilityMode,
   type ContactType,
+  type PartySize,
+  type ResumeBossTarget,
   type ResumeDraft,
   type ResumeRole,
   type PartyType,
@@ -17,9 +20,9 @@ import {
   roleLabels,
   voiceChatLabels,
 } from "@/domain/resume";
-import { findBossOption, maxPartySizeForBoss, type BossOption } from "@/content/bosses";
+import { findBossOption, findBossOptionById, maxPartySizeForBoss, type BossOption } from "@/content/bosses";
 
-import { BossCadencePicker } from "@/components/boss-cadence-picker";
+import { BossTargetPicker } from "@/components/boss-target-picker";
 import { CharacterDataPanel } from "@/components/character-data-panel";
 import type { MesoongiTemperatureSummary } from "@/components/mesoongi-temperature-panel";
 import { ResumePreview } from "@/components/resume-preview";
@@ -27,9 +30,8 @@ import { ResumePreview } from "@/components/resume-preview";
 type ResolveMode = "mock" | "live";
 type ResolveState = "idle" | "loading" | "success" | "error";
 type FormErrorKey =
-  | "targetBoss"
+  | "bossTargets"
   | "convertedStat"
-  | "bossMultiplierPercent"
   | "partySize"
   | "availability"
   | "lootPolicy"
@@ -47,6 +49,12 @@ interface ResolveCharacterPayload {
 interface CreateResumePayload {
   slug: string;
   versionNumber: number;
+}
+
+interface UpdateResumePayload {
+  resume: {
+    slug: string;
+  };
 }
 
 interface EditableResumePayload {
@@ -109,10 +117,40 @@ const formSectionNumbers: Record<string, string> = {
   "공개 범위": "07",
 };
 
-function createDefaultDraft(): ResumeDraft {
+function toBossTarget(boss: BossOption, multiplier?: string): ResumeBossTarget {
   return {
-    targetBoss: "검은 마법사 (하드)",
-    targetBossCadence: "MONTHLY",
+    bossId: boss.id,
+    bossName: boss.name,
+    cadence: boss.cadence,
+    bossMultiplierPercent: multiplier?.trim() || undefined,
+  };
+}
+
+function cataloguedBossForTarget(target: ResumeBossTarget): BossOption | undefined {
+  if (target.bossId) {
+    return findBossOptionById(target.bossId);
+  }
+  return target.cadence ? findBossOption(target.cadence, target.bossName) : undefined;
+}
+
+function maxPartySizeForTargets(targets: readonly ResumeBossTarget[]): PartySize {
+  const cap = targets.reduce(
+    (minimum, target) => Math.min(minimum, maxPartySizeForBoss(cataloguedBossForTarget(target))),
+    6,
+  );
+  return partySizeValues.find((candidate) => candidate === cap) ?? 6;
+}
+
+function createDefaultDraft(): ResumeDraft {
+  const defaultBoss = findBossOptionById("hblack");
+  if (!defaultBoss) {
+    throw new Error("Default boss option is unavailable.");
+  }
+
+  return {
+    bossTargets: [toBossTarget(defaultBoss)],
+    targetBoss: defaultBoss.name,
+    targetBossCadence: defaultBoss.cadence,
     role: "DAMAGE",
     partyType: "FIXED",
     partySize: 6,
@@ -224,6 +262,20 @@ function isResumeDraft(value: unknown): value is ResumeDraft {
         value.contact.type === "COMMUNITY") &&
       typeof value.contact.value === "string" &&
       typeof value.contact.isPublic === "boolean");
+  const validBossTargets =
+    value.bossTargets === undefined ||
+    (Array.isArray(value.bossTargets) &&
+      value.bossTargets.length >= 1 &&
+      value.bossTargets.length <= 6 &&
+      value.bossTargets.every(
+        (target) =>
+          isRecord(target) &&
+          typeof target.bossName === "string" &&
+          target.bossName.length > 0 &&
+          (target.bossId === undefined || typeof target.bossId === "string") &&
+          (target.cadence === undefined || target.cadence === "WEEKLY" || target.cadence === "MONTHLY") &&
+          (target.bossMultiplierPercent === undefined || typeof target.bossMultiplierPercent === "string"),
+      ));
 
   return (
     typeof value.targetBoss === "string" &&
@@ -256,6 +308,7 @@ function isResumeDraft(value: unknown): value is ResumeDraft {
       value.voiceChat === "UNAVAILABLE") &&
     (value.convertedStat === undefined || typeof value.convertedStat === "string") &&
     (value.bossMultiplierPercent === undefined || typeof value.bossMultiplierPercent === "string") &&
+    validBossTargets &&
     (value.lootPolicy === undefined || typeof value.lootPolicy === "string") &&
     (value.experienceSummary === undefined || typeof value.experienceSummary === "string") &&
     (value.roleSummary === undefined || typeof value.roleSummary === "string") &&
@@ -276,6 +329,16 @@ function isCreateResumePayload(value: unknown): value is CreateResumePayload {
     typeof value.slug === "string" &&
     value.slug.length > 0 &&
     typeof value.versionNumber === "number"
+  );
+}
+
+/** Validates the deliberately minimal owner-only PATCH response. */
+function isUpdateResumePayload(value: unknown): value is UpdateResumePayload {
+  return (
+    isRecord(value) &&
+    isRecord(value.resume) &&
+    typeof value.resume.slug === "string" &&
+    value.resume.slug.length > 0
   );
 }
 
@@ -340,18 +403,31 @@ function messageFromPayload(payload: unknown, fallback: string) {
 
 function normalizeDraft(draft: ResumeDraft): ResumeDraft {
   const contactValue = draft.contact?.value.trim() ?? "";
-  const boss = draft.targetBossCadence
-    ? findBossOption(draft.targetBossCadence, draft.targetBoss)
-    : undefined;
-  const maxPartySize = maxPartySizeForBoss(boss);
+  const targets = getResumeBossTargets(draft)
+    .map((target) => {
+      const boss = cataloguedBossForTarget(target);
+      if (boss) {
+        return toBossTarget(boss, target.bossMultiplierPercent);
+      }
+      return {
+        ...target,
+        bossName: target.bossName.trim(),
+        bossMultiplierPercent: target.bossMultiplierPercent?.trim() || undefined,
+      };
+    })
+    .filter((target) => Boolean(target.bossName));
+  const primary = targets[0];
+  const maxPartySize = maxPartySizeForTargets(targets);
   const partySize =
     partySizeValues.find((size) => size === Math.min(draft.partySize ?? 6, maxPartySize)) ?? maxPartySize;
 
   return {
     ...draft,
-    targetBoss: draft.targetBoss.trim(),
+    bossTargets: targets,
+    targetBoss: primary?.bossName ?? draft.targetBoss.trim(),
+    targetBossCadence: primary?.cadence ?? draft.targetBossCadence,
     convertedStat: draft.convertedStat?.trim() || undefined,
-    bossMultiplierPercent: draft.bossMultiplierPercent?.trim() || undefined,
+    bossMultiplierPercent: primary?.bossMultiplierPercent,
     partySize,
     availabilityMode: draft.availabilityMode ?? "SCHEDULED",
     availability: draft.availability.map((slot) => ({
@@ -368,29 +444,44 @@ function normalizeDraft(draft: ResumeDraft): ResumeDraft {
 function validateDraft(draft: ResumeDraft): FormErrors {
   const errors: FormErrors = {};
   const slot = draft.availability[0];
-  const boss = draft.targetBossCadence
-    ? findBossOption(draft.targetBossCadence, draft.targetBoss)
-    : undefined;
+  const targets = getResumeBossTargets(draft);
 
-  if (!draft.targetBoss.trim()) {
-    errors.targetBoss = "목표 보스를 목록에서 선택해 주세요.";
-  } else if (draft.targetBoss.trim().length > 60) {
-    errors.targetBoss = "목표 보스는 60자 이하로 입력해 주세요.";
+  if (!targets.length) {
+    errors.bossTargets = "희망 보스를 하나 이상 선택해 주세요.";
+  } else if (targets.length > 6) {
+    errors.bossTargets = "희망 보스는 최대 6개까지 묶을 수 있습니다.";
+  } else {
+    const selectedBossIds = new Set<string>();
+    for (const target of targets) {
+      const boss = cataloguedBossForTarget(target);
+      if (!boss) {
+        errors.bossTargets = "목록에서 희망 보스를 선택해 주세요.";
+        break;
+      }
+      if (selectedBossIds.has(boss.id)) {
+        errors.bossTargets = "같은 보스는 한 번만 선택할 수 있습니다.";
+        break;
+      }
+      selectedBossIds.add(boss.id);
+      const multiplier = target.bossMultiplierPercent?.trim() ?? "";
+      if (multiplier.length > 40) {
+        errors.bossTargets = "보스 배율은 40자 이하로 입력해 주세요.";
+        break;
+      }
+      if (multiplier && !/^\d[\d,]*(?:\.\d+)?$/.test(multiplier)) {
+        errors.bossTargets = "보스 배율은 % 기호 없이 숫자로 입력해 주세요.";
+        break;
+      }
+    }
   }
 
-  if (boss && draft.partySize && draft.partySize > maxPartySizeForBoss(boss)) {
-    errors.partySize = `${boss.name}은(는) 최대 ${maxPartySizeForBoss(boss)}인격까지 입장할 수 있습니다.`;
+  const maxPartySize = maxPartySizeForTargets(targets);
+  if (draft.partySize && draft.partySize > maxPartySize) {
+    errors.partySize = `선택한 보스 묶음은 최대 ${maxPartySize}인격까지 입장할 수 있습니다.`;
   }
 
   if ((draft.convertedStat?.trim().length ?? 0) > 40) {
     errors.convertedStat = "환산은 40자 이하로 입력해 주세요.";
-  }
-
-  const bossMultiplierPercent = draft.bossMultiplierPercent?.trim() ?? "";
-  if (bossMultiplierPercent.length > 40) {
-    errors.bossMultiplierPercent = "보스 배율은 40자 이하로 입력해 주세요.";
-  } else if (bossMultiplierPercent && !/^\d[\d,]*(?:\.\d+)?$/.test(bossMultiplierPercent)) {
-    errors.bossMultiplierPercent = "보스 배율은 % 기호 없이 숫자로 입력해 주세요.";
   }
 
   if ((draft.availabilityMode ?? "SCHEDULED") === "SCHEDULED") {
@@ -501,6 +592,7 @@ function ResumeEditorContent() {
       try {
         if (sourceSlug) {
           const response = await fetch(`/api/resumes/${encodeURIComponent(sourceSlug)}`, {
+            cache: "no-store",
             credentials: "same-origin",
             headers: { Accept: "application/json" },
             signal: controller.signal,
@@ -615,21 +707,77 @@ function ResumeEditorContent() {
     setDraft((current) => ({ ...current, ...update }));
   }
 
-  function selectBoss(boss: BossOption) {
-    const maxPartySize = maxPartySizeForBoss(boss);
+  /** Keeps legacy primary aliases and the party-size cap in sync with the target list. */
+  function updateBossTargets(nextTargets: readonly ResumeBossTarget[]) {
     setDraft((current) => {
+      const normalizedTargets = nextTargets.map((target) => {
+        const catalogued = cataloguedBossForTarget(target);
+        return catalogued ? toBossTarget(catalogued, target.bossMultiplierPercent) : target;
+      });
+      const primary = normalizedTargets[0];
+      if (!primary) {
+        return current;
+      }
+      const maxPartySize = maxPartySizeForTargets(normalizedTargets);
       const partySize =
         partySizeValues.find((size) => size === Math.min(current.partySize ?? 6, maxPartySize)) ??
         maxPartySize;
       return {
         ...current,
-        targetBossCadence: boss.cadence,
-        targetBoss: boss.name,
+        bossTargets: normalizedTargets,
+        targetBossCadence: primary.cadence,
+        targetBoss: primary.bossName,
+        bossMultiplierPercent: primary.bossMultiplierPercent,
         partySize,
       };
     });
-    clearError("targetBoss");
+    clearError("bossTargets");
     clearError("partySize");
+  }
+
+  function addBossTarget(boss: BossOption) {
+    const targets = getResumeBossTargets(draft);
+    if (targets.some((target) => cataloguedBossForTarget(target)?.id === boss.id) || targets.length >= 6) {
+      return;
+    }
+    updateBossTargets([...targets, toBossTarget(boss)]);
+  }
+
+  function replaceBossTarget(index: number, boss: BossOption) {
+    const targets = [...getResumeBossTargets(draft)];
+    if (
+      targets.some(
+        (target, targetIndex) => targetIndex !== index && cataloguedBossForTarget(target)?.id === boss.id,
+      )
+    ) {
+      return;
+    }
+    if (!targets[index]) {
+      return;
+    }
+    // A multiplier belongs to the selected boss, not the position in the list.
+    // Reusing it after a replacement could misrepresent a different boss.
+    targets[index] = toBossTarget(boss);
+    updateBossTargets(targets);
+  }
+
+  function removeBossTarget(index: number) {
+    const targets = [...getResumeBossTargets(draft)];
+    if (targets.length <= 1) {
+      return;
+    }
+    targets.splice(index, 1);
+    updateBossTargets(targets);
+  }
+
+  function updateBossMultiplier(index: number, value: string) {
+    const targets = [...getResumeBossTargets(draft)];
+    const currentTarget = targets[index];
+    if (!currentTarget) {
+      return;
+    }
+    targets[index] = { ...currentTarget, bossMultiplierPercent: value };
+    updateBossTargets(targets);
   }
 
   function updateAvailability(update: Partial<ResumeDraft["availability"][number]>) {
@@ -725,7 +873,7 @@ function ResumeEditorContent() {
         );
       }
       if (editSlug) {
-        if (!isEditableResumePayload(payload)) {
+        if (!isUpdateResumePayload(payload)) {
           throw new Error("수정 응답 형식을 확인할 수 없습니다.");
         }
         router.push(`/r/${encodeURIComponent(payload.resume.slug)}`);
@@ -752,10 +900,8 @@ function ResumeEditorContent() {
 
   const availability = draft.availability[0];
   const availabilityMode = draft.availabilityMode ?? "SCHEDULED";
-  const selectedBoss = draft.targetBossCadence
-    ? findBossOption(draft.targetBossCadence, draft.targetBoss)
-    : undefined;
-  const maxPartySize = maxPartySizeForBoss(selectedBoss);
+  const bossTargets = getResumeBossTargets(draft);
+  const maxPartySize = maxPartySizeForTargets(bossTargets);
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
@@ -812,7 +958,7 @@ function ResumeEditorContent() {
           <FormSection title="환산·보스 배율 참고">
             <p className="text-sm leading-7 text-slate-300">
               메력서는 환산과 보스 배율을 자동으로 가져오거나 임의로 계산하지 않습니다. 확인한 값은 아래에
-              기록할 수 있으며, 메력서에는 작성 내용으로 표시됩니다.
+              기록할 수 있으며, 보스 배율은 희망 보스별로 메력서에 작성 내용으로 표시됩니다.
             </p>
             {profile ? (
               <a
@@ -824,7 +970,7 @@ function ResumeEditorContent() {
                 MapleScouter에서 환산·보스 배율 확인
               </a>
             ) : null}
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="mt-4 max-w-sm">
               <Field label="환산" htmlFor="converted-stat" error={formErrors.convertedStat}>
                 <input
                   id="converted-stat"
@@ -843,51 +989,18 @@ function ResumeEditorContent() {
                   aria-invalid={Boolean(formErrors.convertedStat)}
                 />
               </Field>
-              <Field
-                label="보스 배율"
-                htmlFor="boss-multiplier-percent"
-                error={formErrors.bossMultiplierPercent}
-              >
-                <div className="relative">
-                  <input
-                    id="boss-multiplier-percent"
-                    name="bossMultiplierPercent"
-                    autoComplete="off"
-                    className={`${inputClassName} pr-9`}
-                    inputMode="decimal"
-                    maxLength={40}
-                    placeholder="예: 412.5"
-                    value={draft.bossMultiplierPercent ?? ""}
-                    onChange={(event) => {
-                      updateDraft({ bossMultiplierPercent: event.target.value });
-                      clearError("bossMultiplierPercent");
-                    }}
-                    aria-describedby={
-                      formErrors.bossMultiplierPercent ? "boss-multiplier-percent-error" : undefined
-                    }
-                    aria-invalid={Boolean(formErrors.bossMultiplierPercent)}
-                  />
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-bold text-slate-400"
-                  >
-                    %
-                  </span>
-                </div>
-              </Field>
             </div>
-            <p className="mt-2 text-xs leading-5 text-slate-400">
-              보스 배율에는 % 기호를 제외한 숫자만 입력해 주세요.
-            </p>
           </FormSection>
 
           <FormSection title="지원 분야">
             <div className="space-y-4">
-              <BossCadencePicker
-                value={draft.targetBossCadence}
-                targetBoss={draft.targetBoss}
-                error={formErrors.targetBoss}
-                onBossSelect={selectBoss}
+              <BossTargetPicker
+                targets={bossTargets}
+                error={formErrors.bossTargets}
+                onAdd={addBossTarget}
+                onReplace={replaceBossTarget}
+                onRemove={removeBossTarget}
+                onMultiplierChange={updateBossMultiplier}
               />
               <div className="grid gap-4 sm:grid-cols-3">
                 <Field label="역할" htmlFor="role">

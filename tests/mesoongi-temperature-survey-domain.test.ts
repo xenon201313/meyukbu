@@ -10,7 +10,7 @@ import {
   toMesoongiTemperatureCelsius,
 } from "@/domain/mesoongi-temperature-survey";
 
-describe("메숭이 체온 설문 점수 규칙", () => {
+describe("메붕이 온도 설문 점수 규칙", () => {
   it("starts every character at 36.5°C and maps the three answers to a -5..+5 delta", () => {
     expect(mesoongiTemperatureBaselineCelsius).toBe(36.5);
     expect(surveyTemperatureDelta(-2, -2, -1)).toBe(-5);

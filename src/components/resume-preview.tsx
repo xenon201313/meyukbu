@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 
-import { bossArtworkUrl, findBossOption } from "@/content/bosses";
+import { bossArtworkUrl, findBossOption, findBossOptionById } from "@/content/bosses";
 import type { NormalizedCharacterProfile } from "@/domain/character";
 import { getFreshnessStatus } from "@/domain/freshness";
 import {
@@ -8,6 +8,8 @@ import {
   partySizeLabel,
   roleLabels,
   targetBossCadenceLabels,
+  getResumeBossTargets,
+  type ResumeBossTarget,
   type ResumeDraft,
   voiceChatLabels,
 } from "@/domain/resume";
@@ -51,6 +53,10 @@ function formatAvailability(draft: ResumeDraft): string {
 
 function displayOrEmpty(value: string | undefined): string {
   return value?.trim() || "미입력";
+}
+
+function targetLabel(target: ResumeBossTarget): string {
+  return target.cadence ? `${targetBossCadenceLabels[target.cadence]} · ${target.bossName}` : target.bossName;
 }
 
 function CharacterAvatar({ profile }: { profile: NormalizedCharacterProfile }) {
@@ -127,6 +133,39 @@ function PreviewMetric({ label, value, last = false }: { label: string; value: s
   );
 }
 
+function PreviewBossMultiplier({ target }: { target: ResumeBossTarget }) {
+  const boss = target.bossId
+    ? findBossOptionById(target.bossId)
+    : target.cadence
+      ? findBossOption(target.cadence, target.bossName)
+      : undefined;
+
+  return (
+    <div className="flex min-w-0 items-center gap-3 border border-[#cec5b7] bg-[#fffefa] p-3">
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden border border-[#ddd5c8] bg-[#f6f2ea] p-1">
+        {boss ? (
+          <img
+            src={bossArtworkUrl(boss.artworkKey)}
+            alt={`${target.bossName} 보스 일러스트`}
+            data-boss-art-key={boss.artworkKey}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-contain object-center"
+          />
+        ) : (
+          <span className="text-[10px] font-bold text-[#687380]">보스</span>
+        )}
+      </div>
+      <div className="min-w-0">
+        <p className="truncate text-xs font-bold text-[#5e6b78]">{targetLabel(target)}</p>
+        <p className="mt-1 text-xl font-bold text-[#202a36]">
+          {formatBossMultiplierPercent(target.bossMultiplierPercent)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /** A read-only, mobile-first paper-form representation of the resume being edited. */
 export function ResumePreview({
   profile,
@@ -149,12 +188,8 @@ export function ResumePreview({
 
   const freshness = getFreshnessStatus(profile.fetchedAt);
   const isMock = mode === "mock" || profile.provider === "mock";
-  const selectedBoss = draft.targetBossCadence
-    ? findBossOption(draft.targetBossCadence, draft.targetBoss)
-    : undefined;
-  const targetBoss = draft.targetBossCadence
-    ? `${targetBossCadenceLabels[draft.targetBossCadence]} · ${draft.targetBoss}`
-    : draft.targetBoss;
+  const bossTargets = getResumeBossTargets(draft);
+  const targetBoss = bossTargets.map(targetLabel).join(" / ");
 
   return (
     <article
@@ -204,29 +239,15 @@ export function ResumePreview({
             title="지원 분야"
             provenance="USER_PROVIDED"
           />
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_7.5rem]">
-            <div className="overflow-hidden border border-[#cec5b7]">
-              <PreviewRow label="희망 보스" value={displayOrEmpty(targetBoss)} />
-              <div className="grid grid-cols-2">
-                <div className="border-r border-[#ddd5c8]">
-                  <PreviewRow label="역할" value={roleLabels[draft.role]} last />
-                </div>
-                <PreviewRow label="파티 유형" value={partyTypeLabels[draft.partyType]} last />
+          <div className="overflow-hidden border border-[#cec5b7]">
+            <PreviewRow label="희망 보스" value={displayOrEmpty(targetBoss)} />
+            <div className="grid grid-cols-2">
+              <div className="border-r border-[#ddd5c8]">
+                <PreviewRow label="역할" value={roleLabels[draft.role]} last />
               </div>
-              <PreviewRow label="희망 인원" value={partySizeLabel(draft.partySize)} last />
+              <PreviewRow label="파티 유형" value={partyTypeLabels[draft.partyType]} last />
             </div>
-            {selectedBoss ? (
-              <div className="flex min-h-28 items-center justify-center overflow-hidden border border-[#cec5b7] bg-[#f6f2ea] p-2">
-                <img
-                  src={bossArtworkUrl(selectedBoss.artworkKey)}
-                  alt={`${selectedBoss.name} 보스 일러스트`}
-                  data-boss-art-key={selectedBoss.artworkKey}
-                  loading="lazy"
-                  decoding="async"
-                  className="h-full w-full object-contain object-center"
-                />
-              </div>
-            ) : null}
+            <PreviewRow label="희망 인원" value={partySizeLabel(draft.partySize)} last />
           </div>
         </section>
 
@@ -237,16 +258,17 @@ export function ResumePreview({
             title="환산 · 보스 배율"
             provenance="USER_PROVIDED"
           />
-          <div className="overflow-hidden border border-[#cec5b7] sm:flex">
-            <PreviewMetric
-              label="환산"
-              value={draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "미입력"}
-            />
-            <PreviewMetric
-              label="보스 배율"
-              value={formatBossMultiplierPercent(draft.bossMultiplierPercent)}
-              last
-            />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="overflow-hidden border border-[#cec5b7] sm:flex">
+              <PreviewMetric
+                label="환산"
+                value={draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "미입력"}
+                last
+              />
+            </div>
+            {bossTargets.map((target, index) => (
+              <PreviewBossMultiplier key={`${target.bossId ?? target.bossName}-${index}`} target={target} />
+            ))}
           </div>
         </section>
 
@@ -254,7 +276,7 @@ export function ResumePreview({
           <PreviewSectionHeading
             id="preview-temperature-heading"
             number="03"
-            title="메숭이 체온"
+            title="메붕이 온도"
             provenance="USER_PROVIDED"
           />
           <MesoongiTemperatureResumeBlock summary={temperatureSummary} />

@@ -44,6 +44,9 @@ export default function Home() {
           aria-label="보조 메뉴"
           className="resume-nav flex items-center gap-3 text-xs sm:gap-6 sm:text-sm"
         >
+          <Link href="/parties" className="whitespace-nowrap transition-opacity hover:opacity-70">
+            파티 게시판
+          </Link>
           <Link href="/my-resumes" className="whitespace-nowrap transition-opacity hover:opacity-70">
             나의 이력서
           </Link>

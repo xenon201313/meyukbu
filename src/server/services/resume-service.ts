@@ -2,6 +2,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 
 import type { NormalizedCharacterProfile, ProfileField } from "@/domain/character";
 import { transitionGuildObservation } from "@/domain/guild-observation";
+import { getResumeBossTargets } from "@/domain/resume";
 import type {
   OwnedResumeSummary,
   PublicResume,
@@ -287,6 +288,7 @@ export async function getOwnedResumeSummaries(
       characterImageUrl: profile.imageUrl,
       targetBoss: version.draft.targetBoss,
       targetBossCadence: version.draft.targetBossCadence ?? null,
+      bossTargets: [...getResumeBossTargets(version.draft)],
       role: version.draft.role,
       partyType: version.draft.partyType,
       partySize: version.draft.partySize ?? null,

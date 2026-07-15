@@ -133,7 +133,7 @@ export interface ListTemperatureFeedbackOptions {
   includeWithdrawn?: boolean;
 }
 
-/** Persistence boundary for one-time, non-numeric 메숭이 체온 feedback. */
+/** Persistence boundary for one-time, non-numeric 메붕이 온도 feedback. */
 export interface TemperatureRepository {
   createInvitation(input: CreateTemperatureInvitationInput): Promise<MesoongiTemperatureInvitation>;
   submitFeedback(input: SubmitTemperatureFeedbackInput): Promise<MesoongiTemperatureFeedback>;

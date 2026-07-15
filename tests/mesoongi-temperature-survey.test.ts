@@ -76,7 +76,7 @@ async function createTargetResume(repository: ResumeRepository) {
   );
 }
 
-describe("메숭이 체온 익명 설문", () => {
+describe("메붕이 온도 익명 설문", () => {
   it("starts at 36.5°C, accepts anonymous three-question scores, and exposes only an aggregate", async () => {
     const { resumeRepository, surveyRepository } = dependencies();
     const target = await createTargetResume(resumeRepository);

@@ -12,11 +12,8 @@ async function publishMockResume(page: Page, bossId: string): Promise<URL> {
 
   await expect(page).toHaveURL(/\/create\?name=/);
   await page.locator("#converted-stat").fill("110,650");
-  await page.locator("#boss-multiplier-percent").fill("412.5");
-  if (bossId === "xsu") {
-    await page.getByRole("button", { name: /^주간 보스/ }).click();
-  }
-  await page.locator("#boss-quick-select").selectOption(bossId);
+  await page.locator("#boss-target-0").selectOption(bossId);
+  await page.locator("#boss-multiplier-0").fill("412.5");
   await Promise.all([
     page.waitForURL(/\/r\/m-[a-z0-9_-]+$/),
     page.locator("form button[type='submit']").click(),
@@ -94,4 +91,48 @@ test("나의 이력서는 소유한 여러 장을 보스별 탭으로 열람하�
   await expect(page.getByRole("tab", { name: /전체/ })).toBeVisible();
   await expect(page.getByRole("link", { name: "새 메력서로 저장" }).first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+});
+
+test("소유자는 메력서를 한 번 수정해 새 버전으로 이동한다", async ({ page }) => {
+  const resumeUrl = await publishMockResume(page, "xblack");
+  const slug = resumeUrl.pathname.slice("/r/".length);
+  let patchCount = 0;
+
+  page.on("request", (request) => {
+    if (request.method() === "PATCH" && request.url().endsWith(`/api/resumes/${slug}`)) {
+      patchCount += 1;
+    }
+  });
+
+  const firstEditorLoad = page.waitForResponse(
+    (response) => response.request().method() === "GET" && response.url().endsWith(`/api/resumes/${slug}`),
+  );
+  await page.getByRole("link", { name: "수정" }).click();
+  await expect(page).toHaveURL(`/create?edit=${slug}`);
+  const firstEditorPayload = await firstEditorLoad;
+  expect(firstEditorPayload.headers()["cache-control"]).toContain("private, no-store");
+  expect((await firstEditorPayload.json()).resume.version.versionNumber).toBe(1);
+  await expect(page.locator("#role-summary")).toBeVisible();
+  await page.locator("#role-summary").fill("수정한 어필 포인트입니다.");
+
+  await Promise.all([
+    page.waitForURL(resumeUrl.pathname),
+    page.getByRole("button", { name: "메력서 수정하기" }).click(),
+  ]);
+
+  await expect.poll(() => patchCount).toBe(1);
+  await expect(page.getByText(/v2 ·/)).toBeVisible();
+
+  // Reopen the editor without another mutation to ensure the single saved
+  // version carries the changed draft and the owner cookie remains valid.
+  const secondEditorLoad = page.waitForResponse(
+    (response) => response.request().method() === "GET" && response.url().endsWith(`/api/resumes/${slug}`),
+  );
+  await page.getByRole("link", { name: "수정" }).click();
+  const secondEditorPayload = await secondEditorLoad;
+  const secondEditorBody = await secondEditorPayload.json();
+  expect(secondEditorBody.resume.version.versionNumber).toBe(2);
+  expect(secondEditorBody.resume.version.draft.roleSummary).toBe("수정한 어필 포인트입니다.");
+  await expect(page.locator("#role-summary")).toHaveValue("수정한 어필 포인트입니다.");
+  expect(patchCount).toBe(1);
 });

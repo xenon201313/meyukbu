@@ -50,7 +50,12 @@ export async function GET(request: NextRequest, context: Context) {
     // The owner may recover a private contact in the editor; public readers never receive it.
     view.version.draft = structuredClone(result.version.draft);
   }
-  return NextResponse.json({ resume: view, canEdit });
+  // This response may include an owner's private contact, so neither the
+  // browser nor an intermediary may reuse it for a later edit request.
+  return NextResponse.json(
+    { resume: view, canEdit },
+    { headers: { "Cache-Control": "private, no-store", Vary: "Cookie" } },
+  );
 }
 
 export async function PATCH(request: NextRequest, context: Context) {
@@ -79,8 +84,10 @@ export async function PATCH(request: NextRequest, context: Context) {
       parsed.data.draft,
       request.cookies.get(editTokenCookieName(slug))?.value,
     );
-    const result = await getPublicResume(updated.slug);
-    return NextResponse.json({ resume: result ? toPublicResumeView(result) : null });
+    // The editor only needs the canonical destination after a successful save.
+    // Do not return the complete draft here: an owner's private contact must
+    // remain available only through the authorized edit-read endpoint.
+    return NextResponse.json({ resume: { slug: updated.slug } });
   } catch (error) {
     return mutationError(error);
   }

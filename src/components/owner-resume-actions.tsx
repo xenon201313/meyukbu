@@ -80,12 +80,12 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
       });
       const body = await readApiMessage(response);
       if (!response.ok || !body?.invitationUrl) {
-        setMessage(body?.message ?? "메숭이 체온 설문 링크를 만들지 못했습니다.");
+        setMessage(body?.message ?? "메붕이 온도 설문 링크를 만들지 못했습니다.");
         return;
       }
       setInvitationUrl(body.invitationUrl);
       setInvitationExpiresAt(body.expiresAt ?? null);
-      setMessage("메숭이 체온 설문 링크를 만들었습니다. 함께한 파티원에게만 전달해 주세요.");
+      setMessage("메붕이 온도 설문 링크를 만들었습니다. 함께한 파티원에게만 전달해 주세요.");
     } catch {
       setMessage("네트워크 연결을 확인한 뒤 다시 시도해 주세요.");
     } finally {
@@ -99,7 +99,7 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
     }
     try {
       await navigator.clipboard.writeText(invitationUrl);
-      setMessage("메숭이 체온 설문 링크를 클립보드에 복사했습니다.");
+      setMessage("메붕이 온도 설문 링크를 클립보드에 복사했습니다.");
     } catch {
       setMessage("설문 링크를 선택해서 복사해 주세요.");
     }
@@ -124,6 +124,12 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
         >
           새 메력서로 저장
         </a>
+        <a
+          href={`/parties/new?resume=${encodeURIComponent(slug)}`}
+          className="rounded-lg border border-[#bfae99] bg-[#fffefa] px-3 py-2 text-sm font-semibold text-[#202a36] transition hover:border-[#a44640]/70 hover:text-[#7c2f2c]"
+        >
+          파티 글 작성
+        </a>
         <button
           type="button"
           disabled={busy}
@@ -143,7 +149,7 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
       </div>
 
       <div className="mt-5 border-t border-[#d9cdbd] pt-4">
-        <p className="text-sm font-bold text-[#202a36]">메숭이 체온 설문</p>
+        <p className="text-sm font-bold text-[#202a36]">메붕이 온도 설문</p>
         <p className="mt-1 text-xs leading-5 text-[#687380]">
           실제 함께한 파티원에게만 1회용 설문 링크를 전달하세요. 설문은 익명으로 집계되며, 개별 답변이나
           응답자 정보는 공개되지 않습니다.
@@ -154,12 +160,12 @@ export function OwnerResumeActions({ slug }: { slug: string }) {
           onClick={issueTemperatureInvitation}
           className="mt-3 rounded-lg border border-[#a44640]/45 bg-[#f8e6e1] px-3 py-2 text-sm font-semibold text-[#7c2f2c] transition hover:bg-[#f3d9d2] disabled:opacity-50"
         >
-          {isIssuingInvitation ? "설문 링크 만드는 중…" : "메숭이 체온 설문 링크 만들기"}
+          {isIssuingInvitation ? "설문 링크 만드는 중…" : "메붕이 온도 설문 링크 만들기"}
         </button>
         {invitationUrl ? (
           <div className="mt-3 rounded-xl border border-[#d9cdbd] bg-[#fffefa] p-3">
             <label htmlFor="temperature-invite-url" className="text-xs font-semibold text-[#52606d]">
-              메숭이 체온 설문 링크
+              메붕이 온도 설문 링크
             </label>
             <input
               id="temperature-invite-url"

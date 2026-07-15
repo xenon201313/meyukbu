@@ -1,10 +1,12 @@
 import {
+  getResumeBossTargets,
   partySizeLabel,
   partyTypeLabels,
   roleLabels,
   targetBossCadenceLabels,
   voiceChatLabels,
   type ResumeContact,
+  type ResumeBossTarget,
 } from "@/domain/resume";
 import type { PublicMesoongiTemperatureSummary } from "@/domain/mesoongi-temperature-survey";
 import { formatNumericDisplay } from "@/lib/format";
@@ -25,6 +27,15 @@ function formatBossMultiplier(value: string | undefined): string {
   }
 
   return `${formatNumericDisplay(normalized.replace(/%$/u, ""))}%`;
+}
+
+function formatBossName(target: ResumeBossTarget): string {
+  const cadence = target.cadence ? `${targetBossCadenceLabels[target.cadence]} · ` : "";
+  return `${cadence}${oneLine(target.bossName)}`;
+}
+
+function formatBossTargetMultiplier(target: ResumeBossTarget): string {
+  return `${formatBossName(target)} ${formatBossMultiplier(target.bossMultiplierPercent)}`;
 }
 
 function formatAvailability(resume: PublicResumeView): string {
@@ -69,7 +80,7 @@ export function formatResumePlainText(
 ): string {
   const { draft, snapshot } = resume.version;
   const profile = snapshot.profile;
-  const bossCadence = draft.targetBossCadence ? `${targetBossCadenceLabels[draft.targetBossCadence]} · ` : "";
+  const bossTargets = getResumeBossTargets(draft);
   const publicContact = formatContact(draft.contact);
 
   const lines = [
@@ -81,15 +92,15 @@ export function formatResumePlainText(
     `현재 길드: ${oneLine(profile.currentGuild, "길드 없음")}`,
     "",
     "[지원 분야]",
-    `희망 보스: ${bossCadence}${oneLine(draft.targetBoss)}`,
+    `희망 보스: ${bossTargets.map(formatBossName).join(" / ")}`,
     `역할: ${roleLabels[draft.role]}`,
     `파티 유형: ${partyTypeLabels[draft.partyType]}`,
     `희망 인원: ${partySizeLabel(draft.partySize)}`,
     "",
     "[파티 조건]",
     `환산: ${oneLine(draft.convertedStat) === notProvided ? notProvided : formatNumericDisplay(oneLine(draft.convertedStat))}`,
-    `보스 배율: ${formatBossMultiplier(draft.bossMultiplierPercent)}`,
-    `메숭이 체온: ${temperatureSummary.temperatureCelsius.toFixed(1)}℃ · 익명 설문 ${temperatureSummary.responseCount}건`,
+    `보스 배율: ${bossTargets.map(formatBossTargetMultiplier).join(" / ")}`,
+    `메붕이 온도: ${temperatureSummary.temperatureCelsius.toFixed(1)}℃ · 익명 설문 ${temperatureSummary.responseCount}건`,
     `가능 시간: ${formatAvailability(resume)}`,
     `디스코드: ${voiceChatLabels[draft.voiceChat]}`,
     `분배 방식: ${oneLine(draft.lootPolicy)}`,

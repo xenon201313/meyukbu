@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { transitionGuildObservation } from "@/domain/guild-observation";
-import type { ResumeDraft } from "@/domain/resume";
+import { getResumeBossTargets, type ResumeDraft } from "@/domain/resume";
 import { parseStoredDraft } from "@/lib/db/json";
 import { createResumeSchema, resumeDraftSchema } from "@/lib/validation/schemas";
 import { mesoongiTemperatureSubmitSchema } from "@/lib/validation/temperature-schemas";
@@ -95,6 +95,69 @@ describe("resume draft validation", () => {
     );
   });
 
+  it("normalizes catalog-id multi-boss input and keeps primary scalar aliases for older readers", () => {
+    const parsed = resumeDraftSchema.parse({
+      ...validDraft,
+      targetBoss: undefined,
+      targetBossCadence: undefined,
+      bossMultiplierPercent: undefined,
+      partySize: 2,
+      bossTargets: [
+        { bossId: "hblack", bossMultiplierPercent: "412.5" },
+        { bossId: "hsu", bossMultiplierPercent: "88" },
+      ],
+    });
+
+    expect(parsed.bossTargets).toEqual([
+      {
+        bossId: "hblack",
+        bossName: "검은 마법사 (하드)",
+        cadence: "MONTHLY",
+        bossMultiplierPercent: "412.5",
+      },
+      {
+        bossId: "hsu",
+        bossName: "스우 (하드)",
+        cadence: "WEEKLY",
+        bossMultiplierPercent: "88",
+      },
+    ]);
+    expect(parsed.targetBoss).toBe("검은 마법사 (하드)");
+    expect(parsed.targetBossCadence).toBe("MONTHLY");
+    expect(parsed.bossMultiplierPercent).toBe("412.5");
+    expect(getResumeBossTargets(parsed)).toEqual(parsed.bossTargets);
+  });
+
+  it("rejects an unknown, duplicate, or oversized multi-boss selection", () => {
+    const multiBossDraft = {
+      ...validDraft,
+      targetBoss: undefined,
+      targetBossCadence: undefined,
+      bossMultiplierPercent: undefined,
+      partySize: 2,
+      bossTargets: [{ bossId: "hblack" }],
+    };
+
+    expect(
+      resumeDraftSchema.safeParse({
+        ...multiBossDraft,
+        bossTargets: [{ bossId: "not-a-boss" }],
+      }).success,
+    ).toBe(false);
+    expect(
+      resumeDraftSchema.safeParse({
+        ...multiBossDraft,
+        bossTargets: [{ bossId: "hblack" }, { bossId: "hblack" }],
+      }).success,
+    ).toBe(false);
+    expect(
+      resumeDraftSchema.safeParse({
+        ...multiBossDraft,
+        bossTargets: Array.from({ length: 7 }, () => ({ bossId: "hblack" })),
+      }).success,
+    ).toBe(false);
+  });
+
   it("enforces boss entry-size limits on both direct API input and stored drafts", () => {
     expect(
       resumeDraftSchema.safeParse({
@@ -125,6 +188,25 @@ describe("resume draft validation", () => {
     expect(resumeDraftSchema.safeParse({ ...validDraft, partySize: 7 }).success).toBe(false);
   });
 
+  it("applies the strictest entry-size limit across every selected boss", () => {
+    const multiBossDraft = {
+      ...validDraft,
+      targetBoss: undefined,
+      targetBossCadence: undefined,
+      bossTargets: [{ bossId: "hblack" }, { bossId: "hsu" }],
+    };
+
+    expect(resumeDraftSchema.safeParse({ ...multiBossDraft, partySize: 3 }).success).toBe(false);
+    expect(resumeDraftSchema.safeParse({ ...multiBossDraft, partySize: 2 }).success).toBe(true);
+    expect(
+      resumeDraftSchema.safeParse({
+        ...multiBossDraft,
+        bossTargets: [{ bossId: "hblack" }, { bossId: "njup" }],
+        partySize: 4,
+      }).success,
+    ).toBe(false);
+  });
+
   it("allows flexible and negotiable schedules without a fixed time slot", () => {
     expect(
       resumeDraftSchema.safeParse({ ...validDraft, availabilityMode: "FLEXIBLE", availability: [] }).success,
@@ -148,16 +230,75 @@ describe("resume draft validation", () => {
 
     expect(parsed.availabilityMode).toBe("SCHEDULED");
     expect(parsed.partySize).toBeUndefined();
+    expect(parsed.bossTargets).toEqual([
+      {
+        bossId: "njup",
+        bossName: "유피테르 (노멀)",
+        cadence: "WEEKLY",
+      },
+    ]);
+  });
+
+  it("keeps an uncatalogued historical scalar target readable as a singleton", () => {
+    const legacyDraft = {
+      ...validDraft,
+      targetBoss: "이전 카탈로그 보스",
+    };
+    delete legacyDraft.targetBossCadence;
+
+    const parsed = parseStoredDraft(legacyDraft);
+
+    expect(parsed.bossTargets).toEqual([
+      {
+        bossName: "이전 카탈로그 보스",
+      },
+    ]);
+    expect(getResumeBossTargets({ ...validDraft, bossTargets: undefined })).toEqual([
+      {
+        bossName: validDraft.targetBoss,
+        cadence: validDraft.targetBossCadence,
+      },
+    ]);
   });
 
   it("round-trips the optional boss multiplier through stored draft JSON", () => {
     const stored = parseStoredDraft({ ...validDraft, bossMultiplierPercent: "412.5" });
 
     expect(stored.bossMultiplierPercent).toBe("412.5");
+    expect(stored.bossTargets?.[0]?.bossMultiplierPercent).toBe("412.5");
+    expect(getResumeBossTargets(stored)).toEqual(stored.bossTargets);
+  });
+
+  it("normalizes a stored multi-boss document without rewriting its legacy primary aliases", () => {
+    const stored = parseStoredDraft({
+      ...validDraft,
+      targetBoss: "오래된 대표 보스",
+      targetBossCadence: "WEEKLY",
+      bossMultiplierPercent: "1",
+      bossTargets: [
+        {
+          bossId: "hblack",
+          bossName: "검은 마법사 (하드)",
+          cadence: "MONTHLY",
+          bossMultiplierPercent: "412.5",
+        },
+        {
+          bossId: "hsu",
+          bossName: "스우 (하드)",
+          cadence: "WEEKLY",
+          bossMultiplierPercent: "88",
+        },
+      ],
+    });
+
+    expect(stored.targetBoss).toBe("검은 마법사 (하드)");
+    expect(stored.targetBossCadence).toBe("MONTHLY");
+    expect(stored.bossMultiplierPercent).toBe("412.5");
+    expect(stored.bossTargets).toHaveLength(2);
   });
 });
 
-describe("메숭이 체온 입력 검증", () => {
+describe("메붕이 온도 입력 검증", () => {
   const validFeedback = {
     invitationToken: "a".repeat(43),
     reviewerSlug: "m-reviewer",

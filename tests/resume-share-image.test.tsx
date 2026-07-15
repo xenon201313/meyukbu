@@ -59,7 +59,7 @@ function renderShareImage(
       qrDataUri="data:image/png;base64,qr"
       canonicalUrl="https://example.test/r/m-test"
       avatarDataUri="data:image/png;base64,avatar"
-      bossArtworkDataUri="data:image/png;base64,boss"
+      bossArtworkDataUris={["data:image/png;base64,boss"]}
     />,
   );
 }
@@ -99,7 +99,7 @@ describe("ResumeShareImage", () => {
     expect(markup).toContain("미입력");
     expect(markup).toContain("data:image/png;base64,qr");
     expect(markup).toContain("Data based on NEXON Open API");
-    expect(markup).toContain("메숭이 체온");
+    expect(markup).toContain("메붕이 온도");
     expect(markup).toContain("36.5℃");
     expect(markup).toContain("익명 설문 0건");
   });
@@ -124,7 +124,7 @@ describe("ResumeShareImage", () => {
       },
     );
 
-    expect(markup).toContain("메숭이 체온");
+    expect(markup).toContain("메붕이 온도");
     expect(markup).toContain("41.5℃");
     expect(markup).toContain("익명 설문 1건");
   });
@@ -147,10 +147,131 @@ describe("ResumeShareImage", () => {
     expect(markup).toContain("환산 · 보스 배율");
     expect(markup).toContain("환산");
     expect(markup).toContain("110,650");
-    expect(markup).toContain("보스 배율");
+    expect(markup).toContain("월간 · 검은 마법사 (하드)");
     expect(markup).toContain("412.5%");
     expect(markup).toContain("data:image/png;base64,boss");
     expect(markup).toContain("검은 마법사 (하드) 보스 일러스트");
+  });
+
+  it("renders every boss-specific multiplier and artwork from a bundled resume", () => {
+    const markup = renderToStaticMarkup(
+      <ResumeShareImage
+        resume={createResumeView({
+          targetBoss: "검은 마법사 (하드)",
+          targetBossCadence: "MONTHLY",
+          bossTargets: [
+            {
+              bossId: "hblack",
+              bossName: "검은 마법사 (하드)",
+              cadence: "MONTHLY",
+              bossMultiplierPercent: "412.5",
+            },
+            {
+              bossId: "njup",
+              bossName: "유피테르 (노멀)",
+              cadence: "WEEKLY",
+              bossMultiplierPercent: "88.2",
+            },
+          ],
+          role: "DAMAGE",
+          partyType: "FIXED",
+          availability: [{ days: ["화"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
+          voiceChat: "OPTIONAL",
+          theme: "RESUME",
+        })}
+        temperatureSummary={baselineTemperatureSummary}
+        qrDataUri="data:image/png;base64,qr"
+        canonicalUrl="https://example.test/r/m-test"
+        avatarDataUri="data:image/png;base64,avatar"
+        bossArtworkDataUris={["data:image/png;base64,blackmage", "data:image/png;base64,jupiter"]}
+      />,
+    );
+
+    expect(markup).toContain("412.5%");
+    expect(markup).toContain("88.2%");
+    expect(markup).toContain("data:image/png;base64,blackmage");
+    expect(markup).toContain("data:image/png;base64,jupiter");
+    expect(markup).toContain("유피테르 (노멀) 보스 일러스트");
+  });
+
+  it("keeps all six boss rows inside the fixed sheet without losing the verification footer", () => {
+    const markup = renderToStaticMarkup(
+      <ResumeShareImage
+        resume={createResumeView({
+          targetBoss: "검은 마법사 (하드)",
+          targetBossCadence: "MONTHLY",
+          convertedStat: "110,650",
+          bossTargets: [
+            {
+              bossId: "hblack",
+              bossName: "검은 마법사 (하드)",
+              cadence: "MONTHLY",
+              bossMultiplierPercent: "10.5",
+            },
+            {
+              bossId: "czak",
+              bossName: "자쿰 (카오스)",
+              cadence: "WEEKLY",
+              bossMultiplierPercent: "20.5",
+            },
+            {
+              bossId: "cbq",
+              bossName: "블러디퀸 (카오스)",
+              cadence: "WEEKLY",
+              bossMultiplierPercent: "30.5",
+            },
+            {
+              bossId: "cban",
+              bossName: "반반 (카오스)",
+              cadence: "WEEKLY",
+              bossMultiplierPercent: "40.5",
+            },
+            {
+              bossId: "cpier",
+              bossName: "피에르 (카오스)",
+              cadence: "WEEKLY",
+              bossMultiplierPercent: "50.5",
+            },
+            {
+              bossId: "hmag",
+              bossName: "매그너스 (하드)",
+              cadence: "WEEKLY",
+              bossMultiplierPercent: "60.5",
+            },
+          ],
+          role: "DAMAGE",
+          partyType: "FIXED",
+          availability: [{ days: ["화"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
+          voiceChat: "OPTIONAL",
+          theme: "RESUME",
+        })}
+        temperatureSummary={baselineTemperatureSummary}
+        qrDataUri="data:image/png;base64,qr"
+        canonicalUrl="https://example.test/r/m-test"
+        avatarDataUri="data:image/png;base64,avatar"
+        bossArtworkDataUris={[
+          "data:image/png;base64,blackmage",
+          "data:image/png;base64,zakum",
+          "data:image/png;base64,bloodyqueen",
+          "data:image/png;base64,vonbon",
+          "data:image/png;base64,pierre",
+          "data:image/png;base64,magnus",
+        ]}
+      />,
+    );
+
+    for (const multiplier of ["10.5%", "20.5%", "30.5%", "40.5%", "50.5%", "60.5%"]) {
+      expect(markup).toContain(multiplier);
+    }
+    for (const artwork of ["blackmage", "zakum", "bloodyqueen", "vonbon", "pierre", "magnus"]) {
+      expect(markup).toContain(`data:image/png;base64,${artwork}`);
+    }
+    expect(markup).toContain("height:1350px");
+    expect(markup).toContain("height:144px");
+    expect(markup).toContain("overflow:hidden");
+    expect(markup).toContain("검증 페이지 QR");
+    expect(markup).toContain("Data based on NEXON Open API");
+    expect(markup.indexOf("Data based on NEXON Open API")).toBeGreaterThan(markup.lastIndexOf("60.5%"));
   });
 
   it("includes the achievement party type in the PNG card", () => {

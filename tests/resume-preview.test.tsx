@@ -73,7 +73,7 @@ describe("ResumePreview", () => {
     expect(screen.getByText("환산 · 보스 배율")).toBeInTheDocument();
     expect(screen.getByText("환산")).toBeInTheDocument();
     expect(screen.getByText("110,650")).toBeInTheDocument();
-    expect(screen.getByText("보스 배율")).toBeInTheDocument();
+    expect(screen.getAllByText("월간 · 검은 마법사 (하드)").length).toBeGreaterThan(0);
     expect(screen.getByText("412.5%")).toBeInTheDocument();
     const bossArtwork = document.querySelector('img[data-boss-art-key="blackmage"]');
     expect(bossArtwork).toHaveAttribute("src", "/images/bosses/blackmage.png");
@@ -88,7 +88,7 @@ describe("ResumePreview", () => {
     const { rerender } = render(<ResumePreview profile={profile} draft={draft} mode="mock" />);
 
     const gauge = screen.getByTestId("resume-temperature-gauge");
-    expect(gauge).toHaveTextContent("기본 메숭이 체온");
+    expect(gauge).toHaveTextContent("기본 메붕이 온도");
     expect(gauge).toHaveTextContent("36.5℃");
     expect(gauge).toHaveTextContent("익명 설문 응답 대기 중");
 
@@ -107,7 +107,7 @@ describe("ResumePreview", () => {
       />,
     );
 
-    expect(gauge).toHaveTextContent("현재 메숭이 체온");
+    expect(gauge).toHaveTextContent("현재 메붕이 온도");
     expect(gauge).toHaveTextContent("40.5℃");
     expect(gauge).toHaveTextContent("익명 설문 2건 반영");
   });

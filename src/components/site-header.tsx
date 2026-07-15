@@ -26,6 +26,13 @@ export function SiteHeader({ currentLabel }: SiteHeaderProps) {
           >
             <Link
               className="whitespace-nowrap transition hover:text-[#7c2f2c]"
+              href="/parties"
+              aria-current={currentLabel === "파티 게시판" ? "page" : undefined}
+            >
+              파티 게시판
+            </Link>
+            <Link
+              className="whitespace-nowrap transition hover:text-[#7c2f2c]"
               href="/my-resumes"
               aria-current={currentLabel === "나의 이력서" ? "page" : undefined}
             >

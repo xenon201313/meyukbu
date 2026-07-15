@@ -52,7 +52,7 @@ export function MesoongiTemperaturePanel({ summary, className = "" }: MesoongiTe
         <div>
           <p className="ui-kicker">ANONYMOUS SURVEY</p>
           <h2 id="mesoongi-temperature-heading" className="mt-1 text-lg font-bold text-[#202a36]">
-            메숭이 체온
+            메붕이 온도
           </h2>
           <p className="mt-2 max-w-xl text-sm leading-6 text-[#52606d]">
             초대 링크로 제출한 익명 설문을 집계한 참고 지표입니다. 개별 답변과 응답자 정보는 공개하지
@@ -69,7 +69,7 @@ export function MesoongiTemperaturePanel({ summary, className = "" }: MesoongiTe
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs font-bold text-[#687380]">
-              {hasResponses ? "현재 메숭이 체온" : "기준 메숭이 체온"}
+              {hasResponses ? "현재 메붕이 온도" : "기준 메붕이 온도"}
             </p>
             <p className="mt-1 text-3xl font-black tracking-tight text-[#202a36]">
               {formatTemperature(displayedTemperature)}
@@ -83,7 +83,7 @@ export function MesoongiTemperaturePanel({ summary, className = "" }: MesoongiTe
         <div
           className="relative mt-6 h-5"
           role="img"
-          aria-label={`메숭이 체온 ${formatTemperature(displayedTemperature)}. 기준 체온 ${formatTemperature(baseline)}.`}
+          aria-label={`메붕이 온도 ${formatTemperature(displayedTemperature)}. 기준 온도 ${formatTemperature(baseline)}.`}
         >
           <div className="absolute inset-x-0 top-2 h-2 rounded-full bg-gradient-to-r from-[#91b8cc] via-[#f3d4a0] to-[#c85a52]" />
           <span
@@ -106,7 +106,7 @@ export function MesoongiTemperaturePanel({ summary, className = "" }: MesoongiTe
       </div>
 
       <aside className="mt-5 rounded-xl border border-[#d9cdbd] bg-[#f6f2ea] px-4 py-3" role="note">
-        <p className="text-sm font-semibold text-[#202a36]">메숭이 체온 안내</p>
+        <p className="text-sm font-semibold text-[#202a36]">메붕이 온도 안내</p>
         <p className="mt-1 text-xs leading-5 text-[#52606d]">
           36.5℃를 기준으로 보여 주며, 설문 응답이 쌓이면 집계값이 갱신됩니다. 이 지표는 공유 PNG와 공개
           이력서에 함께 표시됩니다.

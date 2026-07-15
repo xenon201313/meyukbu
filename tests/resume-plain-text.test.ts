@@ -83,8 +83,8 @@ describe("formatResumePlainText", () => {
     expect(text).toContain("파티 유형: 업적");
     expect(text).toContain("희망 인원: 3인격");
     expect(text).toContain("환산: 110,650");
-    expect(text).toContain("보스 배율: 412.5%");
-    expect(text).toContain("메숭이 체온: 41.5℃ · 익명 설문 2건");
+    expect(text).toContain("보스 배율: 월간 · 검은 마법사 (하드) 412.5%");
+    expect(text).toContain("메붕이 온도: 41.5℃ · 익명 설문 2건");
     expect(text).toContain("가능 시간: 화 · 목 20:00 - 23:00 (한국 표준시)");
     expect(text).toContain("디스코드: 선택");
     expect(text).toContain("[공개 연락처]\n디스코드: resumae#1234");

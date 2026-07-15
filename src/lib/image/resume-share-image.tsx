@@ -1,10 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 
 import {
+  getResumeBossTargets,
   partySizeLabel,
   partyTypeLabels,
   roleLabels,
   targetBossCadenceLabels,
+  type ResumeBossTarget,
   voiceChatLabels,
 } from "@/domain/resume";
 import type { PublicMesoongiTemperatureSummary } from "@/domain/mesoongi-temperature-survey";
@@ -18,7 +20,8 @@ interface ResumeShareImageProps {
   qrDataUri: string;
   canonicalUrl: string;
   avatarDataUri: string | null;
-  bossArtworkDataUri: string | null;
+  /** One inlined catalogued artwork per ordered boss target. */
+  bossArtworkDataUris: readonly (string | null)[];
 }
 
 const paper = "#fffefa";
@@ -44,6 +47,10 @@ function compactText(value: string | undefined, limit: number): string {
 
 function formatBossMultiplierPercent(value: string | undefined): string {
   return value ? `${formatNumericDisplay(value)}%` : "미입력";
+}
+
+function targetLabel(target: ResumeBossTarget): string {
+  return target.cadence ? `${targetBossCadenceLabels[target.cadence]} · ${target.bossName}` : target.bossName;
 }
 
 function formatAvailability(resume: PublicResumeView): string {
@@ -279,6 +286,105 @@ function MetricCell({ label, value, last = false }: { label: string; value: stri
   );
 }
 
+/** A compact pair of boss-specific multiplier cells, sized for the fixed share sheet. */
+function BossMultiplierRow({
+  targets,
+  artworkDataUris,
+}: {
+  targets: readonly ResumeBossTarget[];
+  artworkDataUris: readonly (string | null)[];
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        height: 62,
+        flexShrink: 0,
+        boxSizing: "border-box",
+        borderTop: `1px solid ${rule}`,
+      }}
+    >
+      {[0, 1].map((column) => {
+        const target = targets[column];
+        const artworkDataUri = artworkDataUris[column];
+        const last = column === 1;
+        if (!target) {
+          return (
+            <div
+              key={`empty-${column}`}
+              style={{
+                display: "flex",
+                flex: 1,
+                minWidth: 0,
+                boxSizing: "border-box",
+                borderRight: last ? "0" : `1px solid ${rule}`,
+                background: "#fffefb",
+              }}
+            />
+          );
+        }
+        return (
+          <div
+            key={`${target.bossId ?? target.bossName}-${column}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              flex: 1,
+              minWidth: 0,
+              boxSizing: "border-box",
+              gap: 10,
+              borderRight: last ? "0" : `1px solid ${rule}`,
+              padding: "7px 12px",
+            }}
+          >
+            {artworkDataUri ? (
+              <img
+                src={artworkDataUri}
+                alt={`${target.bossName} 보스 일러스트`}
+                style={{
+                  width: 46,
+                  height: 46,
+                  objectFit: "contain",
+                  objectPosition: "center",
+                  flexShrink: 0,
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 46,
+                  height: 46,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  boxSizing: "border-box",
+                  border: `1px solid ${paperBorder}`,
+                  background: paperShade,
+                  color: mutedInk,
+                  fontSize: 11,
+                }}
+              >
+                보스
+              </div>
+            )}
+            <div style={{ display: "flex", minWidth: 0, flex: 1, flexDirection: "column", gap: 3 }}>
+              <div style={{ display: "flex", color: mutedInk, fontSize: 13, fontWeight: 700 }}>
+                {compactText(targetLabel(target), 22)}
+              </div>
+              <div
+                style={{ display: "flex", color: documentInk, fontSize: 22, fontWeight: 700, lineHeight: 1 }}
+              >
+                {formatBossMultiplierPercent(target.bossMultiplierPercent)}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /**
  * Compact, aggregate-only temperature indicator for the share PNG. It never
  * renders a respondent or any individual survey answer.
@@ -311,7 +417,7 @@ function TemperatureMetricCell({
         padding: "0 20px",
       }}
     >
-      <div style={{ display: "flex", color: mutedInk, fontSize: 16, fontWeight: 700 }}>메숭이 체온</div>
+      <div style={{ display: "flex", color: mutedInk, fontSize: 16, fontWeight: 700 }}>메붕이 온도</div>
       <div
         style={{
           display: "flex",
@@ -379,15 +485,20 @@ export function ResumeShareImage({
   qrDataUri,
   canonicalUrl,
   avatarDataUri,
-  bossArtworkDataUri,
+  bossArtworkDataUris,
 }: ResumeShareImageProps) {
   const { profile } = resume.version.snapshot;
   const { draft } = resume.version;
-  const targetBoss = draft.targetBossCadence
-    ? `${targetBossCadenceLabels[draft.targetBossCadence]} · ${draft.targetBoss}`
-    : draft.targetBoss;
+  const bossTargets = getResumeBossTargets(draft);
+  const targetBoss = bossTargets.map(targetLabel).join(" / ");
   const referenceStat = draft.convertedStat ? formatNumericDisplay(draft.convertedStat) : "미입력";
-  const bossMultiplier = formatBossMultiplierPercent(draft.bossMultiplierPercent);
+  const bossTargetRows = Array.from({ length: Math.ceil(bossTargets.length / 2) }, (_, rowIndex) => {
+    const start = rowIndex * 2;
+    return {
+      targets: bossTargets.slice(start, start + 2),
+      artworkDataUris: bossArtworkDataUris.slice(start, start + 2),
+    };
+  });
 
   return (
     <div
@@ -556,7 +667,7 @@ export function ResumeShareImage({
 
           <div style={{ display: "flex", flexDirection: "column", flexShrink: 0, gap: 8 }}>
             <SectionHeading number="01" title="지원 분야" source="작성 내용" />
-            <div style={{ display: "flex", height: 170, gap: 14 }}>
+            <div style={{ display: "flex", height: 170 }}>
               <div
                 style={{
                   display: "flex",
@@ -582,30 +693,6 @@ export function ResumeShareImage({
                   valueLimit={20}
                 />
               </div>
-              <div
-                style={{
-                  width: 122,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  overflow: "hidden",
-                  boxSizing: "border-box",
-                  border: `1px solid ${paperBorder}`,
-                  background: paperShade,
-                  padding: 8,
-                }}
-              >
-                {bossArtworkDataUri ? (
-                  <img
-                    src={bossArtworkDataUri}
-                    alt={`${draft.targetBoss} 보스 일러스트`}
-                    style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "center" }}
-                  />
-                ) : (
-                  <div style={{ display: "flex", color: mutedInk, fontSize: 13 }}>보스 이미지 없음</div>
-                )}
-              </div>
             </div>
           </div>
 
@@ -613,16 +700,24 @@ export function ResumeShareImage({
             <SectionHeading number="02" title="환산 · 보스 배율" source="작성 내용" />
             <div
               style={{
-                height: 116,
                 display: "flex",
+                flexDirection: "column",
                 flexShrink: 0,
                 boxSizing: "border-box",
                 border: `1px solid ${paperBorder}`,
               }}
             >
-              <MetricCell label="환산" value={referenceStat} />
-              <MetricCell label="보스 배율" value={bossMultiplier} />
-              <TemperatureMetricCell summary={temperatureSummary} last />
+              <div style={{ display: "flex", height: 66, flexShrink: 0, boxSizing: "border-box" }}>
+                <MetricCell label="환산" value={referenceStat} />
+                <TemperatureMetricCell summary={temperatureSummary} last />
+              </div>
+              {bossTargetRows.map((row, index) => (
+                <BossMultiplierRow
+                  key={`boss-multiplier-row-${index}`}
+                  targets={row.targets}
+                  artworkDataUris={row.artworkDataUris}
+                />
+              ))}
             </div>
           </div>
 

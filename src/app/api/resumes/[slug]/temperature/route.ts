@@ -28,7 +28,7 @@ function surveyErrorResponse(error: unknown): NextResponse {
     );
   }
   return NextResponse.json(
-    { message: "체온 설문을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요." },
+    { message: "메붕이 온도 설문을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요." },
     { status: 500 },
   );
 }

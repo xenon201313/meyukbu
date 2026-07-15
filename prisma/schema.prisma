@@ -59,6 +59,30 @@ enum TemperatureFeedbackStatus {
   WITHDRAWN
 }
 
+/// Whether the post author is recruiting members or looking for a party to join.
+enum PartyPostKind {
+  RECRUITING
+  LOOKING
+}
+
+/// A closed post remains auditable to its owner but is never publicly discoverable.
+enum PartyPostStatus {
+  OPEN
+  CLOSED
+}
+
+/// Only the post owner can move an application out of the pending state.
+enum PartyApplicationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum PartyTargetCadence {
+  WEEKLY
+  MONTHLY
+}
+
 /// A stable character identity. Mutable character properties belong to snapshots.
 model Character {
   id                           String                        @id @default(cuid())
@@ -148,6 +172,8 @@ model ResumeVersion {
   calculatedMetrics      CalculatedMetric[]
   temperatureInvitations TemperatureInvitation[] @relation("TemperatureInvitationTargetVersion")
   temperatureFeedbacks   TemperatureFeedback[]   @relation("TemperatureFeedbackTargetVersion")
+  partyPosts             PartyPost[]             @relation("PartyPostOwnerVersion")
+  partyApplications      PartyApplication[]      @relation("PartyApplicationResumeVersion")
 
   @@unique([resumeId, versionNumber], name: "resumeId_versionNumber")
   @@unique([id, resumeId], name: "id_resumeId")
@@ -287,4 +313,64 @@ model TemperatureSurveyResponse {
   invitation       TemperatureSurveyInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
 
   @@index([characterId, createdAt])
+}
+
+/// A structured in-site party listing pinned to one immutable, currently public resume version.
+model PartyPost {
+  id                   String          @id @default(cuid())
+  slug                 String          @unique @db.VarChar(96)
+  kind                 PartyPostKind
+  status               PartyPostStatus @default(OPEN)
+  ownerResumeId        String
+  ownerResumeSlug      String          @db.VarChar(96)
+  ownerResumeVersionId String
+  ownerCharacterOcid   String          @db.VarChar(128)
+  expiresAt            DateTime        @db.Timestamptz(3)
+  createdAt            DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime        @updatedAt @db.Timestamptz(3)
+  closedAt             DateTime?       @db.Timestamptz(3)
+  ownerResumeVersion   ResumeVersion   @relation("PartyPostOwnerVersion", fields: [ownerResumeVersionId, ownerResumeId], references: [id, resumeId], onDelete: Cascade)
+  targets              PartyPostTarget[]
+  applications         PartyApplication[]
+
+  @@index([status, expiresAt, createdAt])
+  @@index([ownerResumeId, status])
+}
+
+/// Immutable, normalized copies of the selected boss targets from a post's resume version.
+model PartyPostTarget {
+  id                   String              @id @default(cuid())
+  postId               String
+  sourceBossKey        String              @db.VarChar(128)
+  sourceBossId         String?             @db.VarChar(96)
+  bossName             String              @db.VarChar(96)
+  cadence              PartyTargetCadence?
+  bossMultiplierPercent String?            @db.VarChar(40)
+  maxPartySize         Int
+  sortOrder            Int
+  post                 PartyPost           @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, sourceBossKey])
+  @@index([cadence, bossName])
+  @@index([postId, sortOrder])
+}
+
+/// A resume-backed application. It stores no edit token, contact field, or temperature response detail.
+model PartyApplication {
+  id                       String                 @id @default(cuid())
+  postId                   String
+  applicantResumeId        String
+  applicantResumeSlug      String                 @db.VarChar(96)
+  applicantResumeVersionId String
+  applicantCharacterOcid   String                 @db.VarChar(128)
+  status                   PartyApplicationStatus @default(PENDING)
+  message                  String?                @db.VarChar(240)
+  createdAt                DateTime               @default(now()) @db.Timestamptz(3)
+  decidedAt                DateTime?              @db.Timestamptz(3)
+  post                     PartyPost              @relation(fields: [postId], references: [id], onDelete: Cascade)
+  applicantResumeVersion   ResumeVersion          @relation("PartyApplicationResumeVersion", fields: [applicantResumeVersionId, applicantResumeId], references: [id, resumeId], onDelete: Cascade)
+
+  @@unique([postId, applicantCharacterOcid])
+  @@index([postId, status, createdAt])
+  @@index([applicantResumeId, status])
 }

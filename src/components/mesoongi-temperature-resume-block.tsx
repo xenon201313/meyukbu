@@ -52,7 +52,7 @@ export function MesoongiTemperatureResumeBlock({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-bold text-[#5e6b78]">
-            {hasResponses ? "현재 메숭이 체온" : "기본 메숭이 체온"}
+            {hasResponses ? "현재 메붕이 온도" : "기본 메붕이 온도"}
           </p>
           <p className="mt-1 text-3xl font-black tracking-tight text-[#202a36]">
             {formatTemperature(displayedTemperature)}
@@ -66,7 +66,7 @@ export function MesoongiTemperatureResumeBlock({
       <div
         className="relative mt-5 h-5"
         role="img"
-        aria-label={`메숭이 체온 ${formatTemperature(displayedTemperature)}. 기본 체온 ${formatTemperature(baseline)}.`}
+        aria-label={`메붕이 온도 ${formatTemperature(displayedTemperature)}. 기본 온도 ${formatTemperature(baseline)}.`}
       >
         <div className="absolute inset-x-0 top-2 h-2 rounded-full bg-gradient-to-r from-[#91b8cc] via-[#f3d4a0] to-[#c85a52]" />
         <span

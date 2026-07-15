@@ -276,7 +276,7 @@ async function main(): Promise<void> {
     },
   });
 
-  console.info("메력부 예제 데이터 2건을 준비했습니다.");
+  console.info("메력서 예제 데이터 2건을 준비했습니다.");
 }
 
 main()
