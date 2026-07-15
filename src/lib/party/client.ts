@@ -1,8 +1,12 @@
-import type { ResumeBossTarget, TargetBossCadence } from "@/domain/resume";
+import type { ResumeBossTarget, TargetBossCadence, WorldTransferAvailability } from "@/domain/resume";
+import type { PartyWorldGroup } from "@/domain/party-world";
 
 export interface PartyOwnedResume {
   slug: string;
   characterName: string;
+  worldName: string | null;
+  /** Server-derived compatibility group. Null means the API did not provide a world. */
+  worldGroup: PartyWorldGroup | null;
   targetBoss: string;
   targetBossCadence: TargetBossCadence | null;
   bossTargets: ResumeBossTarget[];
@@ -24,8 +28,10 @@ export interface PartyOwnerApplication {
     versionNumber: number;
     characterName: string;
     worldName: string | null;
+    worldGroup: PartyWorldGroup | null;
     className: string | null;
     level: number | null;
+    worldTransferAvailability: WorldTransferAvailability | null;
   } | null;
 }
 
@@ -44,6 +50,14 @@ function isCadence(value: unknown): value is TargetBossCadence {
 
 function isVisibility(value: unknown): value is PartyOwnedResume["visibility"] {
   return value === "PUBLIC" || value === "UNLISTED" || value === "ARCHIVED";
+}
+
+function isPartyWorldGroup(value: unknown): value is PartyWorldGroup {
+  return value === "MAIN" || value === "EOS_HELIOS" || value === "CHALLENGERS";
+}
+
+function isWorldTransferAvailability(value: unknown): value is WorldTransferAvailability {
+  return value === "AVAILABLE" || value === "UNAVAILABLE";
 }
 
 function isApplicationStatus(value: unknown): value is PartyOwnerApplication["status"] {
@@ -79,6 +93,8 @@ function parseOwnedResume(value: unknown): PartyOwnedResume | null {
     !isRecord(value) ||
     typeof value.slug !== "string" ||
     typeof value.characterName !== "string" ||
+    !(typeof value.worldName === "string" || value.worldName === null) ||
+    !(isPartyWorldGroup(value.worldGroup) || value.worldGroup === null) ||
     typeof value.targetBoss !== "string" ||
     typeof value.fetchedAt !== "string" ||
     typeof value.partyEligible !== "boolean" ||
@@ -96,6 +112,8 @@ function parseOwnedResume(value: unknown): PartyOwnedResume | null {
   return {
     slug: value.slug,
     characterName: value.characterName,
+    worldName: value.worldName,
+    worldGroup: value.worldGroup,
     targetBoss: value.targetBoss,
     targetBossCadence: isCadence(value.targetBossCadence) ? value.targetBossCadence : null,
     bossTargets,
@@ -136,8 +154,12 @@ function parseApplicant(value: unknown): PartyOwnerApplication["applicant"] | un
     versionNumber: value.versionNumber,
     characterName: value.characterName,
     worldName: typeof value.worldName === "string" ? value.worldName : null,
+    worldGroup: isPartyWorldGroup(value.worldGroup) ? value.worldGroup : null,
     className: typeof value.className === "string" ? value.className : null,
     level: typeof value.level === "number" && Number.isFinite(value.level) ? value.level : null,
+    worldTransferAvailability: isWorldTransferAvailability(value.worldTransferAvailability)
+      ? value.worldTransferAvailability
+      : null,
   };
 }
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import type { PublicPartyPostTarget } from "@/domain/party";
+import { partyWorldGroupLabels, type PartyWorldGroup } from "@/domain/party-world";
 import type { ResumeBossTarget } from "@/domain/resume";
 import { parseOwnedResumesPayload, partyResponseMessage, type PartyOwnedResume } from "@/lib/party/client";
 import { formatPartyBossLabel } from "@/lib/party/presentation";
@@ -11,6 +12,7 @@ import { formatPartyBossLabel } from "@/lib/party/presentation";
 interface PartyApplicationFormProps {
   postSlug: string;
   ownerResumeSlug: string;
+  ownerWorldGroup: PartyWorldGroup | null;
   targets: readonly PublicPartyPostTarget[];
 }
 
@@ -36,16 +38,26 @@ function hasMatchingTarget(resume: PartyOwnedResume, postTargets: readonly Publi
 function eligibleApplicants(
   resumes: PartyOwnedResume[],
   ownerResumeSlug: string,
+  ownerWorldGroup: PartyWorldGroup | null,
   postTargets: readonly PublicPartyPostTarget[],
 ): PartyOwnedResume[] {
   return resumes.filter(
     (resume) =>
-      resume.slug !== ownerResumeSlug && resume.partyEligible && hasMatchingTarget(resume, postTargets),
+      resume.slug !== ownerResumeSlug &&
+      resume.partyEligible &&
+      ownerWorldGroup !== null &&
+      resume.worldGroup === ownerWorldGroup &&
+      hasMatchingTarget(resume, postTargets),
   );
 }
 
 /** Submits a short, owner-only application from another current matching resume. */
-export function PartyApplicationForm({ postSlug, ownerResumeSlug, targets }: PartyApplicationFormProps) {
+export function PartyApplicationForm({
+  postSlug,
+  ownerResumeSlug,
+  ownerWorldGroup,
+  targets,
+}: PartyApplicationFormProps) {
   const [resumes, setResumes] = useState<PartyOwnedResume[]>([]);
   const [selectedResumeSlug, setSelectedResumeSlug] = useState("");
   const [message, setMessage] = useState("");
@@ -53,8 +65,8 @@ export function PartyApplicationForm({ postSlug, ownerResumeSlug, targets }: Par
   const [notice, setNotice] = useState<string | null>(null);
 
   const candidates = useMemo(
-    () => eligibleApplicants(resumes, ownerResumeSlug, targets),
-    [ownerResumeSlug, resumes, targets],
+    () => eligibleApplicants(resumes, ownerResumeSlug, ownerWorldGroup, targets),
+    [ownerResumeSlug, ownerWorldGroup, resumes, targets],
   );
 
   useEffect(() => {
@@ -80,7 +92,7 @@ export function PartyApplicationForm({ postSlug, ownerResumeSlug, targets }: Par
           return;
         }
 
-        const available = eligibleApplicants(parsed, ownerResumeSlug, targets);
+        const available = eligibleApplicants(parsed, ownerResumeSlug, ownerWorldGroup, targets);
         setResumes(parsed);
         setSelectedResumeSlug(available[0]?.slug ?? "");
         setState("ready");
@@ -95,7 +107,7 @@ export function PartyApplicationForm({ postSlug, ownerResumeSlug, targets }: Par
 
     void load();
     return () => controller.abort();
-  }, [ownerResumeSlug, targets]);
+  }, [ownerResumeSlug, ownerWorldGroup, targets]);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -152,7 +164,7 @@ export function PartyApplicationForm({ postSlug, ownerResumeSlug, targets }: Par
         <h2 className="text-lg font-bold text-[#202a36]">이 파티에 지원하기</h2>
         <p className="mt-2 text-sm leading-6 text-[#52606d]">
           같은 보스가 포함된 공개·최근 조회 메력서가 있어야 지원할 수 있습니다. 본인이 올린 게시글에는 지원할
-          수 없습니다.
+          수 없습니다. 파티는 같은 월드 그룹에서만 구성할 수 있습니다.
         </p>
         <Link
           href="/my-resumes"
@@ -174,6 +186,11 @@ export function PartyApplicationForm({ postSlug, ownerResumeSlug, targets }: Par
           <p className="mt-1 text-sm leading-6 text-[#52606d]">
             지원 정보와 메시지는 게시글 작성자에게만 보입니다. 연락처나 메붕이 온도 설문 내용은 전달하지
             않습니다.
+          </p>
+          <p className="mt-1 text-xs leading-5 text-[#687380]">
+            {ownerWorldGroup
+              ? `이 게시글은 ${partyWorldGroupLabels[ownerWorldGroup]} 그룹의 메력서만 지원할 수 있습니다.`
+              : "월드 그룹을 확인할 수 없어 지원할 수 없습니다."}
           </p>
         </div>
       </div>

@@ -1,5 +1,32 @@
 # 구현 결정 기록
 
+## D-007: 파티 월드 그룹과 Cloudflare 엣지 경계
+
+**상태:** 채택
+**결정일:** 2026-07-15
+
+### 배경
+
+파티 게시판은 게임 안에서 실제로 함께 입장할 수 있는 캐릭터만 연결해야 한다. 동시에 공개 프로필, 이미지 발급, API mutation은 CDN·프록시를 거칠 수 있으므로, 개인정보나 갱신 데이터가 캐시되거나 전달 헤더를 위조해 rate limit을 우회해서는 안 된다.
+
+### 결정
+
+API가 반환하는 월드명은 서버에서만 다음 세 그룹으로 분류한다.
+
+1. `본서버`: 에오스·헬리오스·챌린저스가 아닌 이름 있는 모든 월드
+2. `에오스 · 헬리오스`
+3. `챌린저스`: `챌린저스`로 시작하는 월드명
+
+월드명이 없으면 그룹을 추정하지 않고 게시·지원 모두 거절한다. `월드 통합 가능/불가능`은 작성자가 표시하는 지원 희망 조건일 뿐이며, 서로 다른 그룹을 허용하는 권한이나 자동 매칭 규칙이 아니다.
+
+앱은 API와 공유 PNG에 `private, no-store`를 보내고 정적 자산만 cache한다. 기본 `TRUSTED_PROXY_MODE=vercel`은 Vercel edge가 찍은 헤더가 있을 때만 forwarding IP를 rate-limit key에 사용한다. `cloudflare` 모드는 Cloudflare Transform Rule이 덮어쓴 별도 비밀 헤더를 timing-safe 비교한 경우에만 `CF-Connecting-IP`를 사용한다. 실제 DNS/TLS/WAF 설정은 외부 계정 권한이 필요한 운영 작업이므로 자동화하지 않고 runbook으로 분리한다.
+
+### 결과와 안전장치
+
+- UI 필터는 편의 기능이고, 서버 서비스도 동일한 그룹 검사를 수행한다. 따라서 클라이언트 요청을 조작해도 교차 그룹 지원은 통과하지 않는다.
+- Vercel 기본 흐름은 정상 사용자별 bucket을 유지하고, direct/self-hosted origin은 `none` 또는 소유자가 통제하는 proxy 설정을 명시해야 한다.
+- Cloudflare의 WAF rate limiting은 여러 serverless instance에 공통으로 적용되는 첫 방어선이고, 앱 내부 limiter는 제한적인 보조 장치다.
+
 ## D-006: 다중 보스 메력서와 resume-pinned 파티 게시판
 
 **상태:** 채택 — 사용자 요청

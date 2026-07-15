@@ -5,6 +5,7 @@ import {
   roleLabels,
   targetBossCadenceLabels,
   voiceChatLabels,
+  worldTransferAvailabilityLabel,
   type ResumeContact,
   type ResumeBossTarget,
 } from "@/domain/resume";
@@ -103,6 +104,7 @@ export function formatResumePlainText(
     `메붕이 온도: ${temperatureSummary.temperatureCelsius.toFixed(1)}℃ · 익명 설문 ${temperatureSummary.responseCount}건`,
     `가능 시간: ${formatAvailability(resume)}`,
     `디스코드: ${voiceChatLabels[draft.voiceChat]}`,
+    `월드 통합: ${worldTransferAvailabilityLabel(draft.worldTransferAvailability)}`,
     `분배 방식: ${oneLine(draft.lootPolicy)}`,
     "",
     "[파티 경험]",

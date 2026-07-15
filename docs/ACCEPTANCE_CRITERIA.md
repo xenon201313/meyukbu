@@ -110,3 +110,12 @@
 - [x] 게시글 작성자는 지원자의 공개 요약과 선택 메시지만 보고 수락·거절할 수 있다. 연락처, edit token/hash, OCID, 개별 메붕이 온도 응답은 게시판 DTO에 포함되지 않는다.
 - [x] pinned 메력서가 갱신되거나 비공개·stale·expired가 되면 기존 파티 게시글은 공개 목록에서 제외된다.
 - [x] 게시·지원·결정·마감 mutation은 same-origin, Zod, rate limit 및 edit-token 권한을 적용하고 375px viewport에서 사용할 수 있다.
+- [x] 월드명은 서버에서 본서버, 에오스·헬리오스, 챌린저스 중 하나로 분류하며, 게시·지원 단계에서 서로 다른 그룹의 파티 결성을 거절한다. 월드명이 없으면 게시 또는 지원할 수 없다.
+- [x] 작성 내용인 월드 통합 가능 여부는 이력서 미리보기, 공개 검증, 1080×1350 PNG, 게시판 요약에 표시하지만 월드 그룹 제한을 우회하지 않는다.
+
+## L. 엣지 캐시·보안 운영
+
+- [x] API와 메력서 공유 PNG는 `private, no-store`로 응답해 CDN이 권한·갱신 데이터를 재사용하지 않는다.
+- [x] Next의 기본 immutable 정적 자산 cache와 자체 이미지의 명시적인 edge cache TTL만 사용하고, 보안 응답 헤더를 기본 제공한다.
+- [x] Vercel forwarding header를 신뢰하는 IP rate-limit 기본값과, 선택적인 Cloudflare shared-secret 경계를 제공한다.
+- [x] 실제 Cloudflare 계정에서 필요한 DNS, TLS, Cache Rules, WAF rate limiting 및 검증 절차를 문서화한다.

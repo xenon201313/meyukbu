@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { ownedResumeEditTokenReferences } from "@/lib/auth/edit-token";
 import { isPartyResumeEligible } from "@/lib/party/eligibility";
+import { partyWorldGroupFor } from "@/domain/party-world";
 import { getOwnedResumeSummaries } from "@/server/services/resume-service";
 
 export const runtime = "nodejs";
@@ -21,10 +22,14 @@ export async function GET(request: NextRequest) {
     const resumes = await getOwnedResumeSummaries(references);
     return NextResponse.json(
       {
-        resumes: resumes.map((resume) => ({
-          ...resume,
-          partyEligible: isPartyResumeEligible(resume.visibility, resume.fetchedAt),
-        })),
+        resumes: resumes.map((resume) => {
+          const worldGroup = partyWorldGroupFor(resume.worldName);
+          return {
+            ...resume,
+            worldGroup,
+            partyEligible: Boolean(worldGroup) && isPartyResumeEligible(resume.visibility, resume.fetchedAt),
+          };
+        }),
       },
       { headers: privateListHeaders },
     );

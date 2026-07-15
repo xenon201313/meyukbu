@@ -19,7 +19,6 @@ export function SiteHeader({ currentLabel }: SiteHeaderProps) {
           </span>
         </Link>
         <div className="flex items-center gap-3 text-sm font-semibold sm:gap-4">
-          {currentLabel ? <span className="hidden text-[#687380] sm:inline">{currentLabel}</span> : null}
           <nav
             aria-label="보조 메뉴"
             className="flex items-center gap-2 text-xs text-[#52606d] sm:gap-3 sm:text-sm"

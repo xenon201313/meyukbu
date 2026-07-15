@@ -14,6 +14,7 @@ import type {
   PublicPartyPost,
   PublicPartyPostTarget,
 } from "@/domain/party";
+import { canFormPartyTogether, partyWorldGroupFor } from "@/domain/party-world";
 import {
   getResumeBossTargets,
   type ResumeBossTarget,
@@ -207,6 +208,7 @@ function partyResumeSummary(record: ResumeRecord, version: ResumeVersion): Party
     versionNumber: version.versionNumber,
     characterName: profile.characterName,
     worldName: profile.worldName,
+    worldGroup: partyWorldGroupFor(profile.worldName),
     className: profile.className,
     level: profile.level,
     imageUrl: profile.imageUrl,
@@ -216,6 +218,7 @@ function partyResumeSummary(record: ResumeRecord, version: ResumeVersion): Party
     availabilityMode: version.draft.availabilityMode ?? "SCHEDULED",
     availability: structuredClone(version.draft.availability),
     voiceChat: version.draft.voiceChat,
+    worldTransferAvailability: version.draft.worldTransferAvailability ?? null,
   };
 }
 
@@ -281,6 +284,9 @@ async function eligiblePublicView(
   if (!version || !isPartySnapshotFresh(version.snapshot.fetchedAt, now, freshnessPolicy)) {
     return null;
   }
+  if (!partyWorldGroupFor(version.snapshot.profile.worldName)) {
+    return null;
+  }
   return {
     slug: post.slug,
     kind: post.kind,
@@ -323,6 +329,11 @@ export async function createPartyPost(
   const now = dependencies.now ?? (() => new Date());
   const owner = await requireOwnedResume(input.ownerResumeSlug, ownerEditToken, resumeRepository);
   const ownerVersion = requirePublicFreshCurrentVersion(owner, now(), dependencies.freshnessPolicy);
+  if (!partyWorldGroupFor(ownerVersion.snapshot.profile.worldName)) {
+    throw new PartyPostUnavailableError(
+      "월드 정보를 확인할 수 있는 메력서만 파티 게시글에 사용할 수 있습니다.",
+    );
+  }
   const targetSources = selectPostTargets(ownerVersion, input.targetBossIds);
   const createdAt = nowIso(now);
   const postId = randomUUID();
@@ -402,13 +413,19 @@ export async function applyToPartyPost(
   if (!post) {
     throw new PartyPostNotFoundError("파티 게시글을 찾을 수 없습니다.");
   }
-  if (!(await eligiblePublicView(post, resumeRepository, now(), dependencies.freshnessPolicy))) {
+  const publicPost = await eligiblePublicView(post, resumeRepository, now(), dependencies.freshnessPolicy);
+  if (!publicPost) {
     throw new PartyPostUnavailableError("현재 지원할 수 없는 파티 게시글입니다.");
   }
   const applicant = await requireOwnedResume(input.applicantResumeSlug, applicantEditToken, resumeRepository);
   const applicantVersion = requirePublicFreshCurrentVersion(applicant, now(), dependencies.freshnessPolicy);
   if (applicant.characterOcid === post.ownerCharacterOcid) {
     throw new PartyApplicationIneligibleError("본인의 파티 게시글에는 지원할 수 없습니다.");
+  }
+  if (!canFormPartyTogether(publicPost.owner.worldName, applicantVersion.snapshot.profile.worldName)) {
+    throw new PartyApplicationIneligibleError(
+      "파티는 같은 월드 그룹에서만 구성할 수 있습니다. 본서버, 에오스·헬리오스, 챌린저스는 서로 다른 그룹입니다.",
+    );
   }
   const applicantTargetKeys = new Set(
     resumeBossTargetSources(applicantVersion).map((target) => target.sourceBossKey),

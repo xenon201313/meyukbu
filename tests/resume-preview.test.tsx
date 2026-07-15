@@ -16,6 +16,7 @@ const draft: ResumeDraft = {
   availabilityMode: "SCHEDULED",
   availability: [{ days: ["화", "목"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
   voiceChat: "OPTIONAL",
+  worldTransferAvailability: "AVAILABLE",
   lootPolicy: "상호 협의",
   experienceSummary: "동일 보스 파티 경험이 있습니다.",
   roleSummary: "패턴 대응과 생존을 강점으로 참여합니다.",
@@ -39,6 +40,8 @@ describe("ResumePreview", () => {
     expect(screen.getByText("어필 포인트")).toBeInTheDocument();
     expect(screen.getByText("환산 · 보스 배율")).toBeInTheDocument();
     expect(screen.getByText("디스코드")).toBeInTheDocument();
+    expect(screen.getByText("월드 통합")).toBeInTheDocument();
+    expect(screen.getByText("가능")).toBeInTheDocument();
     expect(screen.getByText("희망 인원")).toBeInTheDocument();
     expect(screen.getByText("6인격")).toBeInTheDocument();
     expect(screen.getAllByText("미입력").length).toBeGreaterThan(0);

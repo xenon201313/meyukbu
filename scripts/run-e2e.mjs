@@ -76,6 +76,9 @@ const server = spawn(process.execPath, [nextCli, "dev", "--hostname", host, "--p
     NEXON_PROVIDER: "mock",
     NEXON_OPEN_API_KEY: "",
     MEYUKBU_STORAGE: "memory",
+    // Playwright supplies separate X-Forwarded-For values to model distinct
+    // visitors. Production defaults to Vercel's stamped headers instead.
+    TRUSTED_PROXY_MODE: "forwarded",
     MEYUKBU_NEXT_DIST_DIR: e2eDistDir,
   },
   stdio: "inherit",

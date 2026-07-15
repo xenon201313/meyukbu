@@ -3,7 +3,7 @@
  * deliberately not immutable because the anonymous temperature aggregate is
  * live character data rather than part of a resume snapshot.
  */
-export const resumeImageRendererVersion = 7;
+export const resumeImageRendererVersion = 8;
 
 export function resumeImageUrl(slug: string, versionNumber: number): string {
   return `/r/${encodeURIComponent(slug)}/image?v=${versionNumber}&layout=${resumeImageRendererVersion}`;

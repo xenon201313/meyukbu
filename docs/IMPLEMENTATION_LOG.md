@@ -1,11 +1,36 @@
 # 구현 및 검증 로그
 
+## 2026-07-15 — 월드 그룹 파티 제한·월드 통합·Cloudflare 운영 보강
+
+### 구현 범위
+
+- 헤더의 현재 페이지 이름 중복을 없애고, 첫 화면에 `만든 메력서로 파티를 꾸려보세요.` 안내와 `파티 게시판`/`내 이력서로 파티 글 작성` 바로가기를 추가했다. 게시판 카드와 상세는 캐릭터 원본 이미지를 더 큰 렌더 상자와 부드러운 브라우저 보간으로 표시한다.
+- API 월드명은 서버에서 `본서버`, `에오스 · 헬리오스`, `챌린저스`로 분류한다. 월드명이 비어 있으면 추측하지 않고 파티 게시글 작성과 지원을 차단하며, 그룹이 다르면 UI 필터뿐 아니라 서비스 레이어에서도 요청을 거절한다.
+- 작성 내용 `월드 통합 가능/불가능`을 편집기, 문서형 이력서 미리보기, 공개 검증, 1080×1350 PNG, 공유용 글, 게시판 카드·상세·지원자 큐에 표시했다. 이 값은 희망 조건이며 서로 다른 월드 그룹 제한을 바꾸지 않는다. PNG renderer URL은 `layout=8`로 갱신했다.
+- API와 PNG에는 `private, no-store`, 자체 정적 이미지에는 제한된 `s-maxage`를 적용했다. Next의 `/_next/static` cache는 프레임워크 기본 immutable 정책을 사용한다. Vercel edge가 찍은 forwarding header만 기본 IP rate-limit key에 쓰고, `.env.example`의 빈 optional Cloudflare secret도 안전하게 처리한다. 필요 시 Cloudflare static transform secret을 추가로 검증하는 모드를 제공한다.
+- 실제 Cloudflare zone을 직접 변경하지 않고, `docs/CLOUDFLARE_RUNBOOK.md`에 Vercel 도메인 확인 후 DNS proxy, Full (strict) TLS, Cache Rules, WAF rate limiting, production 환경변수와 점검 절차를 기록했다. 이 단계에는 Cloudflare/Vercel 계정 권한이 필요하다.
+
+### 검증 결과
+
+| 명령 | 결과 |
+| --- | --- |
+| `pnpm format:check` | 통과 |
+| `pnpm lint` | 통과 |
+| `pnpm typecheck` | 통과 |
+| `pnpm test` | 30 files, 111 tests 통과 |
+| `pnpm test:e2e` | Chromium 9 tests 통과 — mock 검색·발급·PNG·모바일·나의 이력서·파티 게시판 흐름 포함 |
+| `pnpm build` | 통과 — cache header 경고 없이 production route 생성 확인 |
+
+### 배포 전제
+
+- `maple-resume.com`의 Cloudflare DNS/TLS/WAF 설정은 배포 계정 권한으로 runbook을 따라 한 번 적용해야 한다. 코드만 배포해도 API/PNG cache 정책은 적용되지만, Cloudflare DDoS/WAF 보호는 프록시된 사용자 도메인에만 적용된다.
+
 ## 2026-07-15 — 다중 보스 메력서·사이트 내 파티 게시판·메붕이 온도
 
 ### 구현 범위
 
 - 한 메력서에 1~6개 보스와 각 보스의 작성 배율을 저장하는 `bossTargets`를 추가했다. 기존 단일 보스 버전은 첫 target으로 읽어 과거 공개 링크와 PNG가 깨지지 않게 유지했으며, 중복 보스와 스우 2인·최초의 대적자/림보/발드릭스/찬란한 흉성/유피테르 3인 제한은 편집기와 서버에서 함께 검증한다.
-- 편집기·문서형 미리보기·공개 검증 페이지·1080×1350 PNG·공유용 글·나의 이력서 목록이 같은 보스 묶음과 개별 배율을 표시한다. PNG renderer URL은 `layout=7`로 올렸고, 최대 6개 보스여도 QR과 데이터 출처 푸터가 남도록 테스트했다.
+- 편집기·문서형 미리보기·공개 검증 페이지·1080×1350 PNG·공유용 글·나의 이력서 목록이 같은 보스 묶음과 개별 배율을 표시한다. PNG renderer URL은 `layout=8`로 올렸고, 최대 6개 보스여도 QR과 데이터 출처 푸터가 남도록 테스트했다.
 - `/parties`에서 최신·공개·신선한 메력서에 고정된 모집/파티 찾기 글을 탐색하고, `/parties/new`에서 본인 이력서로 모집 글을 만들며, `/parties/[slug]`에서 같은 보스가 하나 이상 겹치는 본인 메력서로 지원할 수 있게 했다. 작성자는 지원자의 공개 요약과 선택 메시지만 보고 수락·거절·마감할 수 있다.
 - `PartyPost`·`PartyApplication` Prisma migration과 메모리 저장소를 추가했다. 7일 만료, stale/expired/비공개/갱신된 pinned version의 공개 목록 제외, 중복 지원 및 동시 결정 방지, same-origin·Zod·rate limit·HttpOnly edit-token 검증을 적용했다. 이력서를 수정해 공개 목록에서 숨겨진 게시글도 작성자는 지원 현황을 관리하고 마감할 수 있다.
 - 사용자 노출 이름은 모두 `메붕이 온도`로 바꿨다. 기존 내부 경로·DB 식별자는 기존 초대 링크와 누적 설문 데이터를 보존하기 위해 그대로 두며, 온도는 파티 추천·정렬·수락 판단에 사용하지 않는다.

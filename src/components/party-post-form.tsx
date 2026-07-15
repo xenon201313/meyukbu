@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { partyPostKindLabels, type PartyPostKind } from "@/domain/party";
+import { partyWorldGroupLabels } from "@/domain/party-world";
 import type { ResumeBossTarget } from "@/domain/resume";
 import {
   parseOwnedResumesPayload,
@@ -30,7 +31,7 @@ function targetsFor(resume: PartyOwnedResume): ResumeBossTarget[] {
 }
 
 function availableResumes(resumes: PartyOwnedResume[]): PartyOwnedResume[] {
-  return resumes.filter((resume) => resume.partyEligible);
+  return resumes.filter((resume) => resume.partyEligible && resume.worldGroup !== null);
 }
 
 /** Lets an owner turn a current, fresh resume into a one-week structured party post. */
@@ -263,6 +264,7 @@ export function PartyPostForm({ initialResumeSlug }: PartyPostFormProps) {
             {eligibleResumes.map((resume) => (
               <option key={resume.slug} value={resume.slug}>
                 {resume.characterName} ·{" "}
+                {resume.worldGroup ? partyWorldGroupLabels[resume.worldGroup] : "월드 확인 불가"} ·{" "}
                 {targetsFor(resume)
                   .map((target) => target.bossName)
                   .join(" / ")}
@@ -270,8 +272,14 @@ export function PartyPostForm({ initialResumeSlug }: PartyPostFormProps) {
             ))}
           </select>
           <p className="mt-2 text-xs leading-5 text-[#687380]">
-            공개 중이고 최근에 조회된 내 메력서만 선택할 수 있습니다.
+            공개 중이고 최신 상태이며 월드 정보를 확인할 수 있는 내 메력서만 선택할 수 있습니다. 본서버,
+            에오스·헬리오스, 챌린저스는 서로 다른 파티 그룹입니다.
           </p>
+          {selectedResume?.worldGroup ? (
+            <p className="mt-2 rounded-xl border border-[#d9cdbd] bg-[#f6f2ea] px-3 py-2 text-xs font-bold text-[#52606d]">
+              이 게시글의 파티 그룹: {partyWorldGroupLabels[selectedResume.worldGroup]}
+            </p>
+          ) : null}
         </div>
 
         <fieldset>

@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 
 import { partyResponseMessage, parsePartyOwnerQueuePayload, type PartyOwnerQueue } from "@/lib/party/client";
 import { formatPartyDateTime } from "@/lib/party/presentation";
+import { partyWorldGroupLabels } from "@/domain/party-world";
+import { worldTransferAvailabilityLabel } from "@/domain/resume";
 
 interface PartyOwnerQueueProps {
   postSlug: string;
@@ -197,6 +199,17 @@ export function PartyOwnerQueue({ postSlug }: PartyOwnerQueueProps) {
                         .filter(Boolean)
                         .concat(`v${application.applicant.versionNumber}`)
                         .join(" · ") || "기본 정보 조회 불가"}
+                    </p>
+                  ) : null}
+                  {application.applicant ? (
+                    <p className="mt-1 text-xs text-[#687380]">
+                      {application.applicant.worldGroup
+                        ? `파티 그룹 ${partyWorldGroupLabels[application.applicant.worldGroup]}`
+                        : "파티 그룹 확인 불가"}
+                      {" · "}월드 통합{" "}
+                      {worldTransferAvailabilityLabel(
+                        application.applicant.worldTransferAvailability ?? undefined,
+                      )}
                     </p>
                   ) : null}
                   <p className="mt-1 text-xs text-[#687380]">

@@ -9,6 +9,10 @@ export type PartyType = (typeof partyTypeValues)[number];
 export const voiceChatValues = ["AVAILABLE", "OPTIONAL", "UNAVAILABLE"] as const;
 export type VoiceChat = (typeof voiceChatValues)[number];
 
+/** Author-provided preference for cross-world party play (월드 통합). */
+export const worldTransferAvailabilityValues = ["AVAILABLE", "UNAVAILABLE"] as const;
+export type WorldTransferAvailability = (typeof worldTransferAvailabilityValues)[number];
+
 export const availabilityModeValues = ["SCHEDULED", "NEGOTIABLE", "FLEXIBLE"] as const;
 export type AvailabilityMode = (typeof availabilityModeValues)[number];
 
@@ -79,6 +83,8 @@ export interface ResumeDraft {
   availabilityMode?: AvailabilityMode;
   availability: AvailabilitySlot[];
   voiceChat: VoiceChat;
+  /** Optional for immutable legacy versions created before the field existed. */
+  worldTransferAvailability?: WorldTransferAvailability;
   lootPolicy?: string;
   experienceSummary?: string;
   roleSummary?: string;
@@ -181,6 +187,16 @@ export const voiceChatLabels: Record<VoiceChat, string> = {
   OPTIONAL: "선택",
   UNAVAILABLE: "불가",
 };
+
+export const worldTransferAvailabilityLabels: Record<WorldTransferAvailability, string> = {
+  AVAILABLE: "가능",
+  UNAVAILABLE: "불가능",
+};
+
+/** Keeps legacy documents honest instead of assuming their 월드 통합 preference. */
+export function worldTransferAvailabilityLabel(value: WorldTransferAvailability | undefined): string {
+  return value ? worldTransferAvailabilityLabels[value] : "미입력";
+}
 
 export const availabilityModeLabels: Record<AvailabilityMode, string> = {
   SCHEDULED: "요일·시간 지정",

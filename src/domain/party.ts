@@ -6,7 +6,9 @@ import type {
   ResumeRole,
   TargetBossCadence,
   VoiceChat,
+  WorldTransferAvailability,
 } from "@/domain/resume";
+import type { PartyWorldGroup } from "@/domain/party-world";
 
 /** A post can recruit members or advertise that its author is looking for a party. */
 export const partyPostKindValues = ["RECRUITING", "LOOKING"] as const;
@@ -104,6 +106,8 @@ export interface PartyResumeSummary {
   versionNumber: number;
   characterName: string;
   worldName: string | null;
+  /** Derived from the pinned API world; never supplied by the browser. */
+  worldGroup: PartyWorldGroup | null;
   className: string | null;
   level: number | null;
   imageUrl: string | null;
@@ -113,6 +117,8 @@ export interface PartyResumeSummary {
   availabilityMode: AvailabilityMode;
   availability: AvailabilitySlot[];
   voiceChat: VoiceChat;
+  /** User-provided preference, distinct from the server-enforced world group. */
+  worldTransferAvailability: WorldTransferAvailability | null;
 }
 
 /** Public party-board DTO. It deliberately has no contact, token, or survey-answer field. */

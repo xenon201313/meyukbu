@@ -34,6 +34,7 @@ const post: PublicPartyPost = {
     versionNumber: 2,
     characterName: "테스트캐릭터",
     worldName: "크로아",
+    worldGroup: "MAIN",
     className: "메카닉",
     level: 295,
     imageUrl: null,
@@ -43,6 +44,7 @@ const post: PublicPartyPost = {
     availabilityMode: "SCHEDULED",
     availability: [{ days: ["화", "목"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
     voiceChat: "AVAILABLE",
+    worldTransferAvailability: "AVAILABLE",
   },
 };
 
@@ -55,7 +57,31 @@ describe("party board presentation", () => {
     expect(screen.getByText("월간 · 검은 마법사 (하드)")).toBeInTheDocument();
     expect(screen.getByText(/배율 45.86% · 최대 2인/)).toBeInTheDocument();
     expect(screen.getByText(/배율 72.10% · 최대 6인/)).toBeInTheDocument();
+    expect(screen.getByText(/파티 그룹 본서버 · 월드 통합 가능/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "게시글 열기" })).toHaveAttribute("href", "/parties/p-testcard");
+  });
+
+  it("uses a larger, smoothly rendered source image for the post owner", () => {
+    render(
+      <PartyPostCard
+        post={{
+          ...post,
+          owner: { ...post.owner, imageUrl: "https://example.invalid/character.png" },
+        }}
+      />,
+    );
+
+    const avatar = screen.getByAltText(`${post.owner.characterName} 캐릭터 이미지`);
+    expect(avatar).toHaveAttribute("width", "192");
+    expect(avatar).toHaveAttribute("height", "192");
+    expect(avatar).toHaveClass(
+      "h-full",
+      "w-full",
+      "scale-[1.38]",
+      "object-contain",
+      "[image-rendering:auto]",
+    );
+    expect(avatar.parentElement).toHaveClass("h-20", "w-20", "overflow-hidden", "sm:h-24", "sm:w-24");
   });
 
   it("keeps negotiated and flexible availability honest instead of inventing a schedule", () => {

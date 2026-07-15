@@ -60,6 +60,8 @@ Compose를 멈추려면 `docker compose down`을 사용합니다. `docker compos
 - 다른 사용자는 같은 보스가 하나 이상 포함된 본인의 공개·최신 메력서로만 지원할 수 있습니다. 본인 게시글과 동일 캐릭터의 중복 지원은 서버에서 막습니다.
 - 작성자는 지원자의 공개 프로필 요약과 선택 메시지만 보고 수락·거절하거나 게시글을 마감할 수 있습니다. 연락처, 편집 권한, OCID, 개별 메붕이 온도 설문 답변은 게시판에 포함되지 않습니다.
 - 메붕이 온도는 게시글 노출, 정렬, 지원 가능 여부, 수락 판단에 사용하지 않습니다.
+- 파티는 API가 확인한 월드 그룹 안에서만 만들고 지원할 수 있습니다. `본서버`(에오스·헬리오스·챌린저스 외 모든 월드), `에오스·헬리오스`, `챌린저스`는 서로 섞을 수 없습니다.
+- 이력서의 `월드 통합 가능/불가능`은 작성자가 표시하는 희망 조건입니다. 이 값은 게시판 요약과 공유 이미지에도 표시되지만, 위 월드 그룹 제한을 바꾸지는 않습니다.
 
 ## live NEXON Open API 모드
 
@@ -86,17 +88,23 @@ live provider는 캐릭터 식별자와 기본 정보에 더해 아래를 조회
 
 모든 변수의 설명과 안전한 개발 기본값은 [.env.example](.env.example)에 있습니다.
 
-| 변수                         | 용도                                                      |
-| ---------------------------- | --------------------------------------------------------- |
-| `NEXON_PROVIDER`             | `mock` 또는 `live` provider 선택                          |
-| `NEXON_OPEN_API_KEY`         | live 모드에서만 필요한 서버 전용 NEXON API key            |
-| `NEXON_BASE_URL`             | live API base URL                                         |
-| `DATABASE_URL`               | PostgreSQL 연결 문자열                                    |
-| `MEYUKBU_STORAGE`            | `memory`(mock demo) 또는 `prisma`(PostgreSQL 영속 저장소) |
-| `APP_ORIGIN`                 | QR/공유 이미지에 넣을 canonical public origin             |
-| `PROFILE_FRESH_HOURS`        | fresh 판정 시간(기본 24시간)                              |
-| `PROFILE_PUBLIC_EXPIRY_DAYS` | 공개 API 데이터 만료 시간(기본 30일)                      |
-| `APP_SECRET`                 | production에서 token/content hash 보조에 쓰는 긴 비밀값   |
+| 변수                             | 용도                                                                         |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| `NEXON_PROVIDER`                 | `mock` 또는 `live` provider 선택                                             |
+| `NEXON_OPEN_API_KEY`             | live 모드에서만 필요한 서버 전용 NEXON API key                               |
+| `NEXON_BASE_URL`                 | live API base URL                                                            |
+| `DATABASE_URL`                   | PostgreSQL 연결 문자열                                                       |
+| `MEYUKBU_STORAGE`                | `memory`(mock demo) 또는 `prisma`(PostgreSQL 영속 저장소)                    |
+| `APP_ORIGIN`                     | QR/공유 이미지에 넣을 canonical public origin                                |
+| `PROFILE_FRESH_HOURS`            | fresh 판정 시간(기본 24시간)                                                 |
+| `PROFILE_PUBLIC_EXPIRY_DAYS`     | 공개 API 데이터 만료 시간(기본 30일)                                         |
+| `APP_SECRET`                     | production에서 token/content hash 보조에 쓰는 긴 비밀값                      |
+| `TRUSTED_PROXY_MODE`             | `vercel`(기본), `none`, `forwarded`, `cloudflare` 중 rate-limit IP 신뢰 방식 |
+| `CLOUDFLARE_PROXY_SHARED_SECRET` | 선택한 `cloudflare` 모드에서 Transform Rule과 일치시킬 32자 이상 비밀값      |
+
+## Cloudflare 운영 보강
+
+앱은 API와 공유 PNG를 CDN에 저장하지 않고, 정적 Next 자산·자체 이미지에만 edge cache를 허용합니다. Vercel 배포에서는 `TRUSTED_PROXY_MODE=vercel` 기본값으로 Vercel edge가 보증한 방문자 IP만 rate-limit에 사용합니다. Cloudflare DNS, TLS, WAF rate limit, Cache Rules를 실제 계정에 적용하는 순서는 [CLOUDFLARE_RUNBOOK.md](docs/CLOUDFLARE_RUNBOOK.md)를 따르세요. Cloudflare 권한이 없는 상태에서는 이 저장소의 코드와 문서만 적용되며 DNS·프록시 설정은 자동으로 바뀌지 않습니다.
 
 ## 저장소 동작 원칙
 

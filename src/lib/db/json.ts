@@ -14,6 +14,7 @@ import {
   type ResumeBossTarget,
   type ResumeDraft,
   voiceChatValues,
+  worldTransferAvailabilityValues,
 } from "@/domain/resume";
 
 /** Serializes data for Prisma JSON fields without trusting a type assertion. */
@@ -176,6 +177,7 @@ const draftSchema = z
       }),
     ),
     voiceChat: z.enum(voiceChatValues),
+    worldTransferAvailability: z.enum(worldTransferAvailabilityValues).optional(),
     lootPolicy: z.string().optional(),
     experienceSummary: z.string().optional(),
     roleSummary: z.string().optional(),

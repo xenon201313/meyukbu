@@ -11,7 +11,8 @@ import { SiteHeader } from "@/components/site-header";
 import { editTokenCookieName } from "@/lib/auth/edit-token";
 import { getPartyRepository } from "@/lib/db/party-repository";
 import { partyPostKindLabels } from "@/domain/party";
-import { partySizeLabel, roleLabels, voiceChatLabels } from "@/domain/resume";
+import { partyWorldGroupLabels } from "@/domain/party-world";
+import { partySizeLabel, roleLabels, voiceChatLabels, worldTransferAvailabilityLabel } from "@/domain/resume";
 import {
   formatPartyAvailability,
   formatPartyBossLabel,
@@ -103,17 +104,19 @@ export default async function PartyPostPage({ params }: PartyPostPageProps) {
 
               <div className="mt-5 flex items-start gap-4 border-b border-[#d9cdbd] pb-5">
                 {owner.imageUrl ? (
-                  <img
-                    src={owner.imageUrl}
-                    alt={`${owner.characterName} 캐릭터 이미지`}
-                    width={112}
-                    height={112}
-                    className="h-24 w-24 shrink-0 rounded-2xl border border-[#d9cdbd] bg-[#f6f2ea] object-contain p-1 sm:h-28 sm:w-28"
-                  />
+                  <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#d9cdbd] bg-[#f6f2ea] sm:h-32 sm:w-32">
+                    <img
+                      src={owner.imageUrl}
+                      alt={`${owner.characterName} 캐릭터 이미지`}
+                      width={256}
+                      height={256}
+                      className="h-full w-full scale-[1.38] object-contain [image-rendering:auto]"
+                    />
+                  </div>
                 ) : (
                   <span
                     aria-hidden
-                    className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border border-[#d9cdbd] bg-[#f6f2ea] text-3xl font-bold text-[#7c2f2c] sm:h-28 sm:w-28"
+                    className="flex h-28 w-28 shrink-0 items-center justify-center rounded-2xl border border-[#d9cdbd] bg-[#f6f2ea] text-3xl font-bold text-[#7c2f2c] sm:h-32 sm:w-32"
                   >
                     {owner.characterName.slice(0, 1)}
                   </span>
@@ -144,6 +147,19 @@ export default async function PartyPostPage({ params }: PartyPostPageProps) {
                       <dt className="sr-only">가능 시간</dt>
                       <dd className="text-[#52606d]">
                         {formatPartyAvailability(owner.availabilityMode, owner.availability)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="sr-only">월드 그룹</dt>
+                      <dd className="text-[#52606d]">
+                        월드 그룹 {owner.worldGroup ? partyWorldGroupLabels[owner.worldGroup] : "확인 불가"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="sr-only">월드 통합</dt>
+                      <dd className="text-[#52606d]">
+                        월드 통합{" "}
+                        {worldTransferAvailabilityLabel(owner.worldTransferAvailability ?? undefined)}
                       </dd>
                     </div>
                   </dl>
@@ -205,6 +221,7 @@ export default async function PartyPostPage({ params }: PartyPostPageProps) {
             <PartyApplicationForm
               postSlug={post.slug}
               ownerResumeSlug={owner.resumeSlug}
+              ownerWorldGroup={owner.worldGroup}
               targets={post.targets}
             />
             <section className="ui-panel rounded-2xl p-5 text-sm leading-6 text-[#52606d]">
@@ -212,6 +229,9 @@ export default async function PartyPostPage({ params }: PartyPostPageProps) {
               <p className="mt-2">
                 보스 배율은 메력서 작성자가 입력한 참고 정보입니다. 서비스가 계산한 점수나 합격 여부로
                 사용하지 않으며, 메붕이 온도는 노출·정렬·지원 판단에 사용하지 않습니다.
+              </p>
+              <p className="mt-2">
+                파티는 본서버, 에오스·헬리오스, 챌린저스의 각 월드 그룹 안에서만 구성할 수 있습니다.
               </p>
             </section>
           </aside>

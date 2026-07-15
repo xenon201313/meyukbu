@@ -92,6 +92,7 @@ function draft(bossIds: string[], privateContact = false): ResumeDraft {
     availabilityMode: "SCHEDULED",
     availability: [{ days: ["토"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
     voiceChat: "AVAILABLE",
+    worldTransferAvailability: "AVAILABLE",
     contact: privateContact
       ? { type: "DISCORD", value: "private-contact-value", isPublic: false }
       : undefined,
@@ -148,6 +149,20 @@ async function createOwnedResume(name: string, resumeDraft: ResumeDraft, reposit
     { characterName: name, draft: resumeDraft },
     { repository, provider: new MockNexonProvider() },
   );
+}
+
+/** Overrides a mock snapshot world to cover the game-side party group policy. */
+async function setCurrentResumeWorld(repository: ResumeRepository, slug: string, worldName: string | null) {
+  const record = await repository.findBySlug(slug);
+  if (!record) {
+    throw new Error("The test resume was not stored.");
+  }
+  const version = record.versions.find((candidate) => candidate.id === record.currentVersionId);
+  if (!version) {
+    throw new Error("The test resume current version is missing.");
+  }
+  version.snapshot.profile.worldName = worldName;
+  await repository.save(record);
 }
 
 describe("party-board service", () => {
@@ -302,6 +317,60 @@ describe("party-board service", () => {
     expect(ownerSerialized).not.toContain("private-contact-value");
     expect(ownerSerialized).not.toContain(applicant.editToken);
     expect(ownerSerialized).not.toContain("experienceScore");
+  });
+
+  it("enforces the server-side world group boundary while allowing 에오스 and 헬리오스 together", async () => {
+    const setup = dependencies();
+    const owner = await createOwnedResume(fixtureName(0), draft(["xblack"]), setup.resumeRepository);
+    const heliosApplicant = await createOwnedResume(
+      fixtureName(1),
+      draft(["xblack"]),
+      setup.resumeRepository,
+    );
+    const mainApplicant = await createOwnedResume(fixtureName(1), draft(["xblack"]), setup.resumeRepository);
+
+    await setCurrentResumeWorld(setup.resumeRepository, owner.record.slug, "에오스");
+    await setCurrentResumeWorld(setup.resumeRepository, heliosApplicant.record.slug, "헬리오스");
+    await setCurrentResumeWorld(setup.resumeRepository, mainApplicant.record.slug, "크로아");
+
+    const post = await createPartyPost(
+      { ownerResumeSlug: owner.record.slug, kind: "RECRUITING" },
+      owner.editToken,
+      setup,
+    );
+    const publicPost = await getPublicPartyPost(post.slug, setup);
+    expect(publicPost?.owner.worldGroup).toBe("EOS_HELIOS");
+    expect(publicPost?.owner.worldTransferAvailability).toBe("AVAILABLE");
+
+    await expect(
+      applyToPartyPost(
+        post.slug,
+        { applicantResumeSlug: heliosApplicant.record.slug },
+        heliosApplicant.editToken,
+        setup,
+      ),
+    ).resolves.toMatchObject({ applicantResumeSlug: heliosApplicant.record.slug });
+
+    await expect(
+      applyToPartyPost(
+        post.slug,
+        { applicantResumeSlug: mainApplicant.record.slug },
+        mainApplicant.editToken,
+        setup,
+      ),
+    ).rejects.toMatchObject({
+      message: expect.stringContaining("같은 월드 그룹"),
+    });
+  });
+
+  it("does not create public party posts from a resume with an unknown world", async () => {
+    const setup = dependencies();
+    const owner = await createOwnedResume(fixtureName(0), draft(["xblack"]), setup.resumeRepository);
+    await setCurrentResumeWorld(setup.resumeRepository, owner.record.slug, null);
+
+    await expect(
+      createPartyPost({ ownerResumeSlug: owner.record.slug, kind: "RECRUITING" }, owner.editToken, setup),
+    ).rejects.toBeInstanceOf(PartyPostUnavailableError);
   });
 
   it("rejects a non-overlapping resume and validates the optional 240-character application message", async () => {

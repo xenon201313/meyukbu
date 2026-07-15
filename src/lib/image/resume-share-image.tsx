@@ -8,6 +8,7 @@ import {
   targetBossCadenceLabels,
   type ResumeBossTarget,
   voiceChatLabels,
+  worldTransferAvailabilityLabel,
 } from "@/domain/resume";
 import type { PublicMesoongiTemperatureSummary } from "@/domain/mesoongi-temperature-survey";
 import { formatNumericDisplay } from "@/lib/format";
@@ -739,6 +740,12 @@ export function ResumeShareImage({
               <TableRow
                 label="디스코드"
                 value={voiceChatLabels[draft.voiceChat]}
+                height={52}
+                valueLimit={34}
+              />
+              <TableRow
+                label="월드 통합"
+                value={worldTransferAvailabilityLabel(draft.worldTransferAvailability)}
                 height={52}
                 valueLimit={34}
               />

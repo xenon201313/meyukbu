@@ -50,6 +50,7 @@ const baseDraft: ResumeDraft = {
   availabilityMode: "SCHEDULED",
   availability: [{ days: ["화", "목"], startTime: "20:00", endTime: "23:00", timezone: "Asia/Seoul" }],
   voiceChat: "OPTIONAL",
+  worldTransferAvailability: "AVAILABLE",
   lootPolicy: "상호 협의",
   experienceSummary: "동일 보스 격수 경험이 있습니다.",
   roleSummary: "패턴 대응과 생존을 강점으로 참여합니다.",
@@ -87,6 +88,7 @@ describe("formatResumePlainText", () => {
     expect(text).toContain("메붕이 온도: 41.5℃ · 익명 설문 2건");
     expect(text).toContain("가능 시간: 화 · 목 20:00 - 23:00 (한국 표준시)");
     expect(text).toContain("디스코드: 선택");
+    expect(text).toContain("월드 통합: 가능");
     expect(text).toContain("[공개 연락처]\n디스코드: resumae#1234");
     expect(text).toContain("검증 URL: https://maple-resume.com/r/m-plain-text?v=3");
     expect(text).toContain("Data based on NEXON Open API");

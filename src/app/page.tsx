@@ -25,6 +25,7 @@ const documentSections = [
   ["02", "지원 조건", "희망 보스 · 역할 · 파티 유형"],
   ["03", "어필 포인트", "클리어 경험 · 참여 시간 · 선호 조건"],
   ["04", "공개 정보", "데이터 기준 시각 · 출처 · 검증 URL"],
+  ["05", "파티 게시판", "공개 모집 · 파티 찾기 · 메력서 지원"],
 ] as const;
 
 export default function Home() {
@@ -110,6 +111,37 @@ export default function Home() {
           <p className="resume-caption mt-4 max-w-xl text-sm leading-6">
             API 조회 정보, 작성 내용, 서비스 계산 항목은 문서 안에서 각각의 출처와 함께 표시됩니다.
           </p>
+
+          <aside
+            className="resume-paper mt-6 max-w-xl rounded-2xl border p-5 sm:p-6"
+            aria-labelledby="party-board-cta-heading"
+          >
+            <p className="resume-kicker">PARTY BOARD</p>
+            <h2
+              id="party-board-cta-heading"
+              className="resume-heading mt-2 text-2xl font-black tracking-[-0.035em]"
+            >
+              만든 메력서로 파티를 꾸려보세요.
+            </h2>
+            <p className="resume-lead mt-3 text-sm leading-7">
+              공개한 메력서를 바탕으로 파티원을 모집하거나, 같은 보스를 가려는 파티에 바로 지원할 수 있습니다.
+              게시글에는 선택한 보스 묶음과 각 보스의 배율이 함께 표시됩니다.
+            </p>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/parties"
+                className="ui-action inline-flex min-h-11 items-center justify-center rounded-xl px-4 py-3 text-sm font-bold"
+              >
+                공개 파티 둘러보기
+              </Link>
+              <Link
+                href="/parties/new"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#bfae99] bg-[#fffefa] px-4 py-3 text-sm font-bold text-[#202a36] transition hover:border-[#a44640]/70 hover:text-[#7c2f2c]"
+              >
+                내 이력서로 파티 글 작성
+              </Link>
+            </div>
+          </aside>
         </div>
 
         <aside

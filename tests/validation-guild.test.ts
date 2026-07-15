@@ -95,6 +95,19 @@ describe("resume draft validation", () => {
     );
   });
 
+  it("stores the author-provided 월드 통합 preference while retaining legacy drafts without it", () => {
+    expect(resumeDraftSchema.parse({ ...validDraft, worldTransferAvailability: "AVAILABLE" })).toMatchObject({
+      worldTransferAvailability: "AVAILABLE",
+    });
+    expect(
+      resumeDraftSchema.parse({ ...validDraft, worldTransferAvailability: "UNAVAILABLE" }),
+    ).toMatchObject({ worldTransferAvailability: "UNAVAILABLE" });
+    expect(resumeDraftSchema.safeParse({ ...validDraft, worldTransferAvailability: "UNKNOWN" }).success).toBe(
+      false,
+    );
+    expect(parseStoredDraft(validDraft).worldTransferAvailability).toBeUndefined();
+  });
+
   it("normalizes catalog-id multi-boss input and keeps primary scalar aliases for older readers", () => {
     const parsed = resumeDraftSchema.parse({
       ...validDraft,

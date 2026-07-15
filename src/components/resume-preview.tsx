@@ -12,6 +12,7 @@ import {
   type ResumeBossTarget,
   type ResumeDraft,
   voiceChatLabels,
+  worldTransferAvailabilityLabel,
 } from "@/domain/resume";
 import { formatNumericDisplay } from "@/lib/format";
 import { formatResumeAvailability } from "@/lib/resume-presentation";
@@ -294,6 +295,10 @@ export function ResumePreview({
             <PreviewRow label="어필 포인트" value={displayOrEmpty(draft.roleSummary)} />
             <PreviewRow label="가능 시간" value={formatAvailability(draft)} />
             <PreviewRow label="디스코드" value={voiceChatLabels[draft.voiceChat]} />
+            <PreviewRow
+              label="월드 통합"
+              value={worldTransferAvailabilityLabel(draft.worldTransferAvailability)}
+            />
             <PreviewRow label="분배 방식" value={displayOrEmpty(draft.lootPolicy)} last />
           </div>
         </section>

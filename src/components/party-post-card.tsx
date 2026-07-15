@@ -3,7 +3,8 @@
 import Link from "next/link";
 
 import { partyPostKindLabels, type PublicPartyPost } from "@/domain/party";
-import { partySizeLabel, roleLabels, voiceChatLabels } from "@/domain/resume";
+import { partyWorldGroupLabels } from "@/domain/party-world";
+import { partySizeLabel, roleLabels, voiceChatLabels, worldTransferAvailabilityLabel } from "@/domain/resume";
 import { formatPartyAvailability, formatPartyBossLabel, formatPartyExpiry } from "@/lib/party/presentation";
 
 interface PartyPostCardProps {
@@ -31,19 +32,21 @@ export function PartyPostCard({ post }: PartyPostCardProps) {
         <span className="text-xs font-bold text-[#687380]">{formatPartyExpiry(post.expiresAt)}</span>
       </div>
 
-      <div className="mt-4 flex items-start gap-3">
+      <div className="mt-4 flex items-start gap-4">
         {owner.imageUrl ? (
-          <img
-            src={owner.imageUrl}
-            alt={`${owner.characterName} 캐릭터 이미지`}
-            width={56}
-            height={56}
-            className="h-14 w-14 shrink-0 rounded-xl border border-[#d9cdbd] bg-[#f6f2ea] object-contain p-1"
-          />
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#d9cdbd] bg-[#f6f2ea] sm:h-24 sm:w-24">
+            <img
+              src={owner.imageUrl}
+              alt={`${owner.characterName} 캐릭터 이미지`}
+              width={192}
+              height={192}
+              className="h-full w-full scale-[1.38] object-contain [image-rendering:auto]"
+            />
+          </div>
         ) : (
           <span
             aria-hidden
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-[#d9cdbd] bg-[#f6f2ea] text-xl font-bold text-[#7c2f2c]"
+            className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-[#d9cdbd] bg-[#f6f2ea] text-2xl font-bold text-[#7c2f2c] sm:h-24 sm:w-24"
           >
             {owner.characterName.slice(0, 1)}
           </span>
@@ -58,6 +61,12 @@ export function PartyPostCard({ post }: PartyPostCardProps) {
           <p className="mt-1 text-xs font-bold text-[#687380]">
             {roleLabels[owner.role]} · {partySizeLabel(owner.partySize ?? undefined)} · 디스코드{" "}
             {voiceChatLabels[owner.voiceChat]}
+          </p>
+          <p className="mt-1 text-xs text-[#687380]">
+            {owner.worldGroup
+              ? `파티 그룹 ${partyWorldGroupLabels[owner.worldGroup]}`
+              : "파티 그룹 확인 불가"}
+            {" · "}월드 통합 {worldTransferAvailabilityLabel(owner.worldTransferAvailability ?? undefined)}
           </p>
         </div>
       </div>

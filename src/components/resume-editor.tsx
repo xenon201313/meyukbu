@@ -17,8 +17,10 @@ import {
   type ResumeRole,
   type PartyType,
   type VoiceChat,
+  type WorldTransferAvailability,
   roleLabels,
   voiceChatLabels,
+  worldTransferAvailabilityLabels,
 } from "@/domain/resume";
 import { findBossOption, findBossOptionById, maxPartySizeForBoss, type BossOption } from "@/content/bosses";
 
@@ -90,6 +92,14 @@ const voiceChatOptions: ReadonlyArray<{ value: VoiceChat; label: string }> = [
   { value: "AVAILABLE", label: voiceChatLabels.AVAILABLE },
   { value: "OPTIONAL", label: voiceChatLabels.OPTIONAL },
   { value: "UNAVAILABLE", label: voiceChatLabels.UNAVAILABLE },
+];
+
+const worldTransferAvailabilityOptions: ReadonlyArray<{
+  value: WorldTransferAvailability;
+  label: string;
+}> = [
+  { value: "AVAILABLE", label: worldTransferAvailabilityLabels.AVAILABLE },
+  { value: "UNAVAILABLE", label: worldTransferAvailabilityLabels.UNAVAILABLE },
 ];
 
 const availabilityModeOptions: ReadonlyArray<{ value: AvailabilityMode; label: string }> = [
@@ -164,6 +174,7 @@ function createDefaultDraft(): ResumeDraft {
       },
     ],
     voiceChat: "OPTIONAL",
+    worldTransferAvailability: "AVAILABLE",
     lootPolicy: "상호 협의",
     experienceSummary: "동일 보스 격수 경험이 있습니다.",
     roleSummary: "패턴 대응과 생존을 강점으로, 약속한 시간에 안정적으로 참여합니다.",
@@ -306,6 +317,9 @@ function isResumeDraft(value: unknown): value is ResumeDraft {
     (value.voiceChat === "AVAILABLE" ||
       value.voiceChat === "OPTIONAL" ||
       value.voiceChat === "UNAVAILABLE") &&
+    (value.worldTransferAvailability === undefined ||
+      value.worldTransferAvailability === "AVAILABLE" ||
+      value.worldTransferAvailability === "UNAVAILABLE") &&
     (value.convertedStat === undefined || typeof value.convertedStat === "string") &&
     (value.bossMultiplierPercent === undefined || typeof value.bossMultiplierPercent === "string") &&
     validBossTargets &&
@@ -1220,7 +1234,7 @@ function ResumeEditorContent() {
           </FormSection>
 
           <FormSection title="희망 조건">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <Field label="디스코드" htmlFor="voice-chat">
                 <select
                   id="voice-chat"
@@ -1240,6 +1254,28 @@ function ResumeEditorContent() {
                     </option>
                   ))}
                 </select>
+              </Field>
+              <Field label="월드 통합" htmlFor="world-transfer-availability">
+                <select
+                  id="world-transfer-availability"
+                  name="worldTransferAvailability"
+                  className={inputClassName}
+                  value={draft.worldTransferAvailability ?? ""}
+                  onChange={(event) => {
+                    const option = findOption(worldTransferAvailabilityOptions, event.target.value);
+                    updateDraft({ worldTransferAvailability: option?.value });
+                  }}
+                >
+                  <option value="">미입력</option>
+                  {worldTransferAvailabilityOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-2 text-xs leading-5 text-[#687380]">
+                  월드 그룹 제한 안에서 월드 통합 파티 참여 가능 여부를 표시합니다.
+                </p>
               </Field>
               <Field label="분배 방식" htmlFor="loot-policy" error={formErrors.lootPolicy}>
                 <input

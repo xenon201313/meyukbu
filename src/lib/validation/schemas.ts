@@ -10,6 +10,7 @@ import {
   resumeRoleValues,
   targetBossCadenceValues,
   voiceChatValues,
+  worldTransferAvailabilityValues,
   type ResumeBossTarget,
 } from "@/domain/resume";
 
@@ -85,6 +86,7 @@ const commonResumeDraftSchema = z.object({
   availabilityMode: z.enum(availabilityModeValues).optional(),
   availability: z.array(availabilitySchema).max(3),
   voiceChat: z.enum(voiceChatValues),
+  worldTransferAvailability: z.enum(worldTransferAvailabilityValues).optional(),
   lootPolicy: z.string().trim().max(80).optional(),
   experienceSummary: z.string().trim().max(280).optional(),
   roleSummary: z.string().trim().max(220).optional(),
